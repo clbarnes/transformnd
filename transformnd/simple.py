@@ -24,7 +24,7 @@ class NullTransform(Transform):
         return coords
 
 
-class Translation(Transform):
+class Translate(Transform):
     def __init__(
         self,
         translation: ArrayLike,
@@ -37,7 +37,7 @@ class Translation(Transform):
         if self.translation.ndim > 1:
             raise ValueError("Translation must be scalar or 1D")
 
-        if self.translation.ndim not in [(), (1,)]:
+        if self.translation.shape not in [(), (1,)]:
             self.ndim = {self.translation.shape[0]}
         # otherwise, can be broadcast to anything
 
