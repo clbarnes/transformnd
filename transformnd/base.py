@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from copy import copy
+from copy import copy, deepcopy
 from typing import Iterator, List, Optional, Set, Union
 
 import numpy as np
+from numpy.lib.utils import source
 
 from .util import (
     SpaceRef,
     TransformSignature,
     check_ndim,
     same_or_none,
+    space_str,
     window,
 )
 
@@ -127,6 +129,12 @@ class Transform(ABC):
             transforms, source_space=other.source_space, target_space=self.target_space
         )
 
+    def __str__(self) -> str:
+        cls_name = type(self).__name__
+        src = space_str(self.source_space)
+        tgt = space_str(self.target_space)
+        return f"{cls_name}[{src}->{tgt}]"
+
 
 class TransformWrapper(Transform):
     def __init__(
@@ -165,15 +173,31 @@ class TransformWrapper(Transform):
         return self.fn(coords)
 
 
-def infer_spaces(transforms: List[Transform]):
-    for (t1, t2) in window(transforms, 2):
-        try:
-            space = same_or_none(t1.target_space, t2.source_space, default=None)
-        except ValueError:
-            raise ValueError("Sequence has incompatible spaces")
-        t1.target_space = space
-        t2.source_space = space
-    return transforms
+def _with_spaces(t: Transform, source_space=None, target_space=None):
+    src_tgt = (t.source_space, t.target_space)
+    src = same_or_none(src_tgt[0], source_space, default=None)
+    tgt = same_or_none(src_tgt[1], target_space, default=None)
+    if (src, tgt) != src_tgt:
+        t = copy(t)
+        t.source_space = src
+        t.target_space = tgt
+    return t
+
+
+def infer_spaces(
+    transforms: List[Transform], source_space=None, target_space=None
+) -> List[Transform]:
+    prev_tgts = [source_space]
+    next_srcs = []
+    for t1, t2 in window(transforms, 2):
+        prev_tgts.append(t1.target_space)
+        next_srcs.append(t2.source_space)
+    next_srcs.append(target_space)
+
+    out = []
+    for t, next_src, prev_tgt in zip(transforms, next_srcs, prev_tgts):
+        out.append(_with_spaces(t, prev_tgt, next_src))
+    return out
 
 
 class TransformSequence(Transform):
@@ -204,21 +228,6 @@ class TransformSequence(Transform):
         ValueError
             If spaces are incompatible.
         """
-        try:
-            src = same_or_none(transforms[0].source_space, source_space, default=None)
-            tgt = same_or_none(transforms[1].target_space, target_space, default=None)
-        except ValueError:
-            raise ValueError(
-                "Source/target spaces are inconsistent with component transforms"
-            )
-
-        transforms[0].source_space = src
-        transforms[-1].target_space = tgt
-
-        super().__init__(
-            source_space=src,
-            target_space=tgt,
-        )
         ts = []
         for t in transforms:
             if isinstance(t, TransformSequence):
@@ -226,7 +235,14 @@ class TransformSequence(Transform):
             else:
                 ts.append(t)
 
-        self.transforms: List[Transform] = infer_spaces(ts)
+        ts = infer_spaces(ts, source_space, target_space)
+
+        super().__init__(
+            source_space=ts[0].source_space,
+            target_space=ts[1].target_space,
+        )
+
+        self.transforms: List[Transform] = ts
 
         self.ndim = None
         for t in self.transforms:
@@ -270,3 +286,9 @@ class TransformSequence(Transform):
         for t in self.transforms:
             coords = t(coords)
         return coords
+
+    def __str__(self) -> str:
+        cls_name = type(self).__name__
+        spaces = [self.source_space] + [t.target_space for t in self.transforms]
+        spaces_str = "->".join(space_str(s) for s in spaces)
+        return f"{cls_name}[{spaces_str}]"

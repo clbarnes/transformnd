@@ -20,6 +20,9 @@ class NullTransform(Transform):
             raise ValueError("Source and target spaces are different")
         super().__init__(source_space=src, target_space=src)
 
+    def __neg__(self) -> Transform:
+        return self
+
     def __call__(self, coords: np.ndarray) -> np.ndarray:
         return coords
 

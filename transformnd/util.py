@@ -13,6 +13,8 @@ from typing import (
 
 import numpy as np
 
+UNSPECIFIED_SPACE_NAME = "???"
+
 TransformSignature = Callable[[np.ndarray], np.ndarray]
 """Type annotation of a function which can be used as a transform."""
 
@@ -192,3 +194,14 @@ def format_dims(supported):
         e.g. "2D/3D/4D"
     """
     return "/".join(f"{d}D" for d in sorted(supported))
+
+
+def space_str(space: Optional[SpaceRef]):
+    if space is None:
+        return UNSPECIFIED_SPACE_NAME
+    else:
+        return str(space)
+
+
+def is_square(arr: np.ndarray) -> bool:
+    return arr.ndim == 2 and arr.shape[0] == arr.shape[1]

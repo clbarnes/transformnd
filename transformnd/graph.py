@@ -124,3 +124,25 @@ class TransformGraph:
         """
         t = self.get_sequence(source_space, target_space)
         return t(coords)
+
+    def __iter__(self) -> Iterator[Transform]:
+        """Iterate through the transforms present in the graph.
+
+        Includes inferred reverse transforms.
+
+        N.B. `networkx.Graph.__iter__` iterates through nodes,
+        where this effectively iterates through edges.
+
+        Yields
+        -------
+        Transform
+
+        Examples
+        --------
+        Create a new transform graph using another
+
+        >>> new_tgraph = TransformGraph([extra_transform, *old_tgraph])
+
+        """
+        for _, _, t in self.graph.edges.data("transform"):
+            yield t
