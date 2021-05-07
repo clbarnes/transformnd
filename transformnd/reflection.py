@@ -80,8 +80,8 @@ class Reflect(Transform):
         self,
         points,
         *,
-        source_space: Optional[SpaceRef],
-        target_space: Optional[SpaceRef]
+        source_space: Optional[SpaceRef] = None,
+        target_space: Optional[SpaceRef] = None,
     ):
         super().__init__(source_space=source_space, target_space=target_space)
         self.ndim = {points.shape[0]}
@@ -91,3 +91,24 @@ class Reflect(Transform):
         for n in self.normals:
             coord = reflect(n, self.point, coord)
         return coord
+
+    @classmethod
+    def from_axis(
+        cls,
+        axis,
+        origin,
+        *,
+        source_space: Optional[SpaceRef] = None,
+        target_space: Optional[SpaceRef] = None,
+    ):
+        points = []
+        for i in range(origin):
+            if i == axis:
+                points.append(origin)
+            else:
+                p = origin.copy()
+                p[i] += 1
+                points.append(p)
+        return cls(
+            np.array(points).T, source_space=source_space, target_space=target_space
+        )
