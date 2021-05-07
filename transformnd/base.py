@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from copy import copy, deepcopy
+from copy import copy
 from typing import Iterator, List, Optional, Set, Union
 
 import numpy as np
-from numpy.lib.utils import source
 
 from .util import (
     SpaceRef,
