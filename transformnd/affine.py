@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from .base import Transform
-from .util import SpaceRef, flatten
+from .util import SpaceRef
 
 # TODO: linear map with displacement vectorises better than true affine
 

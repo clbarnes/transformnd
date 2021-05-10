@@ -155,10 +155,10 @@ class TransformWrapper(Transform):
         super().__init__(source_space=source_space, target_space=target_space)
         self.fn = fn
         if ndim is not None:
-            try:
-                self.ndim = set(ndim)
-            except TypeError:
+            if isinstance(ndim, int):
                 self.ndim = {ndim}
+            else:
+                self.ndim = set(ndim)
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
         self._check_ndim(coords)
