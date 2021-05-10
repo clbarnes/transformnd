@@ -1,7 +1,7 @@
 from copy import copy
 
-import pytest
 import numpy as np
+import pytest
 
 from transformnd.base import TransformSequence, TransformWrapper
 from transformnd.util import window
@@ -31,10 +31,12 @@ def test_sequence(coords5x3):
 
 def test_sequence_errors():
     with pytest.raises(ValueError):
-        TransformSequence([
-            TransformWrapper(noop, source_space=1, target_space=2),
-            TransformWrapper(noop, source_space=3, target_space=4),
-        ])
+        TransformSequence(
+            [
+                TransformWrapper(noop, source_space=1, target_space=2),
+                TransformWrapper(noop, source_space=3, target_space=4),
+            ]
+        )
 
 
 def test_sequence_splits():
@@ -47,10 +49,12 @@ def test_sequence_splits():
 
 
 def test_sequence_infers():
-    t = TransformSequence([
-        TransformWrapper(noop, source_space=0),
-        TransformWrapper(noop, source_space=1, target_space=2),
-    ])
+    t = TransformSequence(
+        [
+            TransformWrapper(noop, source_space=0),
+            TransformWrapper(noop, source_space=1, target_space=2),
+        ]
+    )
     assert t[0].target_space == 1
 
 
