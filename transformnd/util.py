@@ -143,6 +143,14 @@ def flatten(
         The flattened array, and a function
         for converting an identically-shaped flat array
         into one the same shape as the original.
+
+    Example
+    -------
+    >>> my_coords = np.random.random((3, 30, 20))
+    >>> flat, unflatten = flatten(my_coords)
+    >>> flat.shape == (3, 30*20)
+    >>> recovered = unflatten(flat)
+    >>> np.allclose(recovered, my_coords)
     """
     flattened = np.reshape(arr, (arr.shape[0], -1))
     if transpose:
@@ -193,6 +201,10 @@ def format_dims(supported):
     str
         e.g. "2D/3D/4D"
     """
+    if supported is None:
+        return "ND"
+    if not len(supported):
+        return "null-D"
     return "/".join(f"{d}D" for d in sorted(supported))
 
 
