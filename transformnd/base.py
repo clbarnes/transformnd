@@ -286,8 +286,24 @@ class TransformSequence(Transform):
             coords = t(coords)
         return coords
 
+    def spaces(self, skip_none=False) -> List[SpaceRef]:
+        """List spaces in this transform.
+
+        Parameters
+        ----------
+        skip_none : bool, optional
+            Whether to skip undefined spaces, default False.
+
+        Returns
+        -------
+        List[SpaceRef]
+        """
+        spaces = [self.source_space] + [t.target_space for t in self.transforms]
+        if skip_none:
+            spaces = [s for s in spaces if s is not None]
+        return spaces
+
     def __str__(self) -> str:
         cls_name = type(self).__name__
-        spaces = [self.source_space] + [t.target_space for t in self.transforms]
-        spaces_str = "->".join(space_str(s) for s in spaces)
+        spaces_str = "->".join(space_str(s) for s in self.spaces())
         return f"{cls_name}[{spaces_str}]"
