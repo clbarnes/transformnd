@@ -27,8 +27,7 @@ class LinearMapTransform(Transform):
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
         self._check_ndim(coords)
-        flat, unflatten = flatten(coords)
-        return unflatten(self.matrix @ flat)
+        return (self.matrix @ coords.T).T
 
     def __neg__(self) -> Transform:
         return type(self)(
@@ -52,10 +51,9 @@ class AffineTransform(LinearMapTransform):
     def __call__(self, coords: np.ndarray) -> np.ndarray:
         self._check_ndim(coords)
         coords = np.concatenate(
-            [coords, np.ones((1,) + coords.shape[1:], dtype=coords.dtype)], axis=0
+            [coords, np.ones((coords.shape[0], 1), dtype=coords.dtype)], axis=1
         )
-        flat, unflatten = flatten(coords)
-        return unflatten(self.matrix @ flat)
+        return (self.matrix @ coords.T).T[:, :-1]
 
     @classmethod
     def from_linear_map(

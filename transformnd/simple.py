@@ -24,7 +24,7 @@ class NullTransform(Transform):
         return self
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
-        return coords
+        return coords.copy()
 
 
 class Translate(Transform):

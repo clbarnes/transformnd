@@ -18,20 +18,19 @@ class MovingLeastSquares(Transform):
     ):
         super().__init__(source_space=source_space, target_space=target_space)
         self._transformer = _Transformer(
-            np.asarray(source_control_points).T, np.asarray(target_control_points).T
+            np.asarray(source_control_points),
+            np.asarray(target_control_points),
         )
         self.ndim = {self._transformer.control_points.shape[1]}
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
         self._check_ndim(coords)
-        flat, unflatten = flatten(coords, True)
-        out = self._transformer.transform(flat)
-        return unflatten(out)
+        return self._transformer.transform(coords)
 
     def __neg__(self) -> Transform:
         return MovingLeastSquares(
-            self._transformer.deformed_control_points.T,
-            self._transformer.control_points.T,
+            self._transformer.deformed_control_points,
+            self._transformer.control_points,
             source_space=self.target_space,
             target_space=self.source_space,
         )

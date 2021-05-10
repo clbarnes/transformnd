@@ -10,20 +10,9 @@ Heavily inspired by/ cribbed directly from
 
 ## Conventions
 
-This library uses the convention that coordinates' dimensions are in the first axis of an array.
-That is, an array of `N` points in `D` dimensions will be `DxN`.
-This is convenient for:
-
-- matrix multiplication (e.g. for affine transformations)
-- `scipy.ndimage.map_coordinates` (e.g. for image registration)
-- `numpy.meshgrid` and other functions which return a tuple of 1D coordinate arrays
-
-`NxD` is another common convention; just use `my_array.T` or `numpy.moveaxis(my_array, -1, 0)`.
-
-Additionally, implementors should allow any number of dimensions in the coordinate array;
-i.e. arrays of shape `DxIxJxKx...`.
-Use the `transformnd.flatten()` function to convert it into `DxN`
-and provide a function for the reverse reshaping.
+`N` coordinates in `D` dimensions are given as a numpy array of shape `(N, D)`.
+`transformnd.flatten()` converts arrays into a compatible shape,
+and provides a routine for returning to the original shape.
 
 If your `Transform` *subclass* is restricted to certain dimensionalities,
 use the `transformnd.limit_ndim()` function in the constructor.

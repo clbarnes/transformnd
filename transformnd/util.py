@@ -117,25 +117,18 @@ def window(iterable: Iterable, length: int) -> Iterator[Tuple[Any, ...]]:
 
 
 def flatten(
-    arr, transpose=False
+    arr,
+    dim_axis=-1,
+    transpose=False,
 ) -> Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]:
     """Convert array into 2D, and provide a routine to reclaim original shape.
-
-    The first axis is assumed to represent different dimensions,
-    and is therefore kept consistent.
-    Therefore, by default the returned is DxN,
-    where D is the dimensionality of the coordinates,
-    and N the number of coordinates.
-
-    ``transpose=True`` returns an NxD array,
-    as is common in some workflows.
 
     Parameters
     ----------
     arr : np.ndarray
         Array to be flattened
-    transpose : bool, optional
-        Whether the array should be NxD, by default False
+    dim_axis : bool, optional
+        Which axis has the different dimensions
 
     Returns
     -------
@@ -152,16 +145,20 @@ def flatten(
     >>> recovered = unflatten(flat)
     >>> np.allclose(recovered, my_coords)
     """
-    flattened = np.reshape(arr, (arr.shape[0], -1))
+    # todo: reduce copies if possible
+    if dim_axis < 0:
+        dim_axis = arr.ndim + dim_axis
+    moved = np.moveaxis(arr, dim_axis, -1)
+    m_shape = moved.shape
+
+    flattened = np.reshape(moved, (-1, m_shape[-1]))
     if transpose:
         flattened = flattened.T
-    orig_shape = arr.shape
-    orig_order = arr.order
 
     def unflatten(flat):
         if transpose:
             flat = flat.T
-        return np.reshape(flat, orig_shape, orig_order)
+        return np.moveaxis(np.reshape(flat, m_shape), -1, dim_axis)
 
     return flattened, unflatten
 

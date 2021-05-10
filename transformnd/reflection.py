@@ -3,7 +3,7 @@ from typing import List, Optional
 import numpy as np
 
 from .base import Transform
-from .util import SpaceRef, flatten, is_square
+from .util import SpaceRef, is_square
 
 
 def proj(u, v):
@@ -11,8 +11,7 @@ def proj(u, v):
 
 
 def gram_schmidt(vecs: np.ndarray):
-    """ROW vecs
-
+    """
     https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
     if not is_square(vecs):
@@ -41,20 +40,20 @@ def get_hyperplanes(points: np.ndarray, unitise=True, seed=None):
     elif points.ndim > 2:
         raise ValueError("Points must be 2D array")
 
-    ndim, n_points = points.shape
+    n_points, ndim = points.shape
     n_reflections = ndim - n_points + 1
 
     if n_reflections <= 0:
         raise ValueError("Too many points given, must be hyperplane or lower-dim")
 
-    point = points[:, 0]
+    point = points[0]
 
     if n_points == 1:
         return point, list(np.eye(len(point)))
 
     # non-orthogonal vectors spanning provided reflective
     # transpose into row vectors for easier vectorisation
-    reflective_vecs = np.diff(points, axis=1).T
+    reflective_vecs = np.diff(points, axis=0)
     rng = np.random.default_rng(seed)
     randoms = rng.random((n_reflections, ndim))
     non_orth = np.concatenate((reflective_vecs, randoms), 0)
@@ -64,18 +63,6 @@ def get_hyperplanes(points: np.ndarray, unitise=True, seed=None):
     if unitise:
         extras /= np.linalg.norm(extras, axis=1)
     return point, list(extras)
-
-
-def reflect(plane_normal, plane_point, vector):
-    return (
-        vector
-        - 2
-        * (
-            (np.dot(vector, plane_normal) - plane_point)
-            / np.dot(plane_normal, plane_normal)
-        )
-        * plane_normal
-    )
 
 
 def unitise(v):
@@ -104,14 +91,13 @@ class Reflect(Transform):
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
         self._check_ndim(coords)
-        flat, unflatten = flatten(coords, transpose=True)
-        flat -= self.point
+        out = coords - self.point
         for n in self.normals:
             # mul->sum vectorises dot product
             # normals are unit, avoids unnecessary division by 1
-            flat -= 2 * np.sum(flat * n, axis=1) * n
-        flat += self.point
-        return unflatten(flat)
+            out -= 2 * np.sum(coords * n, axis=1) * n
+        out += self.point
+        return out
 
     @classmethod
     def from_points(

@@ -43,14 +43,14 @@ class Transform(ABC):
         Parameters
         ----------
         coords : np.ndarray
-            DxIxJxKx... array of coordinates where D is the dimensionality.
+            NxD array of N D-dimensional coordinates.
 
         Raises
         ------
         ValueError
             If dimensions are not supported.
         """
-        return check_ndim(coords.shape[0], self.ndim)
+        return check_ndim(coords.shape[1], self.ndim)
 
     @abstractmethod
     def __call__(self, coords: np.ndarray) -> np.ndarray:
@@ -59,7 +59,7 @@ class Transform(ABC):
         Parameters
         ----------
         coords : np.ndarray
-            DxIxJxKx... array of coordinates where D is the dimensionality.
+            NxD array of N D-dimensional coordinates.
 
         Returns
         -------
@@ -83,8 +83,7 @@ class Transform(ABC):
 
         Parameters
         ----------
-        other : Transform or callable
-            Callables will be wrapped in a TransformWrapper.
+        other : Transform
 
         Returns
         -------
@@ -94,8 +93,6 @@ class Transform(ABC):
             transforms = copy(other.transforms)
         elif isinstance(other, Transform):
             transforms = [other]
-        elif callable(other):
-            transforms = [TransformWrapper(other)]
         else:
             return NotImplemented
         transforms.insert(0, self)
@@ -108,8 +105,7 @@ class Transform(ABC):
 
         Parameters
         ----------
-        other : Transform or callable
-            Callables will be wrapped in a TransformWrapper.
+        other : Transform
 
         Returns
         -------
@@ -119,8 +115,6 @@ class Transform(ABC):
             transforms = copy(other.transforms)
         elif isinstance(other, Transform):
             transforms = [other]
-        elif callable(other):
-            transforms = [TransformWrapper(other)]
         else:
             return NotImplemented
         transforms.append(self)
@@ -147,8 +141,7 @@ class TransformWrapper(Transform):
         """Wrapper around an arbitrary function.
 
         Callable should take and return an identically-shaped
-        DxIxJxKx... numpy array of coordinates,
-        where D is the dimensionality.
+        NxD numpy array of N D-dimensional coordinates.
 
         Parameters
         ----------
