@@ -8,6 +8,8 @@ from numpy.typing import ArrayLike
 from .base import Transform
 from .util import SpaceRef, flatten
 
+# TODO: linear map with displacement vectorises better than true affine
+
 
 class LinearMapTransform(Transform):
     def __init__(
