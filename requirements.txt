@@ -2,18 +2,19 @@ numpy>=1.20
 
 # optional
 
-morphops
-scipy
-networkx
 molesq
+morphops
+networkx
+scipy
 
 # dev
 
-mypy
-flake8
 black
-pytest
-setuptools-scm
-setuptools
-wheel
+flake8
+isort
+mypy
 pdoc3
+pytest
+setuptools
+setuptools-scm
+wheel
