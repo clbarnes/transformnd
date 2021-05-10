@@ -32,7 +32,7 @@ jobs:
           pip install -r requirements.txt
         name: Install dependencies
       - run: |
-          pip install .
+          pip install '.[all]'
         name: Install package
       - run: pytest --verbose
 
