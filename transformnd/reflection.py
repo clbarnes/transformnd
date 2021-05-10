@@ -3,7 +3,7 @@ from typing import List, Optional
 import numpy as np
 
 from .base import Transform
-from .util import SpaceRef, is_square
+from .util import SpaceRef, flatten, is_square
 
 
 def proj(u, v):
@@ -29,9 +29,12 @@ def gram_schmidt(vecs: np.ndarray):
     return np.array(out)
 
 
-def get_hyperplanes(points: np.ndarray, seed=None):
+def get_hyperplanes(points: np.ndarray, unitise=True, seed=None):
     """
     Reflective: point/line/.../hyperplane to be reflected around
+
+    Returns point-normal representation.
+    Normals are unit vectors.
     """
     points = np.asarray(points)
     if points.ndim <= 1:
@@ -59,7 +62,8 @@ def get_hyperplanes(points: np.ndarray, seed=None):
 
     basis = gram_schmidt(non_orth)
     extras = basis[-n_reflections:]
-    extras /= np.linalg.norm(extras, axis=1)
+    if unitise:
+        extras /= np.linalg.norm(extras, axis=1)
     return point, list(extras)
 
 
@@ -85,12 +89,17 @@ class Reflect(Transform):
     ):
         super().__init__(source_space=source_space, target_space=target_space)
         self.ndim = {points.shape[0]}
-        self.point, self.normals = get_hyperplanes(points)
+        self.point, self.normals = get_hyperplanes(points, unitise=True)
 
-    def _reflect_point(self, coord):
+    def __call__(self, coords: np.ndarray) -> np.ndarray:
+        flat, unflatten = flatten(coords, transpose=True)
+        flat -= self.point
         for n in self.normals:
-            coord = reflect(n, self.point, coord)
-        return coord
+            # mul->sum vectorises dot product
+            # normals are unit, avoids unnecessary division by 1
+            flat -= 2 * np.sum(flat * n, axis=1) * n
+        flat += self.point
+        return unflatten(flat)
 
     @classmethod
     def from_axis(
@@ -102,10 +111,11 @@ class Reflect(Transform):
         target_space: Optional[SpaceRef] = None,
     ):
         points = []
-        for i in range(origin):
-            if i == axis:
-                points.append(origin)
-            else:
+        if np.isscalar(axis):
+            axis = (axis,)
+        points = [origin]
+        for i in range(len(origin) - len(axis)):
+            if i not in axis:
                 p = origin.copy()
                 p[i] += 1
                 points.append(p)
