@@ -5,10 +5,10 @@ fmt:
 
 .PHONY: lint
 lint:
-	mypy transformnd
-	black --check .
 	isort --check .
+	black --check .
 	flake8 .
+	mypy transformnd
 
 .PHONY: test
 test:
