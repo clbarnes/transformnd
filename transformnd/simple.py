@@ -7,7 +7,7 @@ from .base import Transform
 from .util import SpaceRef, chain_or
 
 
-class NullTransform(Transform):
+class IdentityTransform(Transform):
     def __init__(
         self,
         *,
@@ -56,7 +56,7 @@ class Translate(Transform):
         )
 
 
-class Rescale(Transform):
+class Scale(Transform):
     def __init__(
         self,
         scale: ArrayLike,
@@ -69,7 +69,7 @@ class Rescale(Transform):
         if self.scale.ndim > 1:
             raise ValueError("Scale must be scalar or 1D")
 
-        if self.scale.ndim not in [(), (1,)]:
+        if self.scale.shape not in [(), (1,)]:
             self.ndim = {self.scale.shape[0]}
         # otherwise, can be broadcast to anything
 

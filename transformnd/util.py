@@ -70,6 +70,29 @@ def chain_or(*args: Optional[Any], default=NO_DEFAULT):
 
 
 def same_or_none(*args, default=NO_DEFAULT):
+    """Check args are the same or None.
+
+    If so, return the non-None value.
+    Otherwise, raise a ValueError.
+
+    Parameters
+    ----------
+    default : Any, optional
+        If given, return this instead of an error
+        if all *args are None.
+
+    Returns
+    -------
+    Any
+        The non-None arg value.
+
+    Raises
+    ------
+    ValueError
+        Arguments are not None, or the same.
+    ValueError
+        No non-None arguments found and no default given.
+    """
     prev = None
 
     for arg in args:
@@ -127,8 +150,10 @@ def flatten(
     ----------
     arr : np.ndarray
         Array to be flattened
-    dim_axis : bool, optional
-        Which axis has the different dimensions
+    dim_axis : int, optional
+        Which axis contains dimensions, default -1
+    transpose : bool, optional
+        Whether to return DxN array, default False
 
     Returns
     -------
@@ -139,9 +164,9 @@ def flatten(
 
     Example
     -------
-    >>> my_coords = np.random.random((3, 30, 20))
+    >>> my_coords = np.random.random((30, 20, 3))
     >>> flat, unflatten = flatten(my_coords)
-    >>> flat.shape == (3, 30*20)
+    >>> flat.shape == (30*20, 3)
     >>> recovered = unflatten(flat)
     >>> np.allclose(recovered, my_coords)
     """

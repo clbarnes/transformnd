@@ -184,6 +184,7 @@ def infer_spaces(
     for t1, t2 in window(transforms, 2):
         prev_tgts.append(t1.target_space)
         next_srcs.append(t2.source_space)
+
     next_srcs.append(target_space)
 
     out = []
@@ -231,7 +232,7 @@ class TransformSequence(Transform):
 
         super().__init__(
             source_space=ts[0].source_space,
-            target_space=ts[1].target_space,
+            target_space=ts[-1].target_space,
         )
 
         self.transforms: List[Transform] = ts
@@ -300,3 +301,8 @@ class TransformSequence(Transform):
         cls_name = type(self).__name__
         spaces_str = "->".join(space_str(s) for s in self.spaces())
         return f"{cls_name}[{spaces_str}]"
+
+    def __getitem__(self, idx: Union[slice, int]):
+        if isinstance(idx, int):
+            return self.transforms[idx]
+        return type(self)(self.transforms[idx])
