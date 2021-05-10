@@ -32,7 +32,8 @@ jobs:
           pip install -r requirements.txt
         name: Install dependencies
       - run: |
-          pip install '.[all]'
+          # todo: allow non-editable install
+          pip install -e '.[all]'
         name: Install package
       - run: pytest --verbose
 
