@@ -55,7 +55,12 @@ class ThinPlateSplines(Transform):
         )
 
     def __neg__(self) -> Transform:
-        return ThinPlateSplines(self.target_control_points, self.source_control_points)
+        return ThinPlateSplines(
+            self.target_control_points,
+            self.source_control_points,
+            source_space=self.target_space,
+            target_space=self.source_space,
+        )
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
         self._check_ndim(coords)
