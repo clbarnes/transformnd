@@ -1,5 +1,8 @@
+import sys
 import numpy as np
 import pytest
+
+sys.path.pop(0)
 
 
 def make_coords(shape):
