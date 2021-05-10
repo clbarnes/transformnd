@@ -34,7 +34,6 @@ def get_hyperplanes(points: np.ndarray, unitise=True, seed=None):
     Reflective: point/line/.../hyperplane to be reflected around
 
     Returns point-normal representation.
-    Normals are unit vectors.
     """
     points = np.asarray(points)
     if points.ndim <= 1:
@@ -79,19 +78,32 @@ def reflect(plane_normal, plane_point, vector):
     )
 
 
+def unitise(v):
+    return v / np.linalg.norm(v)
+
+
 class Reflect(Transform):
     def __init__(
         self,
-        points,
+        normals,
+        point=None,
         *,
         source_space: Optional[SpaceRef] = None,
         target_space: Optional[SpaceRef] = None,
     ):
         super().__init__(source_space=source_space, target_space=target_space)
-        self.ndim = {points.shape[0]}
-        self.point, self.normals = get_hyperplanes(points, unitise=True)
+        if point is None:
+            point = 0
+        n1 = normals[0]
+        if not np.isscalar(point) and len(n1) != len(point):
+            raise ValueError("Point and normals are not of the same dimensionality")
+        self.point = point
+        self.ndim = {len(n1)}
+        self.normals = [unitise(n) for n in normals]
+        # todo: matmul is associative, so turn this into an affine?
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
+        self._check_ndim(coords)
         flat, unflatten = flatten(coords, transpose=True)
         flat -= self.point
         for n in self.normals:
@@ -102,6 +114,17 @@ class Reflect(Transform):
         return unflatten(flat)
 
     @classmethod
+    def from_points(
+        cls,
+        points,
+        *,
+        source_space: Optional[SpaceRef] = None,
+        target_space: Optional[SpaceRef] = None,
+    ):
+        point, normals = get_hyperplanes(points, unitise=False)
+        return cls(normals, point, source_space=source_space, target_space=target_space)
+
+    @classmethod
     def from_axis(
         cls,
         axis,
@@ -110,15 +133,23 @@ class Reflect(Transform):
         source_space: Optional[SpaceRef] = None,
         target_space: Optional[SpaceRef] = None,
     ):
-        points = []
+        origin = np.asarray(origin)
         if np.isscalar(axis):
             axis = (axis,)
-        points = [origin]
-        for i in range(len(origin) - len(axis)):
+
+        for a in axis:
+            if a >= len(axis):
+                raise ValueError(
+                    "Cannot reflect in axis which does not exist (too high)"
+                )
+
+        normals = []
+        for i in range(len(origin) - len(axis) + 1):
             if i not in axis:
-                p = origin.copy()
-                p[i] += 1
-                points.append(p)
+                v = np.zeros_like(origin)
+                v[i] += 1
+                normals.append(v)
+
         return cls(
-            np.array(points).T, source_space=source_space, target_space=target_space
+            normals, origin, source_space=source_space, target_space=target_space
         )
