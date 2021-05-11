@@ -252,8 +252,8 @@ class AffineTransform(Transform):
         AffineTransform
         """
         if np.isscalar(axis):
-            axis = [axis]
-        values = [-1 if idx in axis else 1 for idx in range(ndim)]
+            axis = [axis]  # type: ignore
+        values = [-1 if idx in axis else 1 for idx in range(ndim)]  # type:ignore
         m = np.eye(ndim + 1)
         m[:-1, :-1] *= values
 
@@ -431,7 +431,7 @@ class AffineTransform(Transform):
 
         m = np.eye(ndim, dtype=s.dtype)
         for col_idx in range(m.shape[1]):
-            it = iter(factor[col_idx])
+            it = iter(factor[col_idx])  # type: ignore
             for row_idx in range(m.shape[0] - 1):
                 if m[row_idx, col_idx] == 0:
                     m[row_idx, col_idx] = next(it)
