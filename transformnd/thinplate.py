@@ -63,7 +63,7 @@ class ThinPlateSplines(Transform):
         )
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
-        coords = self._check_ndim(coords)
+        coords = self._validate_coords(coords)
         U = mops.K_matrix(coords, self.source_control_points)
         P = mops.P_matrix(coords)
         # The warped pts are the affine part + the non-uniform part

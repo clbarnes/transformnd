@@ -37,7 +37,7 @@ class Transform(ABC):
         self.source_space = source_space
         self.target_space = target_space
 
-    def _check_ndim(self, coords) -> np.ndarray:
+    def _validate_coords(self, coords) -> np.ndarray:
         """Check that dimension of coords are supported.
 
         Also ensure that coords is a 2D numpy array.
@@ -167,7 +167,7 @@ class TransformWrapper(Transform):
                 self.ndim = set(ndim)
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
-        self._check_ndim(coords)
+        self._validate_coords(coords)
         return self.fn(coords)
 
 

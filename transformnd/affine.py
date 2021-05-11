@@ -62,7 +62,7 @@ class AffineTransform(Transform):
         self.ndim = {len(self.matrix) - 1}
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
-        coords = self._check_ndim(coords)
+        coords = self._validate_coords(coords)
         # todo: replace with writing into full ones?
         coords = np.concatenate(
             [coords, np.ones((coords.shape[0], 1), dtype=coords.dtype)], axis=1
@@ -114,7 +114,7 @@ class AffineTransform(Transform):
         *,
         source_space: Optional[SpaceRef] = None,
         target_space: Optional[SpaceRef] = None,
-    ):
+    ) -> AffineTransform:
         """Create an augmented affine matrix from a linear map,
         with an optional translation.
 
@@ -129,8 +129,7 @@ class AffineTransform(Transform):
 
         Returns
         -------
-        [type]
-            [description]
+        AffineTransform
         """
         lin_map = np.asarray(linear_map)
 
@@ -159,8 +158,7 @@ class AffineTransform(Transform):
 
         Returns
         -------
-        [type]
-            [description]
+        AffineTransform
         """
         return cls(
             np.eye(ndim + 1), source_space=source_space, target_space=target_space

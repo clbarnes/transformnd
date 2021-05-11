@@ -45,7 +45,7 @@ class Translate(Transform):
         # otherwise, can be broadcast to anything
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
-        self._check_ndim(coords)
+        self._validate_coords(coords)
         return coords + self.translation
 
     def __neg__(self) -> Transform:
@@ -74,7 +74,7 @@ class Scale(Transform):
         # otherwise, can be broadcast to anything
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
-        coords = self._check_ndim(coords)
+        coords = self._validate_coords(coords)
         return coords * self.scale
 
     def __neg__(self) -> Transform:
