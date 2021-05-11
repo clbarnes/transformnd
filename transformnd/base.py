@@ -37,8 +37,10 @@ class Transform(ABC):
         self.source_space = source_space
         self.target_space = target_space
 
-    def _check_ndim(self, coords):
+    def _check_ndim(self, coords) -> np.ndarray:
         """Check that dimension of coords are supported.
+
+        Also ensure that coords is a 2D numpy array.
 
         Parameters
         ----------
@@ -50,7 +52,11 @@ class Transform(ABC):
         ValueError
             If dimensions are not supported.
         """
-        return check_ndim(coords.shape[1], self.ndim)
+        coords = np.asarray(coords)
+        if coords.ndim != 2:
+            raise ValueError("Coords must be a 2D array")
+        check_ndim(coords.shape[1], self.ndim)
+        return coords
 
     @abstractmethod
     def __call__(self, coords: np.ndarray) -> np.ndarray:

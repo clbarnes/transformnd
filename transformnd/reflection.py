@@ -90,7 +90,7 @@ class Reflect(Transform):
         # todo: matmul is associative, so turn this into an affine?
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
-        self._check_ndim(coords)
+        coords = self._check_ndim(coords)
         out = coords - self.point
         for n in self.normals:
             # mul->sum vectorises dot product
