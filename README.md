@@ -16,8 +16,8 @@ and provides a routine for returning to the original shape.
 
 If your `Transform` *subclass* is restricted to certain dimensionalities,
 use the `transformnd.limit_ndim()` function in the constructor.
-If an *instance* is restricted, set the `ndim` member variable
-and call `self._check_ndim()` in `__call__`.
+Use `self._validate_coords(coords)` in `__call__` to ensure the coordinates
+are of valid type and dimensions.
 
 ## Additional transforms
 
