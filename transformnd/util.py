@@ -226,7 +226,7 @@ def format_dims(supported):
     if supported is None:
         return "ND"
     if not len(supported):
-        return "null-D"
+        return "nullD"
     return "/".join(f"{d}D" for d in sorted(supported))
 
 
@@ -239,3 +239,12 @@ def space_str(space: Optional[SpaceRef]):
 
 def is_square(arr: np.ndarray) -> bool:
     return arr.ndim == 2 and arr.shape[0] == arr.shape[1]
+
+
+def dim_intersection(dims1: Optional[Set[int]], dims2: Optional[Set[int]]):
+    if dims1 is None:
+        return dims2
+    elif dims2 is None:
+        return dims1
+    else:
+        return dims1.intersection(dims2)

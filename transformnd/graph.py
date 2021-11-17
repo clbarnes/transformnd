@@ -5,7 +5,7 @@ import networkx as nx
 import numpy as np
 
 from .base import Transform, TransformSequence
-from .util import SpaceRef, chain_or, window
+from .util import SpaceRef, chain_or, dim_intersection, window
 
 
 def split_sequence(seq: TransformSequence) -> Iterator[Transform]:
@@ -36,12 +36,19 @@ def split_sequence(seq: TransformSequence) -> Iterator[Transform]:
 
 
 class TransformGraph:
-    def __init__(self, transforms: Iterable[Transform]):
+    def __init__(self):
         """Transform between any number of arbitrary spaces.
 
         Finds the shortest path for transforming one space
         into another, via some intermediate spaces.
 
+        Populate with ``my_transform_graph.add_transforms(my_transforms)``.
+
+        """
+        self.graph = nx.OrderedDiGraph()
+
+    def add_transforms(self, transforms: Iterable[Transform]):
+        """
         Parameters
         ----------
         transforms : Iterable[Transform]
@@ -55,10 +62,16 @@ class TransformGraph:
             Undefined source and target spaces.
         """
         # TODO: weighting of split-out sequences could be problematic
-        self.graph = nx.OrderedDiGraph()
-
         edges: Dict[Tuple[SpaceRef, SpaceRef], Transform] = dict()
+        self.get_sequence.cache_clear()
+
+        ndim = self.ndim
+
         for t in transforms:
+            ndim = dim_intersection(ndim, t.ndim)
+            if ndim is not None and len(ndim) == 0:
+                raise ValueError("This TransformGraph supports no dimensionality")
+
             if isinstance(t, TransformSequence):
                 ts = list(split_sequence(t))
             else:
@@ -72,13 +85,21 @@ class TransformGraph:
                     )
                 edges[(t2.source_space, t2.target_space)] = t2
 
+        self.ndim = ndim
+
+        count = 0
+
         for (src, tgt), t in edges.items():
             self.graph.add_edge(src, tgt, transform=t)
+            count += 1
             if (tgt, src) not in edges:
                 try:
                     self.graph.add_edge(tgt, src, transform=-t)
+                    count += 1
                 except NotImplementedError:
                     pass
+
+        return count
 
     @lru_cache()
     def get_sequence(

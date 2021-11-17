@@ -10,6 +10,7 @@ from .util import (
     SpaceRef,
     TransformSignature,
     check_ndim,
+    dim_intersection,
     same_or_none,
     space_str,
     window,
@@ -95,13 +96,13 @@ class Transform(ABC):
         -------
         TransformSequence
         """
+        transforms = [self]
         if isinstance(other, TransformSequence):
-            transforms = copy(other.transforms)
+            transforms.extend(other.transforms)
         elif isinstance(other, Transform):
-            transforms = [other]
+            transforms.append(other)
         else:
             return NotImplemented
-        transforms.insert(0, self)
         return TransformSequence(
             transforms, source_space=self.source_space, target_space=other.target_space
         )
@@ -245,11 +246,8 @@ class TransformSequence(Transform):
 
         self.ndim = None
         for t in self.transforms:
-            if t.ndim is not None:
-                if self.ndim is None:
-                    self.ndim = set(t.ndim)
-                else:
-                    self.ndim.intersection_update(t.ndim)
+            self.ndim = dim_intersection(self.ndim, t.ndim)
+
         if self.ndim is not None and len(self.ndim) == 0:
             raise ValueError("Transforms have incompatible dimensionalities")
 
@@ -258,8 +256,7 @@ class TransformSequence(Transform):
 
         Yields
         -------
-        Iterator[Iterable[Transform]]
-            [description]
+        Transform
         """
         yield from self.transforms
 
