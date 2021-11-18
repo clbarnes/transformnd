@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Dict, Iterable, Iterator, Tuple
+from typing import Dict, Iterable, Iterator, Optional, Set, Tuple
 
 import networkx as nx
 import numpy as np
@@ -46,6 +46,7 @@ class TransformGraph:
 
         """
         self.graph = nx.OrderedDiGraph()
+        self.ndim: Optional[Set[int]] = None
 
     def add_transforms(self, transforms: Iterable[Transform]):
         """

@@ -13,10 +13,10 @@ def test_identity():
 
 
 @pytest.mark.parametrize(["ndim"], [[d] for d in range(2, 6)])
-def test_translation(ndim):
+def test_translation(ndim, rng):
     t = 1
 
-    coords = np.random.random((5, ndim)) - 0.5
+    coords = rng.random((5, ndim)) - 0.5
     t_arr = [t] * ndim
     trans = AffineTransform.translation(t, ndim)
     trans_arr = AffineTransform.translation(t_arr)
@@ -26,10 +26,10 @@ def test_translation(ndim):
 
 
 @pytest.mark.parametrize(["ndim"], [[d] for d in range(2, 6)])
-def test_scaling(ndim):
+def test_scaling(ndim, rng):
     s = 2
 
-    coords = np.random.random((5, ndim)) - 0.5
+    coords = rng.random((5, ndim)) - 0.5
     trans = AffineTransform.scaling(s, ndim)
     assert np.allclose(trans(coords), coords * s)
     assert np.allclose((-trans)(coords), coords / s)
@@ -52,14 +52,13 @@ def test_rotation2():
         assert np.allclose(coords[0], exp)
 
 
-def test_reflection():
-    raise NotImplementedError
+# def test_reflection():
+#     pass
 
 
-def test_rotation3():
+# def test_rotation3():
+#     pass
 
-    raise NotImplementedError
 
-
-def test_shear():
-    raise NotImplementedError
+# def test_shear():
+#     pass
