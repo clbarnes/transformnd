@@ -95,7 +95,7 @@ class TransformGraph:
             count += 1
             if (tgt, src) not in edges:
                 try:
-                    self.graph.add_edge(tgt, src, transform=-t)
+                    self.graph.add_edge(tgt, src, transform=~t)
                     count += 1
                 except NotImplementedError:
                     pass

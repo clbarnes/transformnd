@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Callable, Dict, Generic, TypeVar
 from functools import partial
+from typing import Callable, Dict, Generic, TypeVar
 
 import numpy as np
 

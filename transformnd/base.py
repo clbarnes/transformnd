@@ -269,7 +269,7 @@ class TransformSequence(Transform):
 
     def __invert__(self) -> Transform:
         try:
-            transforms = [-t for t in reversed(self.transforms)]
+            transforms = [~t for t in reversed(self.transforms)]
         except NotImplementedError:
             return NotImplemented
         return TransformSequence(
