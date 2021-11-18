@@ -9,7 +9,7 @@ def test_identity():
     test = np.array([(1, 1), (2, 3), (-2, 50)])
     ref = test.copy()
     assert np.allclose(i2(test), ref)
-    assert np.allclose((-i2)(test), ref)
+    assert np.allclose((~i2)(test), ref)
 
 
 @pytest.mark.parametrize(["ndim"], [[d] for d in range(2, 6)])
@@ -22,7 +22,7 @@ def test_translation(ndim, rng):
     trans_arr = AffineTransform.translation(t_arr)
     assert np.allclose(trans(coords), coords + t)
     assert np.allclose(trans_arr(coords), coords + t)
-    assert np.allclose((-trans)(coords), coords - t)
+    assert np.allclose((~trans)(coords), coords - t)
 
 
 @pytest.mark.parametrize(["ndim"], [[d] for d in range(2, 6)])
@@ -32,7 +32,7 @@ def test_scaling(ndim, rng):
     coords = rng.random((5, ndim)) - 0.5
     trans = AffineTransform.scaling(s, ndim)
     assert np.allclose(trans(coords), coords * s)
-    assert np.allclose((-trans)(coords), coords / s)
+    assert np.allclose((~trans)(coords), coords / s)
 
     t_arr = [s] * ndim
     trans_arr = AffineTransform.scaling(t_arr)
@@ -46,7 +46,7 @@ def test_rotation2():
     for exp in expected:
         coords = rot90(coords)
         assert np.allclose(coords[0], exp)
-    inv = -rot90
+    inv = ~rot90
     for exp in reversed(expected[:-1]):
         coords = inv(coords)
         assert np.allclose(coords[0], exp)

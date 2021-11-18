@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from transformnd.base import TransformSequence, TransformWrapper
+from transformnd.transforms.simple import Translate
 from transformnd.util import window
 
 
@@ -39,13 +40,12 @@ def test_sequence_errors():
         )
 
 
-def test_sequence_splits():
+def test_sequence_does_not_split():
     t = TransformWrapper(noop)
-    seq1 = t + copy(t)
+    seq1 = t | copy(t)
     seq2 = TransformSequence([copy(t), seq1, copy(t)])
-    assert len(seq2) == 4
-    assert seq2[1] is t
-    assert seq2[2] is not t
+    assert len(seq2) == 3
+    assert seq2[1] is seq1
 
 
 def test_sequence_infers():
@@ -60,14 +60,22 @@ def test_sequence_infers():
 
 def test_add():
     t = [TransformWrapper(noop) for _ in range(5)]
-    t12 = t[1] + t[2]
+    t12 = t[1] | t[2]
     assert isinstance(t12, TransformSequence)
     assert len(t12) == 2
 
-    t123 = t12 + t[3]
+    t123 = t12 | t[3]
     assert len(t123) == 3
     assert t123[2] is t[3]
 
-    t4123 = t[4] + t123
+    t4123 = t[4] | t123
     assert len(t4123) == 4
     assert t4123[0] is t[4]
+
+
+def test_maths():
+    t1 = Translate(1)
+    coords = np.zeros((5, 3))
+
+    assert np.allclose((t1 | ~t1)(coords), coords)
+    assert np.allclose((~t1)(t1(coords)), coords)

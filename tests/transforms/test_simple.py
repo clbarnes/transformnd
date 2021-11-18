@@ -24,7 +24,7 @@ def test_translate_3d(coords5x3):
 
 
 def test_translate_neg(coords5x3):
-    t_neg = -Translate(1)
+    t_neg = ~Translate(1)
     assert np.allclose(t_neg(coords5x3), coords5x3 - 1)
 
 
@@ -40,5 +40,5 @@ def test_scale_3d(coords5x3):
 
 
 def test_scale_neg(coords5x3):
-    t_neg = -Scale(2)
+    t_neg = ~Scale(2)
     assert np.allclose(t_neg(coords5x3), coords5x3 / 2)
