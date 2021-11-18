@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Callable, Dict, Generic, TypeVar
+from functools import partial
 
 import numpy as np
 
@@ -26,6 +27,20 @@ class BaseAdapter(Generic[T], ABC):
         T
         """
         pass
+
+    def partial(self, *args, **kwargs) -> Callable:
+        """Create a partial function with frozen arguments.
+
+        Useful for applying the same transform to many objects,
+        or many transforms to the same object,
+        or for adapters with additional arguments,
+        using the same config repeatedly.
+
+        Returns
+        -------
+        Callable
+        """
+        return partial(self, *args, **kwargs)
 
 
 class NullAdapter(BaseAdapter[np.ndarray]):
