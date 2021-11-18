@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
-from typing import Callable, Dict, Generic, TypeVar
+from typing import Callable, Generic, TypeVar
 
 import numpy as np
 
@@ -67,7 +67,7 @@ class FnAdapter(BaseAdapter[T]):
 
 
 class AttrAdapter(BaseAdapter):
-    def __init__(self, adapters: Dict[str, BaseAdapter]) -> None:
+    def __init__(self, **kwargs: BaseAdapter) -> None:
         """Adapter which transforms an object by applying transforms to its member variables.
 
         Parameters
@@ -76,7 +76,7 @@ class AttrAdapter(BaseAdapter):
             Keys are attribute names, values are adapters with which
             to apply the transform to those attributes.
         """
-        self.adapters = adapters
+        self.adapters = kwargs
 
     def __call__(self, transform: Transform, obj: T, in_place=False) -> T:
         """Apply the given transformation to the object, via its attributes.
