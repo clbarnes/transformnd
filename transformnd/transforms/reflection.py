@@ -1,5 +1,5 @@
-from typing import List, Optional, Sequence, Tuple, Union
 from copy import copy
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
