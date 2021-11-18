@@ -2,9 +2,8 @@ from typing import Hashable, List
 
 import pandas as pd
 
-from transformnd.adapters.base import BaseAdapter
-
 from ..base import Transform
+from .base import BaseAdapter
 
 
 class DataFrameAdapter(BaseAdapter[pd.DataFrame]):

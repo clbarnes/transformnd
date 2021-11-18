@@ -6,6 +6,7 @@ molesq
 morphops
 networkx
 scipy
+pandas
 
 # dev
 
