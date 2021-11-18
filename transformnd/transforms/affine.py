@@ -72,7 +72,7 @@ class AffineTransform(Transform):
         )
         return (self.matrix @ coords.T).T[:, :-1]
 
-    def __neg__(self) -> Transform:
+    def __invert__(self) -> Transform:
         return type(self)(
             np.linalg.inv(self.matrix),
             source_space=self.target_space,

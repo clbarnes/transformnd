@@ -36,7 +36,7 @@ class IdentityTransform(Transform):
             raise ValueError("Source and target spaces are different")
         super().__init__(source_space=src, target_space=src)
 
-    def __neg__(self) -> Transform:
+    def __invert__(self) -> Transform:
         return self
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
@@ -78,7 +78,7 @@ class Translate(Transform):
         self._validate_coords(coords)
         return coords + self.translation
 
-    def __neg__(self) -> Transform:
+    def __invert__(self) -> Transform:
         return type(self)(
             -self.translation,
             source_space=self.target_space,
@@ -123,7 +123,7 @@ class Scale(Transform):
         coords = self._validate_coords(coords)
         return coords * self.scale
 
-    def __neg__(self) -> Transform:
+    def __invert__(self) -> Transform:
         return type(self)(
             1 / self.scale,
             source_space=self.target_space,

@@ -1,4 +1,5 @@
 from typing import List, Optional, Sequence, Tuple, Union
+from copy import copy
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -199,3 +200,6 @@ class Reflect(Transform):
         return cls(
             normals, origin, source_space=source_space, target_space=target_space
         )
+
+    def __invert__(self):
+        return copy(self)

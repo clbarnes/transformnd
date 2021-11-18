@@ -75,7 +75,7 @@ class Transform(ABC):
         """
         pass
 
-    def __neg__(self) -> Transform:
+    def __invert__(self) -> Transform:
         """Invert transformation if possible.
 
         Returns
@@ -85,7 +85,7 @@ class Transform(ABC):
         """
         return NotImplemented
 
-    def __add__(self, other) -> TransformSequence:
+    def __or__(self, other) -> TransformSequence:
         """Compose transformations into a sequence.
 
         If other is a TransformSequence, prepend this transform to the others.
@@ -98,18 +98,14 @@ class Transform(ABC):
         -------
         TransformSequence
         """
-        transforms = [self]
-        if isinstance(other, TransformSequence):
-            transforms.extend(other.transforms)
-        elif isinstance(other, Transform):
-            transforms.append(other)
-        else:
+        if not isinstance(other, Transform):
             return NotImplemented
+        transforms = get_transform_list(self) + get_transform_list(other)
         return TransformSequence(
             transforms, source_space=self.source_space, target_space=other.target_space
         )
 
-    def __radd__(self, other) -> TransformSequence:
+    def __ror__(self, other) -> TransformSequence:
         """Compose transformations into a sequence.
 
         If other is a TransformSequence, append this transform to the others.
@@ -122,13 +118,9 @@ class Transform(ABC):
         -------
         TransformSequence
         """
-        if isinstance(other, TransformSequence):
-            transforms = copy(other.transforms)
-        elif isinstance(other, Transform):
-            transforms = [other]
-        else:
+        if not isinstance(other, Transform):
             return NotImplemented
-        transforms.append(self)
+        transforms = get_transform_list(other) + get_transform_list(self)
         return TransformSequence(
             transforms, source_space=other.source_space, target_space=self.target_space
         )
@@ -204,6 +196,13 @@ def infer_spaces(
     return out
 
 
+def get_transform_list(t: Transform) -> List[Transform]:
+    if isinstance(t, TransformSequence):
+        return t.transforms.copy()
+    else:
+        return [t]
+
+
 class TransformSequence(Transform):
     def __init__(
         self,
@@ -268,7 +267,7 @@ class TransformSequence(Transform):
         """
         return len(self.transforms)
 
-    def __neg__(self) -> Transform:
+    def __invert__(self) -> Transform:
         try:
             transforms = [-t for t in reversed(self.transforms)]
         except NotImplementedError:

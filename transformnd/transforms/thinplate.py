@@ -70,7 +70,7 @@ class ThinPlateSplines(Transform):
             self.target_control_points,
         )
 
-    def __neg__(self) -> Transform:
+    def __invert__(self) -> Transform:
         return ThinPlateSplines(
             self.target_control_points,
             self.source_control_points,
