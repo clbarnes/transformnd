@@ -4,8 +4,8 @@ from typing import Optional
 import morphops as mops
 import numpy as np
 
-from .base import Transform
-from .util import SpaceRef, check_ndim
+from ..base import Transform
+from ..util import SpaceRef, check_ndim
 
 logger = logging.getLogger(__name__)
 

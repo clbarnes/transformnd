@@ -5,8 +5,8 @@ from typing import Container, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import ArrayLike
 
-from .base import Transform
-from .util import SpaceRef, is_square, none_eq
+from ..base import Transform
+from ..util import SpaceRef, is_square, none_eq
 
 
 def arg_as_array(arg: ArrayLike, ndim: Optional[int]):
@@ -134,7 +134,7 @@ class AffineTransform(Transform):
         lin_map = np.asarray(linear_map)
 
         side = len(lin_map) + 1
-        matrix = np.eye(shape=(side, side), dtype=lin_map.dtype)
+        matrix = np.eye(side, dtype=lin_map.dtype)
         matrix[:-1, :] = lin_map
         matrix[:-1, -1] = translation
 

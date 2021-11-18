@@ -3,8 +3,8 @@ from typing import Optional
 import numpy as np
 from numpy.typing import ArrayLike
 
-from .base import Transform
-from .util import SpaceRef, chain_or
+from ..base import Transform
+from ..util import SpaceRef, chain_or
 
 
 class IdentityTransform(Transform):

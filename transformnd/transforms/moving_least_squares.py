@@ -3,8 +3,8 @@ from typing import Optional
 import numpy as np
 from molesq.transform import Transformer as _Transformer
 
-from .base import Transform
-from .util import SpaceRef
+from ..base import Transform
+from ..util import SpaceRef
 
 
 class MovingLeastSquares(Transform):

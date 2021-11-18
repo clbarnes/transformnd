@@ -2,8 +2,8 @@ from typing import List, Optional
 
 import numpy as np
 
-from .base import Transform
-from .util import SpaceRef, is_square
+from ..base import Transform
+from ..util import SpaceRef, is_square
 
 
 def proj(u, v):
