@@ -1,3 +1,6 @@
+"""
+Simple transformations like rigid translation and scaling.
+"""
 from typing import Optional
 
 import numpy as np
@@ -14,6 +17,19 @@ class IdentityTransform(Transform):
         source_space: Optional[SpaceRef] = None,
         target_space: Optional[SpaceRef] = None,
     ):
+        """
+        Transform which does nothing.
+
+        Parameters
+        ----------
+        source_space : Optional[SpaceRef]
+        target_space : Optional[SpaceRef]
+
+        Raises
+        ------
+        ValueError
+            [description]
+        """
         src = chain_or(source_space, target_space, default=None)
         tgt = chain_or(target_space, source_space, default=None)
         if src != tgt:
@@ -35,6 +51,20 @@ class Translate(Transform):
         source_space: Optional[SpaceRef] = None,
         target_space: Optional[SpaceRef] = None,
     ):
+        """Simple translation.
+
+        Parameters
+        ----------
+        translation : scalar or D-length array
+            Translation to apply in all dimensions, or each dimension.
+        source_space : Optional[SpaceRef]
+        target_space : Optional[SpaceRef]
+
+        Raises
+        ------
+        ValueError
+            If the translation is the wrong shape
+        """
         super().__init__(source_space=source_space, target_space=target_space)
         self.translation = np.asarray(translation)
         if self.translation.ndim > 1:
@@ -64,6 +94,22 @@ class Scale(Transform):
         source_space: Optional[SpaceRef] = None,
         target_space: Optional[SpaceRef] = None,
     ):
+        """Simple scale transform.
+
+        All points are scaled, i.e. distance from the origin may also change.
+
+        Parameters
+        ----------
+        scale : scalar or D-length array-like
+            Scaling to apply in all dimensions, or each dimension.
+        source_space : Optional[SpaceRef]
+        target_space : Optional[SpaceRef]
+
+        Raises
+        ------
+        ValueError
+            If scale is the wrong shape.
+        """
         super().__init__(source_space=source_space, target_space=target_space)
         self.scale = np.asarray(scale)
         if self.scale.ndim > 1:

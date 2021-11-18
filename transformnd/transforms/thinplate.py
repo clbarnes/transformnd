@@ -1,3 +1,4 @@
+"""Thin plate splines transformations."""
 import logging
 from typing import Optional
 
@@ -31,9 +32,24 @@ class ThinPlateSplines(Transform):
         source_space: Optional[SpaceRef] = None,
         target_space: Optional[SpaceRef] = None,
     ):
-        """
+        """Non-rigid control point based transforms in 2/3D.
+
         Adapted from
         https://github.com/schlegelp/navis/blob/master/navis/transforms/thinplate.py
+
+        Parameters
+        ----------
+        source_control_points : np.ndarray
+            NxD array of control point coordinates in the source space.
+        target_control_points : np.ndarray
+            NxD array of control point coordinates in the target (deformed) space.
+        source_space : Optional[SpaceRef]
+        target_space : Optional[SpaceRef]
+
+        Raises
+        ------
+        ValueError
+            Invalid control points.
         """
         super().__init__(source_space=source_space, target_space=target_space)
         self.source_control_points = np.asarray(source_control_points)

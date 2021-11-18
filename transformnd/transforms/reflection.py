@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from ..base import Transform
 from ..util import SpaceRef, is_square
@@ -69,25 +70,52 @@ def unitise(v):
     return v / np.linalg.norm(v)
 
 
+def ensure_tuple(obj) -> Tuple:
+    try:
+        return tuple(obj)
+    except TypeError:
+        return (obj,)
+
+
 class Reflect(Transform):
     def __init__(
         self,
-        normals,
-        point=None,
+        normals: ArrayLike,
+        point=0,
         *,
         source_space: Optional[SpaceRef] = None,
         target_space: Optional[SpaceRef] = None,
     ):
+        """Reflection about arbitrary planes.
+
+        Parameters
+        ----------
+        normals : sequence of arrays
+            Normal vectors to the planes of reflection.
+            Unitised internally.
+        point : float or sequence of floats, optional
+            Intersection point of all reflection planes
+            (can be broadcast from scalar), by default 0 (i.e. the origin)
+        source_space : Optional[SpaceRef]
+        target_space : Optional[SpaceRef]
+
+        Raises
+        ------
+        ValueError
+            Inconsistent dimensionality
+        """
         super().__init__(source_space=source_space, target_space=target_space)
-        if point is None:
-            point = 0
+        normals = np.asarray(normals)
+        if normals.ndim == 1:
+            normals = [normals]
+
         n1 = normals[0]
         if not np.isscalar(point) and len(n1) != len(point):
             raise ValueError("Point and normals are not of the same dimensionality")
         self.point = point
         self.ndim = {len(n1)}
         self.normals = [unitise(n) for n in normals]
-        # todo: matmul is associative, so turn this into an affine?
+        # todo: matmul is associative, so turn this into an affine in 2/3D?
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
         coords = self._validate_coords(coords)
@@ -102,26 +130,58 @@ class Reflect(Transform):
     @classmethod
     def from_points(
         cls,
-        points,
+        points: ArrayLike,
         *,
         source_space: Optional[SpaceRef] = None,
         target_space: Optional[SpaceRef] = None,
     ):
-        point, normals = get_hyperplanes(points, unitise=False)
+        """Infer a single plane of reflection from a minimal number of points on it.
+
+        Parameters
+        ----------
+        points :
+            NxD array of N points in D dimensions. N == D
+        source_space : Optional[SpaceRef]
+        target_space : Optional[SpaceRef]
+
+        Returns
+        -------
+        Reflection
+        """
+        point, normals = get_hyperplanes(np.asarray(points), unitise=False)
         return cls(normals, point, source_space=source_space, target_space=target_space)
 
     @classmethod
     def from_axis(
         cls,
-        axis,
-        origin,
+        axis: Union[int, Sequence[int]],
+        origin: ArrayLike,
         *,
         source_space: Optional[SpaceRef] = None,
         target_space: Optional[SpaceRef] = None,
     ):
+        """Reflect around hyperplane(s) parallel with axes.
+
+        Parameters
+        ----------
+        axis : int or sequence of int
+            Index (or indices) of axes in which to reflect.
+        origin : array-like
+            Point around which to reflect.
+        source_space : Optional[SpaceRef]
+        target_space : Optional[SpaceRef]
+
+        Returns
+        -------
+        Reflection
+
+        Raises
+        ------
+        ValueError
+            Selected axis does not exist.
+        """
         origin = np.asarray(origin)
-        if np.isscalar(axis):
-            axis = (axis,)
+        axis = ensure_tuple(axis)
 
         for a in axis:
             if a >= len(axis):

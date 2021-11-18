@@ -1,3 +1,6 @@
+"""
+Rigid transformations implemented as affine multiplications.
+"""
 from __future__ import annotations
 
 from typing import Container, Optional, Tuple, Union

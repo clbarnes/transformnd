@@ -10,18 +10,41 @@ T = TypeVar("T")
 
 
 class BaseAdapter(Generic[T], ABC):
+    """Base class for adapters."""
+
     @abstractmethod
     def __call__(self, transform: Transform, obj: T) -> T:
+        """Apply the given transformation to a non-array object.
+
+        Parameters
+        ----------
+        transform : Transform
+        obj : T
+
+        Returns
+        -------
+        T
+        """
         pass
 
 
 class NullAdapter(BaseAdapter[np.ndarray]):
+    """Adapter which simply applies the transform."""
+
     def __call__(self, transform: Transform, obj: np.ndarray) -> np.ndarray:
         return transform(obj)
 
 
 class FnAdapter(BaseAdapter[T]):
-    def __init__(self, fn: Callable[[Transform, T], T]) -> None:
+    def __init__(self, fn: Callable[[Transform, T], T]):
+        """Adapter which simply wraps a function, for typing purposes.
+
+        Parameters
+        ----------
+        fn : Callable[[Transform, T], T]
+            Function which takes the object,
+            and applies the transformation to it.
+        """
         self.fn = fn
 
     def __call__(self, transform: Transform, obj: T) -> T:
@@ -30,9 +53,31 @@ class FnAdapter(BaseAdapter[T]):
 
 class AttrAdapter(BaseAdapter):
     def __init__(self, adapters: Dict[str, BaseAdapter]) -> None:
+        """Adapter which transforms an object by applying transforms to its member variables.
+
+        Parameters
+        ----------
+        adapters : Dict[str, BaseAdapter]
+            Keys are attribute names, values are adapters with which
+            to apply the transform to those attributes.
+        """
         self.adapters = adapters
 
     def __call__(self, transform: Transform, obj: T, in_place=False) -> T:
+        """Apply the given transformation to the object, via its attributes.
+
+        Parameters
+        ----------
+        transform : Transform
+        obj : T
+        in_place : bool, optional
+            Whether to mutate the given object in place,
+            by default False (i.e. make a deep copy of it).
+
+        Returns
+        -------
+        T
+        """
         if not in_place:
             obj = deepcopy(obj)
 
@@ -45,12 +90,18 @@ class AttrAdapter(BaseAdapter):
 
 
 class Adapter(BaseAdapter, Generic[T], ABC):
+    """
+    Helper class for cases with simple conversion methods.
+    """
+
     @abstractmethod
     def _to_array(self, obj: T) -> np.ndarray:
+        """Convert the object into an array of coordinates."""
         pass
 
     @abstractmethod
     def _from_array(self, coords: np.ndarray) -> T:
+        """Convert an array of coordinates into the correct type."""
         pass
 
     def __call__(self, transform: Transform, obj: T) -> T:

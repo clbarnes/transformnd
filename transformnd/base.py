@@ -88,6 +88,8 @@ class Transform(ABC):
     def __add__(self, other) -> TransformSequence:
         """Compose transformations into a sequence.
 
+        If other is a TransformSequence, prepend this transform to the others.
+
         Parameters
         ----------
         other : Transform
@@ -109,6 +111,8 @@ class Transform(ABC):
 
     def __radd__(self, other) -> TransformSequence:
         """Compose transformations into a sequence.
+
+        If other is a TransformSequence, append this transform to the others.
 
         Parameters
         ----------
@@ -216,6 +220,8 @@ class TransformSequence(Transform):
         Parameters
         ----------
         transforms : List[Transform]
+            Items which are a TransformSequences
+            will each still be treated as a single transform.
         source_space : Optional[SpaceRef]
             Any hashable, to refer to the source space.
             Can also be inferred from the first transform.
@@ -228,14 +234,7 @@ class TransformSequence(Transform):
         ValueError
             If spaces are incompatible.
         """
-        ts = []
-        for t in transforms:
-            if isinstance(t, TransformSequence):
-                ts.extend(t.transforms)
-            else:
-                ts.append(t)
-
-        ts = infer_spaces(ts, source_space, target_space)
+        ts = infer_spaces(transforms, source_space, target_space)
 
         super().__init__(
             source_space=ts[0].source_space,
