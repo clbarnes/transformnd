@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from transformnd.affine import AffineTransform
+from transformnd.transforms.affine import AffineTransform
 
 
 def test_identity():

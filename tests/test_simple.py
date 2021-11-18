@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from transformnd.simple import IdentityTransform, Scale, Translate
+from transformnd.transforms.simple import IdentityTransform, Scale, Translate
 
 
 def test_identity_spaces():
