@@ -6,7 +6,8 @@ The goal is to allow downstream applications which require such transformations
 (e.g. image registration) to be generic over anything inheriting from `transformnd.Transform`.
 
 Heavily inspired by/ cribbed directly from
-[Philipp Schlegel's work in navis](https://github.com/schlegelp/navis/tree/master/navis/transforms).
+[Philipp Schlegel's work in navis](https://github.com/schlegelp/navis/tree/master/navis/transforms);
+co-developed with [xform](https://github.com/schlegelp/xform/) as a red team prototype.
 
 ## Conventions
 
