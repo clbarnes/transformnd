@@ -65,7 +65,7 @@ class FnAdapter(BaseAdapter[T]):
         return self.fn(transform, obj)
 
 
-class AttrAdapter(BaseAdapter):
+class AttrAdapter(BaseAdapter[T]):
     def __init__(self, **kwargs: BaseAdapter) -> None:
         """Adapter which transforms an object by applying transforms to its member variables.
 
