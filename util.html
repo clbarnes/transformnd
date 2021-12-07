@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>transformnd.util API documentation</title>
+<meta name="description" content="Utilities used elsewhere in the package." />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>transformnd.util</code></h1>
+</header>
+<section id="section-intro">
+<p>Utilities used elsewhere in the package.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Utilities used elsewhere in the package.&#34;&#34;&#34;
+from collections import deque
+from typing import (
+    Any,
+    Callable,
+    Deque,
+    Hashable,
+    Iterable,
+    Iterator,
+    Optional,
+    Set,
+    Tuple,
+)
+
+import numpy as np
+
+UNSPECIFIED_SPACE_NAME = &#34;???&#34;
+
+TransformSignature = Callable[[np.ndarray], np.ndarray]
+&#34;&#34;&#34;Type annotation of a function which can be used as a transform.&#34;&#34;&#34;
+
+SpaceRef = Hashable
+&#34;&#34;&#34;Type annotation of things which can be used to refer to spaces&#34;&#34;&#34;
+
+
+def none_eq(a: Optional[Any], b: Optional[Any]) -&gt; bool:
+    &#34;&#34;&#34;Check whether either is None or both are equal.
+
+    Parameters
+    ----------
+    a : Optional[Any]
+    b : Optional[Any]
+
+    Returns
+    -------
+    bool
+    &#34;&#34;&#34;
+    return a == b or a is None or b is None
+
+
+NO_DEFAULT = object()
+
+
+def chain_or(*args: Optional[Any], default=NO_DEFAULT):
+    &#34;&#34;&#34;Return the first of *args which is not None.
+
+    Can either error or return a default if there are no non-None args.
+
+    Parameters
+    ----------
+    default : any, optional
+        By default, raises a ValueError if *args are exhausted.
+        If given, returns the given value instead.
+
+    Returns
+    -------
+    Any
+        One of the given args, or the default.
+
+    Raises
+    ------
+    ValueError
+        If `default` is not given and there are no non-None args.
+    &#34;&#34;&#34;
+    for arg in args:
+        if arg is not None:
+            return arg
+    if default is NO_DEFAULT:
+        raise ValueError(&#34;No non-None arguments&#34;)
+    return default
+
+
+def same_or_none(*args, default=NO_DEFAULT):
+    &#34;&#34;&#34;Check args are the same or None.
+
+    If so, return the non-None value.
+    Otherwise, raise a ValueError.
+
+    Parameters
+    ----------
+    default : Any, optional
+        If given, return this instead of an error
+        if all *args are None.
+
+    Returns
+    -------
+    Any
+        The non-None arg value.
+
+    Raises
+    ------
+    ValueError
+        Arguments are not None, or the same.
+    ValueError
+        No non-None arguments found and no default given.
+    &#34;&#34;&#34;
+    prev = None
+
+    for arg in args:
+        if arg is None:
+            continue
+        if prev is not None and prev != arg:
+            raise ValueError(&#34;Arguments are not None or the same&#34;)
+        prev = arg
+
+    if prev is None:
+        if default is NO_DEFAULT:
+            raise ValueError(&#34;No non-None arguments found&#34;)
+        return default
+
+    return prev
+
+
+def window(iterable: Iterable, length: int) -&gt; Iterator[Tuple[Any, ...]]:
+    &#34;&#34;&#34;Sliding window over iterable.
+
+    e.g. `(it[0], it[1]), (it[1], it[2]), (it[2], it[3]), ...`
+
+    Parameters
+    ----------
+    iterable : Iterable
+    length : int
+        Length of windows to return.
+
+    Yields
+    -------
+    Tuple[Any, ...]
+    &#34;&#34;&#34;
+    it = iter(iterable)
+    q: Deque[Any] = deque(maxlen=length)
+    for _ in range(length):
+        try:
+            item = next(it)
+        except StopIteration:
+            return
+        q.append(item)
+    yield tuple(q)
+    for item in it:
+        q.append(item)
+        yield tuple(q)
+
+
+def flatten(
+    arr,
+    dim_axis=-1,
+    transpose=False,
+) -&gt; Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]:
+    &#34;&#34;&#34;Convert array into 2D, and provide a routine to reclaim original shape.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        Array to be flattened
+    dim_axis : int, optional
+        Which axis contains dimensions, default -1
+    transpose : bool, optional
+        Whether to return DxN array, default False
+
+    Returns
+    -------
+    Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]
+        The flattened array, and a function
+        for converting an identically-shaped flat array
+        into one the same shape as the original.
+
+    Example
+    -------
+    &gt;&gt;&gt; my_coords = np.random.random((30, 20, 3))
+    &gt;&gt;&gt; flat, unflatten = flatten(my_coords)
+    &gt;&gt;&gt; flat.shape == (30*20, 3)
+    &gt;&gt;&gt; recovered = unflatten(flat)
+    &gt;&gt;&gt; np.allclose(recovered, my_coords)
+    &#34;&#34;&#34;
+    # todo: reduce copies if possible
+    if dim_axis &lt; 0:
+        dim_axis = arr.ndim + dim_axis
+    moved = np.moveaxis(arr, dim_axis, -1)
+    m_shape = moved.shape
+
+    flattened = np.reshape(moved, (-1, m_shape[-1]))
+    if transpose:
+        flattened = flattened.T
+
+    def unflatten(flat):
+        if transpose:
+            flat = flat.T
+        return np.moveaxis(np.reshape(flat, m_shape), -1, dim_axis)
+
+    return flattened, unflatten
+
+
+def check_ndim(given_ndim: int, supported_ndim: Optional[Set[int]]):
+    &#34;&#34;&#34;Raise a ValueError if dimensionality is unsupported.
+
+    Parameters
+    ----------
+    given_ndim : int
+        The dimensionality to check.
+    supported_ndim : Optional[Set[int]]
+        Which dimensions are supported.
+        If None, the check passes.
+
+    Raises
+    ------
+    ValueError
+        If supported dimensions are defined and given_ndim is not in them.
+    &#34;&#34;&#34;
+    if supported_ndim is not None and given_ndim not in supported_ndim:
+        raise ValueError(
+            f&#34;Transform supported for {format_dims(supported_ndim)}, not {given_ndim}&#34;
+        )
+
+
+def format_dims(supported):
+    &#34;&#34;&#34;Format supported dimensions for e.g. error messages.
+
+    Parameters
+    ----------
+    supported : Iterable[int]
+        The supported dimensions.
+
+    Returns
+    -------
+    str
+        e.g. &#34;2D/3D/4D&#34;
+    &#34;&#34;&#34;
+    if supported is None:
+        return &#34;ND&#34;
+    if not len(supported):
+        return &#34;nullD&#34;
+    return &#34;/&#34;.join(f&#34;{d}D&#34; for d in sorted(supported))
+
+
+def space_str(space: Optional[SpaceRef]):
+    if space is None:
+        return UNSPECIFIED_SPACE_NAME
+    else:
+        return str(space)
+
+
+def is_square(arr: np.ndarray) -&gt; bool:
+    return arr.ndim == 2 and arr.shape[0] == arr.shape[1]
+
+
+def dim_intersection(dims1: Optional[Set[int]], dims2: Optional[Set[int]]):
+    if dims1 is None:
+        return dims2
+    elif dims2 is None:
+        return dims1
+    else:
+        return dims1.intersection(dims2)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-variables">Global variables</h2>
+<dl>
+<dt id="transformnd.util.SpaceRef"><code class="name">var <span class="ident">SpaceRef</span></code></dt>
+<dd>
+<div class="desc"><p>Type annotation of things which can be used to refer to spaces</p></div>
+</dd>
+<dt id="transformnd.util.TransformSignature"><code class="name">var <span class="ident">TransformSignature</span></code></dt>
+<dd>
+<div class="desc"><p>Type annotation of a function which can be used as a transform.</p></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="transformnd.util.chain_or"><code class="name flex">
+<span>def <span class="ident">chain_or</span></span>(<span>*args: Optional[Any], default=&lt;object object&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the first of *args which is not None.</p>
+<p>Can either error or return a default if there are no non-None args.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>default</code></strong> :&ensp;<code>any</code>, optional</dt>
+<dd>By default, raises a ValueError if *args are exhausted.
+If given, returns the given value instead.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Any</code></dt>
+<dd>One of the given args, or the default.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If <code>default</code> is not given and there are no non-None args.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def chain_or(*args: Optional[Any], default=NO_DEFAULT):
+    &#34;&#34;&#34;Return the first of *args which is not None.
+
+    Can either error or return a default if there are no non-None args.
+
+    Parameters
+    ----------
+    default : any, optional
+        By default, raises a ValueError if *args are exhausted.
+        If given, returns the given value instead.
+
+    Returns
+    -------
+    Any
+        One of the given args, or the default.
+
+    Raises
+    ------
+    ValueError
+        If `default` is not given and there are no non-None args.
+    &#34;&#34;&#34;
+    for arg in args:
+        if arg is not None:
+            return arg
+    if default is NO_DEFAULT:
+        raise ValueError(&#34;No non-None arguments&#34;)
+    return default</code></pre>
+</details>
+</dd>
+<dt id="transformnd.util.check_ndim"><code class="name flex">
+<span>def <span class="ident">check_ndim</span></span>(<span>given_ndim: int, supported_ndim: Optional[Set[int]])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Raise a ValueError if dimensionality is unsupported.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>given_ndim</code></strong> :&ensp;<code>int</code></dt>
+<dd>The dimensionality to check.</dd>
+<dt><strong><code>supported_ndim</code></strong> :&ensp;<code>Optional[Set[int]]</code></dt>
+<dd>Which dimensions are supported.
+If None, the check passes.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If supported dimensions are defined and given_ndim is not in them.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_ndim(given_ndim: int, supported_ndim: Optional[Set[int]]):
+    &#34;&#34;&#34;Raise a ValueError if dimensionality is unsupported.
+
+    Parameters
+    ----------
+    given_ndim : int
+        The dimensionality to check.
+    supported_ndim : Optional[Set[int]]
+        Which dimensions are supported.
+        If None, the check passes.
+
+    Raises
+    ------
+    ValueError
+        If supported dimensions are defined and given_ndim is not in them.
+    &#34;&#34;&#34;
+    if supported_ndim is not None and given_ndim not in supported_ndim:
+        raise ValueError(
+            f&#34;Transform supported for {format_dims(supported_ndim)}, not {given_ndim}&#34;
+        )</code></pre>
+</details>
+</dd>
+<dt id="transformnd.util.dim_intersection"><code class="name flex">
+<span>def <span class="ident">dim_intersection</span></span>(<span>dims1: Optional[Set[int]], dims2: Optional[Set[int]])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dim_intersection(dims1: Optional[Set[int]], dims2: Optional[Set[int]]):
+    if dims1 is None:
+        return dims2
+    elif dims2 is None:
+        return dims1
+    else:
+        return dims1.intersection(dims2)</code></pre>
+</details>
+</dd>
+<dt id="transformnd.util.flatten"><code class="name flex">
+<span>def <span class="ident">flatten</span></span>(<span>arr, dim_axis=-1, transpose=False) ‑> Tuple[numpy.ndarray, Callable[[numpy.ndarray], numpy.ndarray]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert array into 2D, and provide a routine to reclaim original shape.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>arr</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Array to be flattened</dd>
+<dt><strong><code>dim_axis</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Which axis contains dimensions, default -1</dd>
+<dt><strong><code>transpose</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to return DxN array, default False</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]</code></dt>
+<dd>The flattened array, and a function
+for converting an identically-shaped flat array
+into one the same shape as the original.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; my_coords = np.random.random((30, 20, 3))
+&gt;&gt;&gt; flat, unflatten = flatten(my_coords)
+&gt;&gt;&gt; flat.shape == (30*20, 3)
+&gt;&gt;&gt; recovered = unflatten(flat)
+&gt;&gt;&gt; np.allclose(recovered, my_coords)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def flatten(
+    arr,
+    dim_axis=-1,
+    transpose=False,
+) -&gt; Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]:
+    &#34;&#34;&#34;Convert array into 2D, and provide a routine to reclaim original shape.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        Array to be flattened
+    dim_axis : int, optional
+        Which axis contains dimensions, default -1
+    transpose : bool, optional
+        Whether to return DxN array, default False
+
+    Returns
+    -------
+    Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]
+        The flattened array, and a function
+        for converting an identically-shaped flat array
+        into one the same shape as the original.
+
+    Example
+    -------
+    &gt;&gt;&gt; my_coords = np.random.random((30, 20, 3))
+    &gt;&gt;&gt; flat, unflatten = flatten(my_coords)
+    &gt;&gt;&gt; flat.shape == (30*20, 3)
+    &gt;&gt;&gt; recovered = unflatten(flat)
+    &gt;&gt;&gt; np.allclose(recovered, my_coords)
+    &#34;&#34;&#34;
+    # todo: reduce copies if possible
+    if dim_axis &lt; 0:
+        dim_axis = arr.ndim + dim_axis
+    moved = np.moveaxis(arr, dim_axis, -1)
+    m_shape = moved.shape
+
+    flattened = np.reshape(moved, (-1, m_shape[-1]))
+    if transpose:
+        flattened = flattened.T
+
+    def unflatten(flat):
+        if transpose:
+            flat = flat.T
+        return np.moveaxis(np.reshape(flat, m_shape), -1, dim_axis)
+
+    return flattened, unflatten</code></pre>
+</details>
+</dd>
+<dt id="transformnd.util.format_dims"><code class="name flex">
+<span>def <span class="ident">format_dims</span></span>(<span>supported)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Format supported dimensions for e.g. error messages.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>supported</code></strong> :&ensp;<code>Iterable[int]</code></dt>
+<dd>The supported dimensions.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>e.g. "2D/3D/4D"</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def format_dims(supported):
+    &#34;&#34;&#34;Format supported dimensions for e.g. error messages.
+
+    Parameters
+    ----------
+    supported : Iterable[int]
+        The supported dimensions.
+
+    Returns
+    -------
+    str
+        e.g. &#34;2D/3D/4D&#34;
+    &#34;&#34;&#34;
+    if supported is None:
+        return &#34;ND&#34;
+    if not len(supported):
+        return &#34;nullD&#34;
+    return &#34;/&#34;.join(f&#34;{d}D&#34; for d in sorted(supported))</code></pre>
+</details>
+</dd>
+<dt id="transformnd.util.is_square"><code class="name flex">
+<span>def <span class="ident">is_square</span></span>(<span>arr: numpy.ndarray) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_square(arr: np.ndarray) -&gt; bool:
+    return arr.ndim == 2 and arr.shape[0] == arr.shape[1]</code></pre>
+</details>
+</dd>
+<dt id="transformnd.util.none_eq"><code class="name flex">
+<span>def <span class="ident">none_eq</span></span>(<span>a: Optional[Any], b: Optional[Any]) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check whether either is None or both are equal.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>a</code></strong> :&ensp;<code>Optional[Any]</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>b</code></strong> :&ensp;<code>Optional[Any]</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def none_eq(a: Optional[Any], b: Optional[Any]) -&gt; bool:
+    &#34;&#34;&#34;Check whether either is None or both are equal.
+
+    Parameters
+    ----------
+    a : Optional[Any]
+    b : Optional[Any]
+
+    Returns
+    -------
+    bool
+    &#34;&#34;&#34;
+    return a == b or a is None or b is None</code></pre>
+</details>
+</dd>
+<dt id="transformnd.util.same_or_none"><code class="name flex">
+<span>def <span class="ident">same_or_none</span></span>(<span>*args, default=&lt;object object&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check args are the same or None.</p>
+<p>If so, return the non-None value.
+Otherwise, raise a ValueError.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>default</code></strong> :&ensp;<code>Any</code>, optional</dt>
+<dd>If given, return this instead of an error
+if all *args are None.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Any</code></dt>
+<dd>The non-None arg value.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>Arguments are not None, or the same.</dd>
+<dt><code>ValueError</code></dt>
+<dd>No non-None arguments found and no default given.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def same_or_none(*args, default=NO_DEFAULT):
+    &#34;&#34;&#34;Check args are the same or None.
+
+    If so, return the non-None value.
+    Otherwise, raise a ValueError.
+
+    Parameters
+    ----------
+    default : Any, optional
+        If given, return this instead of an error
+        if all *args are None.
+
+    Returns
+    -------
+    Any
+        The non-None arg value.
+
+    Raises
+    ------
+    ValueError
+        Arguments are not None, or the same.
+    ValueError
+        No non-None arguments found and no default given.
+    &#34;&#34;&#34;
+    prev = None
+
+    for arg in args:
+        if arg is None:
+            continue
+        if prev is not None and prev != arg:
+            raise ValueError(&#34;Arguments are not None or the same&#34;)
+        prev = arg
+
+    if prev is None:
+        if default is NO_DEFAULT:
+            raise ValueError(&#34;No non-None arguments found&#34;)
+        return default
+
+    return prev</code></pre>
+</details>
+</dd>
+<dt id="transformnd.util.space_str"><code class="name flex">
+<span>def <span class="ident">space_str</span></span>(<span>space: Optional[Hashable])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def space_str(space: Optional[SpaceRef]):
+    if space is None:
+        return UNSPECIFIED_SPACE_NAME
+    else:
+        return str(space)</code></pre>
+</details>
+</dd>
+<dt id="transformnd.util.window"><code class="name flex">
+<span>def <span class="ident">window</span></span>(<span>iterable: Iterable, length: int) ‑> Iterator[Tuple[Any, ...]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sliding window over iterable.</p>
+<p>e.g. <code>(it[0], it[1]), (it[1], it[2]), (it[2], it[3]), &hellip;</code></p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>iterable</code></strong> :&ensp;<code>Iterable</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>length</code></strong> :&ensp;<code>int</code></dt>
+<dd>Length of windows to return.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><code>Tuple[Any, &hellip;]</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def window(iterable: Iterable, length: int) -&gt; Iterator[Tuple[Any, ...]]:
+    &#34;&#34;&#34;Sliding window over iterable.
+
+    e.g. `(it[0], it[1]), (it[1], it[2]), (it[2], it[3]), ...`
+
+    Parameters
+    ----------
+    iterable : Iterable
+    length : int
+        Length of windows to return.
+
+    Yields
+    -------
+    Tuple[Any, ...]
+    &#34;&#34;&#34;
+    it = iter(iterable)
+    q: Deque[Any] = deque(maxlen=length)
+    for _ in range(length):
+        try:
+            item = next(it)
+        except StopIteration:
+            return
+        q.append(item)
+    yield tuple(q)
+    for item in it:
+        q.append(item)
+        yield tuple(q)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="transformnd" href="index.html">transformnd</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-variables">Global variables</a></h3>
+<ul class="">
+<li><code><a title="transformnd.util.SpaceRef" href="#transformnd.util.SpaceRef">SpaceRef</a></code></li>
+<li><code><a title="transformnd.util.TransformSignature" href="#transformnd.util.TransformSignature">TransformSignature</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="two-column">
+<li><code><a title="transformnd.util.chain_or" href="#transformnd.util.chain_or">chain_or</a></code></li>
+<li><code><a title="transformnd.util.check_ndim" href="#transformnd.util.check_ndim">check_ndim</a></code></li>
+<li><code><a title="transformnd.util.dim_intersection" href="#transformnd.util.dim_intersection">dim_intersection</a></code></li>
+<li><code><a title="transformnd.util.flatten" href="#transformnd.util.flatten">flatten</a></code></li>
+<li><code><a title="transformnd.util.format_dims" href="#transformnd.util.format_dims">format_dims</a></code></li>
+<li><code><a title="transformnd.util.is_square" href="#transformnd.util.is_square">is_square</a></code></li>
+<li><code><a title="transformnd.util.none_eq" href="#transformnd.util.none_eq">none_eq</a></code></li>
+<li><code><a title="transformnd.util.same_or_none" href="#transformnd.util.same_or_none">same_or_none</a></code></li>
+<li><code><a title="transformnd.util.space_str" href="#transformnd.util.space_str">space_str</a></code></li>
+<li><code><a title="transformnd.util.window" href="#transformnd.util.window">window</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
