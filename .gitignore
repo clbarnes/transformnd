@@ -139,5 +139,4 @@ cython_debug/
 
 transformnd/version.py
 
-docs/
 env/
