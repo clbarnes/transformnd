@@ -10,6 +10,7 @@ extras = {
     "thinplatesplines": ["morphops", "scipy"],
     "graph": ["networkx"],
     "movingleastsquares": ["molesq"],
+    "pd": ["pandas"],
 }
 extras["all"] = list(set(chain.from_iterable(extras.values())))
 extras["test"] = ["pytest"]
