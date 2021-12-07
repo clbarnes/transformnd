@@ -15,8 +15,9 @@ co-developed with [xform](https://github.com/schlegelp/xform/) as a red team pro
 `transformnd.flatten()` converts arrays into a compatible shape,
 and provides a routine for returning to the original shape.
 
-If your `Transform` *subclass* is restricted to certain dimensionalities,
-use the `transformnd.limit_ndim()` function in the constructor.
+`Transform` subclasses which are restricted to certain dimensionalities
+can specify this in their `ndim` class variable.
+Instances of `Transform` subclasses can further restrict their `ndim`.
 Use `self._validate_coords(coords)` in `__call__` to ensure the coordinates
 are of valid type and dimensions.
 

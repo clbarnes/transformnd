@@ -1,3 +1,4 @@
+"""Simple adapter cases."""
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
@@ -11,8 +12,6 @@ T = TypeVar("T")
 
 
 class BaseAdapter(Generic[T], ABC):
-    """Base class for adapters."""
-
     @abstractmethod
     def __call__(self, transform: Transform, obj: T) -> T:
         """Apply the given transformation to a non-array object.
@@ -104,7 +103,7 @@ class AttrAdapter(BaseAdapter):
         return obj
 
 
-class Adapter(BaseAdapter, Generic[T], ABC):
+class SimpleAdapter(BaseAdapter, Generic[T], ABC):
     """
     Helper class for cases with simple conversion methods.
     """
