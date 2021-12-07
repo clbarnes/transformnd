@@ -23,8 +23,8 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: '3.x'
-    - run: pip install -e .[all]
-    - run: pip install $(grep -E '^pdoc3' requirements.txt)
+    - run: pip install -r requirements.txt
+    - run: pip install .
     - run: make docs
 
   test:
