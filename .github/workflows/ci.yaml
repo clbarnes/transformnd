@@ -16,6 +16,17 @@ jobs:
       - run: pip install $(grep -E '^(black|flake8|mypy|isort)' requirements.txt)
       - run: make lint
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - run: pip install -e .[all]
+    - run: pip install $(grep -E '^pdoc3' requirements.txt)
+    - run: make docs
+
   test:
     strategy:
       fail-fast: false
@@ -39,7 +50,7 @@ jobs:
 
   deploy-package:
     runs-on: ubuntu-18.04
-    needs: [lint, test]
+    needs: [lint, test, docs]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v2
