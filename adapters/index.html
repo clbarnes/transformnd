@@ -28,10 +28,10 @@ the object to apply it to, and optionally some other arguments.
 The adapter knows how to get coordinates out of the object,
 and then create a new object with those transformed coordinates.</p>
 <p>Classes which compose over transformable objects can be adapted with the
-<code>.<a title="transformnd.adapters.AttrAdapter" href="#transformnd.adapters.AttrAdapter">AttrAdapter</a></code> class.
-See the <code>.<a title="transformnd.adapters.SimpleAdapter" href="#transformnd.adapters.SimpleAdapter">SimpleAdapter</a></code> or <code>.<a title="transformnd.adapters.FnAdapter" href="#transformnd.adapters.FnAdapter">FnAdapter</a></code> for wrapping simple adapting functions.
-Implement your own adapter by inheriting from <code>.<a title="transformnd.adapters.BaseAdapter" href="#transformnd.adapters.BaseAdapter">BaseAdapter</a></code>.</p>
-<p>See <code>.<a title="transformnd.adapters.pd.DataFrameAdapter" href="pd.html#transformnd.adapters.pd.DataFrameAdapter">DataFrameAdapter</a></code> for an example of creating an adapter for an external type.</p>
+<code><a title="transformnd.adapters.AttrAdapter" href="#transformnd.adapters.AttrAdapter">AttrAdapter</a></code> class.
+See the <code><a title="transformnd.adapters.SimpleAdapter" href="#transformnd.adapters.SimpleAdapter">SimpleAdapter</a></code> or <code><a title="transformnd.adapters.FnAdapter" href="#transformnd.adapters.FnAdapter">FnAdapter</a></code> for wrapping simple adapting functions.
+Implement your own adapter by inheriting from <code><a title="transformnd.adapters.BaseAdapter" href="#transformnd.adapters.BaseAdapter">BaseAdapter</a></code>.</p>
+<p>See <code>pd.DataFrameAdapter</code> for an example of creating an adapter for an external type.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -44,11 +44,11 @@ The adapter knows how to get coordinates out of the object,
 and then create a new object with those transformed coordinates.
 
 Classes which compose over transformable objects can be adapted with the
-`.AttrAdapter` class.
-See the `.SimpleAdapter` or `.FnAdapter` for wrapping simple adapting functions.
-Implement your own adapter by inheriting from `.BaseAdapter`.
+`AttrAdapter` class.
+See the `SimpleAdapter` or `FnAdapter` for wrapping simple adapting functions.
+Implement your own adapter by inheriting from `BaseAdapter`.
 
-See `.pd.DataFrameAdapter` for an example of creating an adapter for an external type.
+See `pd.DataFrameAdapter` for an example of creating an adapter for an external type.
 
 &#34;&#34;&#34;
 from .base import AttrAdapter, BaseAdapter, FnAdapter, SimpleAdapter
@@ -63,9 +63,17 @@ __all__ = [&#34;BaseAdapter&#34;, &#34;SimpleAdapter&#34;, &#34;FnAdapter&#34;, 
 <dd>
 <div class="desc"><p>Simple adapter cases.</p></div>
 </dd>
-<dt><code class="name"><a title="transformnd.adapters.pd" href="pd.html">transformnd.adapters.pd</a></code></dt>
+<dt><code class="name"><a title="transformnd.adapters.meshio" href="meshio.html">transformnd.adapters.meshio</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="transformnd.adapters.pandas" href="pandas.html">transformnd.adapters.pandas</a></code></dt>
 <dd>
 <div class="desc"><p>Adapt pandas DataFrames for transformation.</p></div>
+</dd>
+<dt><code class="name"><a title="transformnd.adapters.shapely" href="shapely.html">transformnd.adapters.shapely</a></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 </dl>
 </section>
@@ -106,7 +114,7 @@ to apply the transform to those attributes.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AttrAdapter(BaseAdapter):
+<pre><code class="python">class AttrAdapter(BaseAdapter[T]):
     def __init__(self, **kwargs: BaseAdapter) -&gt; None:
         &#34;&#34;&#34;Adapter which transforms an object by applying transforms to its member variables.
 
@@ -148,6 +156,10 @@ to apply the transform to those attributes.</dd>
 <li><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></li>
 <li>typing.Generic</li>
 <li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="transformnd.adapters.meshio.MeshAdapter" href="meshio.html#transformnd.adapters.meshio.MeshAdapter">MeshAdapter</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -221,7 +233,8 @@ return default</p></div>
 <li><a title="transformnd.adapters.base.FnAdapter" href="base.html#transformnd.adapters.base.FnAdapter">FnAdapter</a></li>
 <li><a title="transformnd.adapters.base.NullAdapter" href="base.html#transformnd.adapters.base.NullAdapter">NullAdapter</a></li>
 <li><a title="transformnd.adapters.base.SimpleAdapter" href="base.html#transformnd.adapters.base.SimpleAdapter">SimpleAdapter</a></li>
-<li><a title="transformnd.adapters.pd.DataFrameAdapter" href="pd.html#transformnd.adapters.pd.DataFrameAdapter">DataFrameAdapter</a></li>
+<li><a title="transformnd.adapters.pandas.DataFrameAdapter" href="pandas.html#transformnd.adapters.pandas.DataFrameAdapter">DataFrameAdapter</a></li>
+<li><a title="transformnd.adapters.shapely.GeometryAdapter" href="shapely.html#transformnd.adapters.shapely.GeometryAdapter">GeometryAdapter</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -381,7 +394,9 @@ and applies the transformation to it.</dd>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="transformnd.adapters.base" href="base.html">transformnd.adapters.base</a></code></li>
-<li><code><a title="transformnd.adapters.pd" href="pd.html">transformnd.adapters.pd</a></code></li>
+<li><code><a title="transformnd.adapters.meshio" href="meshio.html">transformnd.adapters.meshio</a></code></li>
+<li><code><a title="transformnd.adapters.pandas" href="pandas.html">transformnd.adapters.pandas</a></code></li>
+<li><code><a title="transformnd.adapters.shapely" href="shapely.html">transformnd.adapters.shapely</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

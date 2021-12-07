@@ -94,7 +94,7 @@ class FnAdapter(BaseAdapter[T]):
         return self.fn(transform, obj)
 
 
-class AttrAdapter(BaseAdapter):
+class AttrAdapter(BaseAdapter[T]):
     def __init__(self, **kwargs: BaseAdapter) -&gt; None:
         &#34;&#34;&#34;Adapter which transforms an object by applying transforms to its member variables.
 
@@ -192,7 +192,7 @@ to apply the transform to those attributes.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AttrAdapter(BaseAdapter):
+<pre><code class="python">class AttrAdapter(BaseAdapter[T]):
     def __init__(self, **kwargs: BaseAdapter) -&gt; None:
         &#34;&#34;&#34;Adapter which transforms an object by applying transforms to its member variables.
 
@@ -234,6 +234,10 @@ to apply the transform to those attributes.</dd>
 <li><a title="transformnd.adapters.base.BaseAdapter" href="#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></li>
 <li>typing.Generic</li>
 <li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="transformnd.adapters.meshio.MeshAdapter" href="meshio.html#transformnd.adapters.meshio.MeshAdapter">MeshAdapter</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -307,7 +311,8 @@ return default</p></div>
 <li><a title="transformnd.adapters.base.FnAdapter" href="#transformnd.adapters.base.FnAdapter">FnAdapter</a></li>
 <li><a title="transformnd.adapters.base.NullAdapter" href="#transformnd.adapters.base.NullAdapter">NullAdapter</a></li>
 <li><a title="transformnd.adapters.base.SimpleAdapter" href="#transformnd.adapters.base.SimpleAdapter">SimpleAdapter</a></li>
-<li><a title="transformnd.adapters.pd.DataFrameAdapter" href="pd.html#transformnd.adapters.pd.DataFrameAdapter">DataFrameAdapter</a></li>
+<li><a title="transformnd.adapters.pandas.DataFrameAdapter" href="pandas.html#transformnd.adapters.pandas.DataFrameAdapter">DataFrameAdapter</a></li>
+<li><a title="transformnd.adapters.shapely.GeometryAdapter" href="shapely.html#transformnd.adapters.shapely.GeometryAdapter">GeometryAdapter</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>

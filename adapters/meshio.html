@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>transformnd.adapters.pd API documentation</title>
-<meta name="description" content="Adapt pandas DataFrames for transformation." />
+<title>transformnd.adapters.meshio API documentation</title>
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,58 +19,27 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>transformnd.adapters.pd</code></h1>
+<h1 class="title">Module <code>transformnd.adapters.meshio</code></h1>
 </header>
 <section id="section-intro">
-<p>Adapt pandas DataFrames for transformation.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Adapt pandas DataFrames for transformation.&#34;&#34;&#34;
-from typing import Hashable, List
+<pre><code class="python">from meshio import Mesh
 
-import pandas as pd
-
-from ..base import Transform
-from .base import BaseAdapter
+from .base import AttrAdapter, NullAdapter
 
 
-class DataFrameAdapter(BaseAdapter[pd.DataFrame]):
-    def __init__(self, columns: List[Hashable]):
-        &#34;&#34;&#34;Adapt transformation for coordinates stored in a pandas DataFrame.
+class MeshAdapter(AttrAdapter[Mesh]):
+    &#34;&#34;&#34;Transform meshio.Mesh objects.
 
-        Parameters
-        ----------
-        columns : list of keys
-            Keys for columns containing coordinates, e.g. ``[&#34;x&#34;, &#34;y&#34;, &#34;z&#34;]``
-        &#34;&#34;&#34;
-        self.columns = columns
+    N.B. Some transformations may create invalid meshes
+    (incorrect winding, self-intersections, inversions etc.).
+    &#34;&#34;&#34;
 
-    def __call__(
-        self, transform: Transform, df: pd.DataFrame, in_place=False
-    ) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;Transform the dataframe, optionally in-place.
-
-        Parameters
-        ----------
-        transform : Transform
-        df : pd.DataFrame
-
-        in_place : bool, optional
-            Whether to mutate the dataframe in place,
-            by default False (i.e. make a copy of it).
-
-        Returns
-        -------
-        pandas.DataFrame
-        &#34;&#34;&#34;
-        coords = df[self.columns].to_numpy()
-        transformed = transform(coords)
-        if not in_place:
-            df = df.copy()
-        df[self.columns] = transformed
-        return df</code></pre>
+    def __init__(self):
+        super().__init__(points=NullAdapter())</code></pre>
 </details>
 </section>
 <section>
@@ -82,82 +51,46 @@ class DataFrameAdapter(BaseAdapter[pd.DataFrame]):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="transformnd.adapters.pd.DataFrameAdapter"><code class="flex name class">
-<span>class <span class="ident">DataFrameAdapter</span></span>
-<span>(</span><span>columns: List[Hashable])</span>
+<dt id="transformnd.adapters.meshio.MeshAdapter"><code class="flex name class">
+<span>class <span class="ident">MeshAdapter</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Abstract base class for generic types.</p>
-<p>A generic type is typically declared by inheriting from
-this class parameterized with one or more type variables.
-For example, a generic mapping type might be defined as::</p>
-<p>class Mapping(Generic[KT, VT]):
-def <strong>getitem</strong>(self, key: KT) -&gt; VT:
-&hellip;
-# Etc.</p>
-<p>This class can then be used as follows::</p>
-<p>def lookup_name(mapping: Mapping[KT, VT], key: KT, default: VT) -&gt; VT:
-try:
-return mapping[key]
-except KeyError:
-return default</p>
-<p>Adapt transformation for coordinates stored in a pandas DataFrame.</p>
+<div class="desc"><p>Transform meshio.Mesh objects.</p>
+<p>N.B. Some transformations may create invalid meshes
+(incorrect winding, self-intersections, inversions etc.).</p>
+<p>Adapter which transforms an object by applying transforms to its member variables.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>columns</code></strong> :&ensp;<code>list</code> of <code>keys</code></dt>
-<dd>Keys for columns containing coordinates, e.g. <code>["x", "y", "z"]</code></dd>
+<dt><strong><code>adapters</code></strong> :&ensp;<code>Dict[str, BaseAdapter]</code></dt>
+<dd>Keys are attribute names, values are adapters with which
+to apply the transform to those attributes.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DataFrameAdapter(BaseAdapter[pd.DataFrame]):
-    def __init__(self, columns: List[Hashable]):
-        &#34;&#34;&#34;Adapt transformation for coordinates stored in a pandas DataFrame.
+<pre><code class="python">class MeshAdapter(AttrAdapter[Mesh]):
+    &#34;&#34;&#34;Transform meshio.Mesh objects.
 
-        Parameters
-        ----------
-        columns : list of keys
-            Keys for columns containing coordinates, e.g. ``[&#34;x&#34;, &#34;y&#34;, &#34;z&#34;]``
-        &#34;&#34;&#34;
-        self.columns = columns
+    N.B. Some transformations may create invalid meshes
+    (incorrect winding, self-intersections, inversions etc.).
+    &#34;&#34;&#34;
 
-    def __call__(
-        self, transform: Transform, df: pd.DataFrame, in_place=False
-    ) -&gt; pd.DataFrame:
-        &#34;&#34;&#34;Transform the dataframe, optionally in-place.
-
-        Parameters
-        ----------
-        transform : Transform
-        df : pd.DataFrame
-
-        in_place : bool, optional
-            Whether to mutate the dataframe in place,
-            by default False (i.e. make a copy of it).
-
-        Returns
-        -------
-        pandas.DataFrame
-        &#34;&#34;&#34;
-        coords = df[self.columns].to_numpy()
-        transformed = transform(coords)
-        if not in_place:
-            df = df.copy()
-        df[self.columns] = transformed
-        return df</code></pre>
+    def __init__(self):
+        super().__init__(points=NullAdapter())</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="transformnd.adapters.base.AttrAdapter" href="base.html#transformnd.adapters.base.AttrAdapter">AttrAdapter</a></li>
 <li><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></li>
 <li>typing.Generic</li>
 <li>abc.ABC</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></b></code>:
+<li><code><b><a title="transformnd.adapters.base.AttrAdapter" href="base.html#transformnd.adapters.base.AttrAdapter">AttrAdapter</a></b></code>:
 <ul class="hlist">
-<li><code><a title="transformnd.adapters.base.BaseAdapter.partial" href="base.html#transformnd.adapters.base.BaseAdapter.partial">partial</a></code></li>
+<li><code><a title="transformnd.adapters.base.AttrAdapter.partial" href="base.html#transformnd.adapters.base.BaseAdapter.partial">partial</a></code></li>
 </ul>
 </li>
 </ul>
@@ -179,7 +112,7 @@ return default</p>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="transformnd.adapters.pd.DataFrameAdapter" href="#transformnd.adapters.pd.DataFrameAdapter">DataFrameAdapter</a></code></h4>
+<h4><code><a title="transformnd.adapters.meshio.MeshAdapter" href="#transformnd.adapters.meshio.MeshAdapter">MeshAdapter</a></code></h4>
 </li>
 </ul>
 </li>
