@@ -13,6 +13,6 @@ Implement your own adapter by inheriting from `BaseAdapter`.
 See `pd.DataFrameAdapter` for an example of creating an adapter for an external type.
 
 """
-from .base import AttrAdapter, BaseAdapter, FnAdapter, SimpleAdapter, NullAdapter
+from .base import AttrAdapter, BaseAdapter, FnAdapter, NullAdapter, SimpleAdapter
 
 __all__ = ["BaseAdapter", "SimpleAdapter", "NullAdapter", "FnAdapter", "AttrAdapter"]

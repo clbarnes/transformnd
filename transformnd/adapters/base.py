@@ -98,7 +98,7 @@ class AttrAdapter(BaseAdapter[T]):
         for k, v in self.adapters.items():
             member = getattr(obj, k)
             try:
-                transformed = v(transform, member, in_place=True)
+                transformed = v(transform, member, in_place=True)  # type: ignore
             except TypeError as e:
                 if "got an unexpected keyword argument: 'in_place'" in str(e):
                     transformed = v(transform, member)
