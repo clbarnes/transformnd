@@ -31,3 +31,10 @@ clean-docs:
 docs: clean-docs
 	mkdir docs \
 	&& pdoc --html --output-dir docs transformnd
+
+.PHONY: clean-ipynb
+clean-ipynb:
+	jupyter nbconvert --clear-output --inplace examples/*.ipynb
+
+.PHONY: clean
+clean: clean-docs clean-ipynb
