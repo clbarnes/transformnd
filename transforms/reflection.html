@@ -363,7 +363,7 @@ class Reflect(Transform):
 <dl>
 <dt id="transformnd.transforms.reflection.Reflect"><code class="flex name class">
 <span>class <span class="ident">Reflect</span></span>
-<span>(</span><span>normals: Union[Sequence[Sequence[Sequence[Sequence[Sequence[Any]]]]], numpy._array_like._SupportsArray[numpy.dtype], Sequence[numpy._array_like._SupportsArray[numpy.dtype]], Sequence[Sequence[numpy._array_like._SupportsArray[numpy.dtype]]], Sequence[Sequence[Sequence[numpy._array_like._SupportsArray[numpy.dtype]]]], Sequence[Sequence[Sequence[Sequence[numpy._array_like._SupportsArray[numpy.dtype]]]]], bool, int, float, complex, str, bytes, Sequence[Union[bool, int, float, complex, str, bytes]], Sequence[Sequence[Union[bool, int, float, complex, str, bytes]]], Sequence[Sequence[Sequence[Union[bool, int, float, complex, str, bytes]]]], Sequence[Sequence[Sequence[Sequence[Union[bool, int, float, complex, str, bytes]]]]]], point=0, *, source_space: Optional[Hashable] = None, target_space: Optional[Hashable] = None)</span>
+<span>(</span><span>normals: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], point=0, *, source_space: Optional[Hashable] = None, target_space: Optional[Hashable] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -525,7 +525,7 @@ Unitised internally.</dd>
 <h3>Static methods</h3>
 <dl>
 <dt id="transformnd.transforms.reflection.Reflect.from_axis"><code class="name flex">
-<span>def <span class="ident">from_axis</span></span>(<span>axis: Union[int, Sequence[int]], origin: Union[Sequence[Sequence[Sequence[Sequence[Sequence[Any]]]]], numpy._array_like._SupportsArray[numpy.dtype], Sequence[numpy._array_like._SupportsArray[numpy.dtype]], Sequence[Sequence[numpy._array_like._SupportsArray[numpy.dtype]]], Sequence[Sequence[Sequence[numpy._array_like._SupportsArray[numpy.dtype]]]], Sequence[Sequence[Sequence[Sequence[numpy._array_like._SupportsArray[numpy.dtype]]]]], bool, int, float, complex, str, bytes, Sequence[Union[bool, int, float, complex, str, bytes]], Sequence[Sequence[Union[bool, int, float, complex, str, bytes]]], Sequence[Sequence[Sequence[Union[bool, int, float, complex, str, bytes]]]], Sequence[Sequence[Sequence[Sequence[Union[bool, int, float, complex, str, bytes]]]]]], *, source_space: Optional[Hashable] = None, target_space: Optional[Hashable] = None)</span>
+<span>def <span class="ident">from_axis</span></span>(<span>axis: Union[int, Sequence[int]], origin: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], *, source_space: Optional[Hashable] = None, target_space: Optional[Hashable] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reflect around hyperplane(s) parallel with axes.</p>
@@ -605,7 +605,7 @@ def from_axis(
 </details>
 </dd>
 <dt id="transformnd.transforms.reflection.Reflect.from_points"><code class="name flex">
-<span>def <span class="ident">from_points</span></span>(<span>points: Union[Sequence[Sequence[Sequence[Sequence[Sequence[Any]]]]], numpy._array_like._SupportsArray[numpy.dtype], Sequence[numpy._array_like._SupportsArray[numpy.dtype]], Sequence[Sequence[numpy._array_like._SupportsArray[numpy.dtype]]], Sequence[Sequence[Sequence[numpy._array_like._SupportsArray[numpy.dtype]]]], Sequence[Sequence[Sequence[Sequence[numpy._array_like._SupportsArray[numpy.dtype]]]]], bool, int, float, complex, str, bytes, Sequence[Union[bool, int, float, complex, str, bytes]], Sequence[Sequence[Union[bool, int, float, complex, str, bytes]]], Sequence[Sequence[Sequence[Union[bool, int, float, complex, str, bytes]]]], Sequence[Sequence[Sequence[Sequence[Union[bool, int, float, complex, str, bytes]]]]]], *, source_space: Optional[Hashable] = None, target_space: Optional[Hashable] = None)</span>
+<span>def <span class="ident">from_points</span></span>(<span>points: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], *, source_space: Optional[Hashable] = None, target_space: Optional[Hashable] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Infer a single plane of reflection from a minimal number of points on it.</p>

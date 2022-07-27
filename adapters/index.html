@@ -51,9 +51,9 @@ Implement your own adapter by inheriting from `BaseAdapter`.
 See `pd.DataFrameAdapter` for an example of creating an adapter for an external type.
 
 &#34;&#34;&#34;
-from .base import AttrAdapter, BaseAdapter, FnAdapter, SimpleAdapter
+from .base import AttrAdapter, BaseAdapter, FnAdapter, SimpleAdapter, NullAdapter
 
-__all__ = [&#34;BaseAdapter&#34;, &#34;SimpleAdapter&#34;, &#34;FnAdapter&#34;, &#34;AttrAdapter&#34;]</code></pre>
+__all__ = [&#34;BaseAdapter&#34;, &#34;SimpleAdapter&#34;, &#34;NullAdapter&#34;, &#34;FnAdapter&#34;, &#34;AttrAdapter&#34;]</code></pre>
 </details>
 </section>
 <section>
@@ -146,7 +146,13 @@ to apply the transform to those attributes.</dd>
 
         for k, v in self.adapters.items():
             member = getattr(obj, k)
-            transformed = v(transform, member)
+            try:
+                transformed = v(transform, member, in_place=True)
+            except TypeError as e:
+                if &#34;got an unexpected keyword argument: &#39;in_place&#39;&#34; in str(e):
+                    transformed = v(transform, member)
+                else:
+                    raise e
             setattr(obj, k, transformed)
 
         return obj</code></pre>
@@ -333,6 +339,36 @@ and applies the transformation to it.</dd>
 </li>
 </ul>
 </dd>
+<dt id="transformnd.adapters.NullAdapter"><code class="flex name class">
+<span>class <span class="ident">NullAdapter</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adapter which simply applies the transform.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NullAdapter(BaseAdapter[np.ndarray]):
+    &#34;&#34;&#34;Adapter which simply applies the transform.&#34;&#34;&#34;
+
+    def __call__(self, transform: Transform, obj: np.ndarray) -&gt; np.ndarray:
+        return transform(obj)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></b></code>:
+<ul class="hlist">
+<li><code><a title="transformnd.adapters.base.BaseAdapter.partial" href="base.html#transformnd.adapters.base.BaseAdapter.partial">partial</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="transformnd.adapters.SimpleAdapter"><code class="flex name class">
 <span>class <span class="ident">SimpleAdapter</span></span>
 </code></dt>
@@ -412,6 +448,9 @@ and applies the transformation to it.</dd>
 </li>
 <li>
 <h4><code><a title="transformnd.adapters.FnAdapter" href="#transformnd.adapters.FnAdapter">FnAdapter</a></code></h4>
+</li>
+<li>
+<h4><code><a title="transformnd.adapters.NullAdapter" href="#transformnd.adapters.NullAdapter">NullAdapter</a></code></h4>
 </li>
 <li>
 <h4><code><a title="transformnd.adapters.SimpleAdapter" href="#transformnd.adapters.SimpleAdapter">SimpleAdapter</a></code></h4>
