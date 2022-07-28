@@ -41,7 +41,7 @@ class MovingLeastSquares(Transform):
         return self._transformer.transform(coords)
 
     def __invert__(self) -> Transform:
-        return MovingLeastSquares(
+        return type(self)(
             self._transformer.deformed_control_points,
             self._transformer.control_points,
             spaces=self.spaces[::-1],

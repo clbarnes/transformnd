@@ -275,7 +275,7 @@ class TransformSequence(Transform):
             transforms = [~t for t in reversed(self.transforms)]
         except NotImplementedError:
             return NotImplemented
-        return TransformSequence(
+        return type(self)(
             transforms,
             spaces=self.spaces[::-1],
         )
