@@ -38,3 +38,7 @@ clean-ipynb:
 
 .PHONY: clean
 clean: clean-docs clean-ipynb
+
+.PHONY: run-ipynb
+run-ipynb:
+	jupyter nbconvert --to notebook --inplace --execute examples/*.ipynb

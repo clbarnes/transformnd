@@ -100,7 +100,7 @@ class AttrAdapter(BaseAdapter[T]):
             try:
                 transformed = v(transform, member, in_place=True)  # type: ignore
             except TypeError as e:
-                if "got an unexpected keyword argument: 'in_place'" in str(e):
+                if "got an unexpected keyword argument 'in_place'" in str(e):
                     transformed = v(transform, member)
                 else:
                     raise e
