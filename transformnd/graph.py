@@ -126,7 +126,8 @@ class TransformGraph:
                 self.graph.edges[src, tgt]["transform"] for src, tgt in window(path, 2)
             ]
         return TransformSequence(
-            transforms, source_space=source_space, target_space=target_space
+            transforms,
+            spaces=(source_space, target_space),
         )
 
     def transform(

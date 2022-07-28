@@ -8,8 +8,8 @@ from typing import Container, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ..base import Transform
-from ..util import SpaceRef, is_square, none_eq
+from ..base import SpaceTuple, Transform
+from ..util import is_square, none_eq
 
 
 def arg_as_array(arg: ArrayLike, ndim: Optional[int]):
@@ -28,8 +28,7 @@ class AffineTransform(Transform):
         self,
         matrix: ArrayLike,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         """Affine transformation using an augmented matrix.
 
@@ -40,15 +39,15 @@ class AffineTransform(Transform):
         ----------
         matrix : ArrayLike
             Affine transformation matrix.
-        source_space : Optional[SpaceRef], optional
-        target_space : Optional[SpaceRef], optional
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             Malformed matrix.
         """
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         m = np.asarray(matrix)
 
         if m.ndim != 2:
@@ -75,8 +74,7 @@ class AffineTransform(Transform):
     def __invert__(self) -> Transform:
         return type(self)(
             np.linalg.inv(self.matrix),
-            source_space=self.target_space,
-            target_space=self.source_space,
+            spaces=self.spaces[::-1],
         )
 
     def __matmul__(self, rhs: AffineTransform) -> AffineTransform:
@@ -105,8 +103,7 @@ class AffineTransform(Transform):
             raise ValueError("Affine transforms do not share a space")
         return AffineTransform(
             self.matrix @ rhs.matrix,
-            source_space=self.source_space,
-            target_space=rhs.target_space,
+            spaces=(self.source_space, rhs.target_space),
         )
 
     @classmethod
@@ -115,8 +112,7 @@ class AffineTransform(Transform):
         linear_map: ArrayLike,
         translation=0,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ) -> AffineTransform:
         """Create an augmented affine matrix from a linear map,
         with an optional translation.
@@ -127,8 +123,8 @@ class AffineTransform(Transform):
             Shape (D, D)
         translation : ArrayLike, optional
             Translation to add to the matrix, by default None
-        source_space : Optional[SpaceRef], optional
-        target_space : Optional[SpaceRef], optional
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Returns
         -------
@@ -141,30 +137,30 @@ class AffineTransform(Transform):
         matrix[:-1, :] = lin_map
         matrix[:-1, -1] = translation
 
-        return cls(matrix, source_space=source_space, target_space=target_space)
+        return cls(matrix, spaces=spaces)
 
     @classmethod
     def identity(
         cls,
         ndim: int,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ) -> AffineTransform:
         """Create an identity affine transformation.
 
         Parameters
         ----------
         ndim : int
-        source_space : Optional[SpaceRef], optional
-        target_space : Optional[SpaceRef], optional
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Returns
         -------
         AffineTransform
         """
         return cls(
-            np.eye(ndim + 1), source_space=source_space, target_space=target_space
+            np.eye(ndim + 1),
+            spaces=spaces,
         )
 
     @classmethod
@@ -173,8 +169,7 @@ class AffineTransform(Transform):
         translation: ArrayLike,
         ndim: Optional[int] = None,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ) -> AffineTransform:
         """Create an affine translation.
 
@@ -184,8 +179,8 @@ class AffineTransform(Transform):
             If scalar, broadcast to ndim.
         ndim : int, optional
             If translation is scalar, how many dims to use.
-        source_space : Optional[SpaceRef], optional
-        target_space : Optional[SpaceRef], optional
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Returns
         -------
@@ -195,7 +190,7 @@ class AffineTransform(Transform):
         m = np.eye(len(t) + 1, dtype=t.dtype)
         m[:-1, -1] = t
 
-        return cls(m, source_space=source_space, target_space=target_space)
+        return cls(m, spaces=spaces)
 
     @classmethod
     def scaling(
@@ -203,8 +198,7 @@ class AffineTransform(Transform):
         scale: ArrayLike,
         ndim: Optional[int] = None,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ) -> AffineTransform:
         """Create an affine scaling.
 
@@ -214,8 +208,8 @@ class AffineTransform(Transform):
             If scalar, broadcast to ndim.
         ndim : Optional[int], optional
             If scale is scalar, how many dimensions to use
-        source_space : Optional[SpaceRef], optional
-        target_space : Optional[SpaceRef], optional
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Returns
         -------
@@ -226,7 +220,7 @@ class AffineTransform(Transform):
         m = np.eye(len(s) + 1, dtype=s.dtype)
         m[:-1, :-1] *= s
 
-        return cls(m, source_space=source_space, target_space=target_space)
+        return cls(m, spaces=spaces)
 
     @classmethod
     def reflection(
@@ -234,8 +228,7 @@ class AffineTransform(Transform):
         axis: Union[int, Container[int]],
         ndim: int,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ) -> AffineTransform:
         """Create an affine reflection.
 
@@ -245,8 +238,8 @@ class AffineTransform(Transform):
             A single axis or multiple to reflect in.
         ndim : int
             How many dimensions to work in.
-        source_space : Optional[SpaceRef], optional
-        target_space : Optional[SpaceRef], optional
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Returns
         -------
@@ -258,7 +251,7 @@ class AffineTransform(Transform):
         m = np.eye(ndim + 1)
         m[:-1, :-1] *= values
 
-        return cls(m, source_space=source_space, target_space=target_space)
+        return cls(m, spaces=spaces)
 
     @classmethod
     def rotation2(
@@ -267,8 +260,7 @@ class AffineTransform(Transform):
         degrees=True,
         clockwise=False,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ) -> AffineTransform:
         """Create a 2D affine rotation.
 
@@ -280,8 +272,8 @@ class AffineTransform(Transform):
             Whether rotation is in degrees (rather than radians), by default True
         clockwise : bool, optional
             Whether rotation is clockwise, by default False
-        source_space : Optional[SpaceRef], optional
-        target_space : Optional[SpaceRef], optional
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Returns
         -------
@@ -299,7 +291,7 @@ class AffineTransform(Transform):
         m = np.eye(3)
         m[:-1, :-1] = vals
 
-        return cls(m, source_space=source_space, target_space=target_space)
+        return cls(m, spaces=spaces)
 
     @classmethod
     def rotation3(
@@ -309,8 +301,7 @@ class AffineTransform(Transform):
         clockwise=False,
         order=(0, 1, 2),
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ) -> AffineTransform:
         """Create a 3D affine rotation.
 
@@ -324,8 +315,8 @@ class AffineTransform(Transform):
             Whether rotation is clockwise, by default False
         order : tuple, optional
             What order to apply the rotations, by default (0, 1, 2)
-        source_space : Optional[SpaceRef], optional
-        target_space : Optional[SpaceRef], optional
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Returns
         -------
@@ -382,7 +373,7 @@ class AffineTransform(Transform):
         m = np.eye(4)
         m[:-1, :-1] = rot
 
-        return cls(m, source_space=source_space, target_space=target_space)
+        return cls(m, spaces=spaces)
 
     @classmethod
     def shearing(
@@ -390,8 +381,7 @@ class AffineTransform(Transform):
         factor: Union[float, np.ndarray],
         ndim: Optional[int] = None,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ) -> AffineTransform:
         """Create an affine shear.
 
@@ -408,8 +398,8 @@ class AffineTransform(Transform):
             Shear scale factors; see above for more details.
         ndim : Optional[int], optional
             If factor is scalar, broadcast to this many dimensions, by default None
-        source_space : Optional[SpaceRef], optional
-        target_space : Optional[SpaceRef], optional
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Returns
         -------
@@ -437,4 +427,4 @@ class AffineTransform(Transform):
                 if m[row_idx, col_idx] == 0:
                     m[row_idx, col_idx] = next(it)
 
-        return cls(m, source_space=source_space, target_space=target_space)
+        return cls(m, spaces=spaces)

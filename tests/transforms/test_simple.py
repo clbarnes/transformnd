@@ -5,11 +5,11 @@ from transformnd.transforms.simple import IdentityTransform, Scale, Translate
 
 
 def test_identity_spaces():
-    t = IdentityTransform(source_space=1)
+    t = IdentityTransform(spaces=(1, 1))
     assert t.target_space == 1
 
     with pytest.raises(ValueError):
-        IdentityTransform(source_space=1, target_space=2)
+        IdentityTransform(spaces=(1, 2))
 
 
 def test_translate_nd(coords5x3):

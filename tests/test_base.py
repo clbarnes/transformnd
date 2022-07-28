@@ -13,7 +13,7 @@ def noop(arg):
 
 
 def test_transform(coords5x3):
-    t = TransformWrapper(noop, source_space=1, target_space=2)
+    t = TransformWrapper(noop, spaces=(1, 2))
 
     assert np.allclose(t(coords5x3), coords5x3)
 
@@ -22,7 +22,7 @@ def test_sequence(coords5x3):
     ts = []
     last = 3
     for a, b in window(range(last + 1), 2):
-        ts.append(TransformWrapper(noop, source_space=a, target_space=b))
+        ts.append(TransformWrapper(noop, spaces=(a, b)))
 
     t = TransformSequence(ts)
     assert np.allclose(t(coords5x3), coords5x3)
@@ -34,8 +34,8 @@ def test_sequence_errors():
     with pytest.raises(ValueError):
         TransformSequence(
             [
-                TransformWrapper(noop, source_space=1, target_space=2),
-                TransformWrapper(noop, source_space=3, target_space=4),
+                TransformWrapper(noop, spaces=(1, 2)),
+                TransformWrapper(noop, spaces=(3, 4)),
             ]
         )
 
@@ -51,8 +51,8 @@ def test_sequence_does_not_split():
 def test_sequence_infers():
     t = TransformSequence(
         [
-            TransformWrapper(noop, source_space=0),
-            TransformWrapper(noop, source_space=1, target_space=2),
+            TransformWrapper(noop, spaces=(0, None)),
+            TransformWrapper(noop, spaces=(1, 2)),
         ]
     )
     assert t[0].target_space == 1

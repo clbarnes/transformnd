@@ -1,40 +1,37 @@
 """
 Simple transformations like rigid translation and scaling.
 """
-from typing import Optional
-
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ..base import Transform
-from ..util import SpaceRef, chain_or
+from ..base import SpaceTuple, Transform
+from ..util import chain_or
 
 
 class IdentityTransform(Transform):
     def __init__(
         self,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         """
         Transform which does nothing.
 
         Parameters
         ----------
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             [description]
         """
-        src = chain_or(source_space, target_space, default=None)
-        tgt = chain_or(target_space, source_space, default=None)
+        src = chain_or(*spaces, default=None)
+        tgt = chain_or(*spaces, default=None)
         if src != tgt:
             raise ValueError("Source and target spaces are different")
-        super().__init__(source_space=src, target_space=src)
+        super().__init__(spaces=(src, src))
 
     def __invert__(self) -> Transform:
         return self
@@ -48,8 +45,7 @@ class Translate(Transform):
         self,
         translation: ArrayLike,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         """Simple translation.
 
@@ -57,15 +53,15 @@ class Translate(Transform):
         ----------
         translation : scalar or D-length array
             Translation to apply in all dimensions, or each dimension.
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             If the translation is the wrong shape
         """
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         self.translation = np.asarray(translation)
         if self.translation.ndim > 1:
             raise ValueError("Translation must be scalar or 1D")
@@ -79,11 +75,7 @@ class Translate(Transform):
         return coords + self.translation
 
     def __invert__(self) -> Transform:
-        return type(self)(
-            -self.translation,
-            source_space=self.target_space,
-            target_space=self.source_space,
-        )
+        return type(self)(-self.translation, spaces=self.spaces[::-1])
 
 
 class Scale(Transform):
@@ -91,8 +83,7 @@ class Scale(Transform):
         self,
         scale: ArrayLike,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         """Simple scale transform.
 
@@ -102,15 +93,15 @@ class Scale(Transform):
         ----------
         scale : scalar or D-length array-like
             Scaling to apply in all dimensions, or each dimension.
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             If scale is the wrong shape.
         """
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         self.scale = np.asarray(scale)
         if self.scale.ndim > 1:
             raise ValueError("Scale must be scalar or 1D")
@@ -126,6 +117,5 @@ class Scale(Transform):
     def __invert__(self) -> Transform:
         return type(self)(
             1 / self.scale,
-            source_space=self.target_space,
-            target_space=self.source_space,
+            spaces=self.spaces[::-1],
         )

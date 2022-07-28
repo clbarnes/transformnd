@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import Iterator, List, Optional, Set, Union
+from typing import Iterator, List, Optional, Set, Tuple, Union
 
 import numpy as np
 
@@ -17,6 +17,8 @@ from .util import (
     window,
 )
 
+SpaceTuple = Tuple[Optional[SpaceRef], Optional[SpaceRef]]
+
 
 class Transform(ABC):
     ndim: Optional[Set[int]] = None
@@ -24,20 +26,24 @@ class Transform(ABC):
     def __init__(
         self,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         """Base class for transformations.
 
         Parameters
         ----------
-        source_space : Optional[SpaceRef]
-            To refer to the source space.
-        target_space : Optional[SpaceRef]
-            To refer to the target space.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
         """
-        self.source_space = source_space
-        self.target_space = target_space
+        self.spaces = spaces
+
+    @property
+    def source_space(self):
+        return self.spaces[0]
+
+    @property
+    def target_space(self):
+        return self.spaces[1]
 
     def _validate_coords(self, coords) -> np.ndarray:
         """Check that dimension of coords are supported.
@@ -103,7 +109,8 @@ class Transform(ABC):
             return NotImplemented
         transforms = get_transform_list(self) + get_transform_list(other)
         return TransformSequence(
-            transforms, source_space=self.source_space, target_space=other.target_space
+            transforms,
+            spaces=(self.source_space, other.target_space),
         )
 
     def __ror__(self, other) -> TransformSequence:
@@ -123,7 +130,8 @@ class Transform(ABC):
             return NotImplemented
         transforms = get_transform_list(other) + get_transform_list(self)
         return TransformSequence(
-            transforms, source_space=other.source_space, target_space=self.target_space
+            transforms,
+            spaces=(other.source_space, self.target_space),
         )
 
     def __str__(self) -> str:
@@ -139,8 +147,7 @@ class TransformWrapper(Transform):
         fn: TransformSignature,
         ndim: Optional[Union[Set[int], int]] = None,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         """Wrapper around an arbitrary function.
 
@@ -151,12 +158,10 @@ class TransformWrapper(Transform):
         ----------
         fn : TransformSignature
             Callable.
-        source_space : Optional[SpaceRef]
-            Any hashable, to refer to the source space.
-        target_space : Optional[SpaceRef]
-            Any hashable, to refer to the target space.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
         """
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         self.fn = fn
         if ndim is not None:
             if isinstance(ndim, int):
@@ -175,8 +180,7 @@ def _with_spaces(t: Transform, source_space=None, target_space=None):
     tgt = same_or_none(src_tgt[1], target_space, default=None)
     if (src, tgt) != src_tgt:
         t = copy(t)
-        t.source_space = src
-        t.target_space = tgt
+        t.spaces = (src, tgt)
     return t
 
 
@@ -209,8 +213,7 @@ class TransformSequence(Transform):
         self,
         transforms: List[Transform],
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ) -> None:
         """Combine transforms by chaining them.
 
@@ -222,23 +225,22 @@ class TransformSequence(Transform):
         transforms : List[Transform]
             Items which are a TransformSequences
             will each still be treated as a single transform.
-        source_space : Optional[SpaceRef]
-            Any hashable, to refer to the source space.
-            Can also be inferred from the first transform.
-        target_space : Optional[SpaceRef]
-            Any hashable, to refer to the target space.
-            Can also be inferred from the last transform.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces.
+            Can also be inferred from the first and last transforms.
 
         Raises
         ------
         ValueError
             If spaces are incompatible.
         """
-        ts = infer_spaces(transforms, source_space, target_space)
+        ts = infer_spaces(transforms, *spaces)
 
         super().__init__(
-            source_space=ts[0].source_space,
-            target_space=ts[-1].target_space,
+            spaces=(
+                ts[0].source_space,
+                ts[-1].target_space,
+            ),
         )
 
         self.transforms: List[Transform] = ts
@@ -274,7 +276,8 @@ class TransformSequence(Transform):
         except NotImplementedError:
             return NotImplemented
         return TransformSequence(
-            transforms, source_space=self.target_space, target_space=self.source_space
+            transforms,
+            spaces=self.spaces[::-1],
         )
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
@@ -282,7 +285,7 @@ class TransformSequence(Transform):
             coords = t(coords)
         return coords
 
-    def spaces(self, skip_none=False) -> List[SpaceRef]:
+    def list_spaces(self, skip_none=False) -> List[SpaceRef]:
         """List spaces in this transform.
 
         Parameters
@@ -301,7 +304,7 @@ class TransformSequence(Transform):
 
     def __str__(self) -> str:
         cls_name = type(self).__name__
-        spaces_str = "->".join(space_str(s) for s in self.spaces())
+        spaces_str = "->".join(space_str(s) for s in self.list_spaces())
         return f"{cls_name}[{spaces_str}]"
 
     def __getitem__(self, idx: Union[slice, int]):

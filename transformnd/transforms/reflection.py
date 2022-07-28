@@ -1,11 +1,11 @@
 from copy import copy
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import List, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ..base import Transform
-from ..util import SpaceRef, is_square
+from ..base import SpaceTuple, Transform
+from ..util import is_square
 
 
 def proj(u, v):
@@ -84,8 +84,7 @@ class Reflect(Transform):
         normals: ArrayLike,
         point=0,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         """Reflection about arbitrary planes.
 
@@ -97,15 +96,15 @@ class Reflect(Transform):
         point : float or sequence of floats, optional
             Intersection point of all reflection planes
             (can be broadcast from scalar), by default 0 (i.e. the origin)
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             Inconsistent dimensionality
         """
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         normals = np.asarray(normals)
         if normals.ndim == 1:
             normals = [normals]
@@ -133,8 +132,7 @@ class Reflect(Transform):
         cls,
         points: ArrayLike,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         """Infer a single plane of reflection from a minimal number of points on it.
 
@@ -142,15 +140,15 @@ class Reflect(Transform):
         ----------
         points :
             NxD array of N points in D dimensions. N == D
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Returns
         -------
         Reflection
         """
         point, normals = get_hyperplanes(np.asarray(points), unitise=False)
-        return cls(normals, point, source_space=source_space, target_space=target_space)
+        return cls(normals, point, spaces=spaces)
 
     @classmethod
     def from_axis(
@@ -158,8 +156,7 @@ class Reflect(Transform):
         axis: Union[int, Sequence[int]],
         origin: ArrayLike,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         """Reflect around hyperplane(s) parallel with axes.
 
@@ -169,8 +166,8 @@ class Reflect(Transform):
             Index (or indices) of axes in which to reflect.
         origin : array-like
             Point around which to reflect.
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Returns
         -------
@@ -197,9 +194,7 @@ class Reflect(Transform):
                 v[i] += 1
                 normals.append(v)
 
-        return cls(
-            normals, origin, source_space=source_space, target_space=target_space
-        )
+        return cls(normals, origin, spaces=spaces)
 
     def __invert__(self):
         return copy(self)

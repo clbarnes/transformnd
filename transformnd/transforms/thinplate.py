@@ -1,12 +1,11 @@
 """Thin plate splines transformations."""
 import logging
-from typing import Optional
 
 import morphops as mops
 import numpy as np
 
-from ..base import Transform
-from ..util import SpaceRef, check_ndim
+from ..base import SpaceTuple, Transform
+from ..util import check_ndim
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +28,7 @@ class ThinPlateSplines(Transform):
         source_control_points: np.ndarray,
         target_control_points: np.ndarray,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         """Non-rigid control point based transforms in 2/3D.
 
@@ -43,15 +41,15 @@ class ThinPlateSplines(Transform):
             NxD array of control point coordinates in the source space.
         target_control_points : np.ndarray
             NxD array of control point coordinates in the target (deformed) space.
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             Invalid control points.
         """
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         self.source_control_points = np.asarray(source_control_points)
         self.target_control_points = np.asarray(target_control_points)
 
@@ -71,11 +69,10 @@ class ThinPlateSplines(Transform):
         )
 
     def __invert__(self) -> Transform:
-        return ThinPlateSplines(
+        return type(self)(
             self.target_control_points,
             self.source_control_points,
-            source_space=self.target_space,
-            target_space=self.source_space,
+            spaces=self.spaces[::-1],
         )
 
     def __call__(self, coords: np.ndarray) -> np.ndarray:
