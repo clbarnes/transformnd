@@ -27,7 +27,12 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Implementations of some common transforms.&#34;&#34;&#34;</code></pre>
+<pre><code class="python">&#34;&#34;&#34;Implementations of some common transforms.&#34;&#34;&#34;
+from .affine import AffineTransform
+from .reflection import Reflect
+from .simple import Scale, Translate, IdentityTransform
+
+__all__ = [&#34;AffineTransform&#34;, &#34;IdentityTransform&#34;, &#34;Reflect&#34;, &#34;Scale&#34;, &#34;Translate&#34;]</code></pre>
 </details>
 </section>
 <section>
@@ -60,6 +65,1463 @@
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="transformnd.transforms.AffineTransform"><code class="flex name class">
+<span>class <span class="ident">AffineTransform</span></span>
+<span>(</span><span>matrix: ArrayLike, *, spaces: SpaceTuple = (None, None))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Affine transformation using an augmented matrix.</p>
+<p>Matrix must have shape (D+1, D+1) or (D, D+1);
+the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>matrix</code></strong> :&ensp;<code>ArrayLike</code></dt>
+<dd>Affine transformation matrix.</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>Malformed matrix.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AffineTransform(Transform):
+    def __init__(
+        self,
+        matrix: ArrayLike,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ):
+        &#34;&#34;&#34;Affine transformation using an augmented matrix.
+
+        Matrix must have shape (D+1, D+1) or (D, D+1);
+        the bottom row is assumed to be [0, 0, ..., 0, 1].
+
+        Parameters
+        ----------
+        matrix : ArrayLike
+            Affine transformation matrix.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Raises
+        ------
+        ValueError
+            Malformed matrix.
+        &#34;&#34;&#34;
+        super().__init__(spaces=spaces)
+        m = np.asarray(matrix)
+
+        if m.ndim != 2:
+            raise ValueError(&#34;Transformation matrix must be 2D&#34;)
+
+        if m.shape[1] == m.shape[0] + 1:
+            base = np.eye(m.shape[1])
+            base[:-1, :] = m
+            m = base
+        elif not is_square(m):
+            raise ValueError(&#34;Transformation matrix must be square&#34;)
+
+        self.matrix = m
+        self.ndim = {len(self.matrix) - 1}
+
+    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+        coords = self._validate_coords(coords)
+        # todo: replace with writing into full ones?
+        coords = np.concatenate(
+            [coords, np.ones((coords.shape[0], 1), dtype=coords.dtype)], axis=1
+        )
+        return (self.matrix @ coords.T).T[:, :-1]
+
+    def __invert__(self) -&gt; Transform:
+        return type(self)(
+            np.linalg.inv(self.matrix),
+            spaces=self.spaces[::-1],
+        )
+
+    def __matmul__(self, rhs: AffineTransform) -&gt; AffineTransform:
+        &#34;&#34;&#34;Compose two affine transforms by matrix multiplication.
+
+        Parameters
+        ----------
+        rhs : AffineTransform
+
+        Returns
+        -------
+        AffineTransform
+
+        Raises
+        ------
+        ValueError
+            Incompatible transforms.
+        &#34;&#34;&#34;
+        if not isinstance(rhs, AffineTransform):
+            return NotImplemented
+        if self.matrix.shape != rhs.matrix.shape:
+            raise ValueError(
+                &#34;Cannot multiply affine matrices of different dimensionality&#34;
+            )
+        if not none_eq(self.target_space, rhs.source_space):
+            raise ValueError(&#34;Affine transforms do not share a space&#34;)
+        return AffineTransform(
+            self.matrix @ rhs.matrix,
+            spaces=(self.source_space, rhs.target_space),
+        )
+
+    @classmethod
+    def from_linear_map(
+        cls,
+        linear_map: ArrayLike,
+        translation=0,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ) -&gt; AffineTransform:
+        &#34;&#34;&#34;Create an augmented affine matrix from a linear map,
+        with an optional translation.
+
+        Parameters
+        ----------
+        linear_map : ArrayLike
+            Shape (D, D)
+        translation : ArrayLike, optional
+            Translation to add to the matrix, by default None
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Returns
+        -------
+        AffineTransform
+        &#34;&#34;&#34;
+        lin_map = np.asarray(linear_map)
+
+        side = len(lin_map) + 1
+        matrix = np.eye(side, dtype=lin_map.dtype)
+        matrix[:-1, :] = lin_map
+        matrix[:-1, -1] = translation
+
+        return cls(matrix, spaces=spaces)
+
+    @classmethod
+    def identity(
+        cls,
+        ndim: int,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ) -&gt; AffineTransform:
+        &#34;&#34;&#34;Create an identity affine transformation.
+
+        Parameters
+        ----------
+        ndim : int
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Returns
+        -------
+        AffineTransform
+        &#34;&#34;&#34;
+        return cls(
+            np.eye(ndim + 1),
+            spaces=spaces,
+        )
+
+    @classmethod
+    def translation(
+        cls,
+        translation: ArrayLike,
+        ndim: Optional[int] = None,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ) -&gt; AffineTransform:
+        &#34;&#34;&#34;Create an affine translation.
+
+        Parameters
+        ----------
+        translation : ArrayLike
+            If scalar, broadcast to ndim.
+        ndim : int, optional
+            If translation is scalar, how many dims to use.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Returns
+        -------
+        AffineTransform
+        &#34;&#34;&#34;
+        t = arg_as_array(translation, ndim)
+        m = np.eye(len(t) + 1, dtype=t.dtype)
+        m[:-1, -1] = t
+
+        return cls(m, spaces=spaces)
+
+    @classmethod
+    def scaling(
+        cls,
+        scale: ArrayLike,
+        ndim: Optional[int] = None,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ) -&gt; AffineTransform:
+        &#34;&#34;&#34;Create an affine scaling.
+
+        Parameters
+        ----------
+        scale : ArrayLike
+            If scalar, broadcast to ndim.
+        ndim : Optional[int], optional
+            If scale is scalar, how many dimensions to use
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Returns
+        -------
+        AffineTransform
+            [description]
+        &#34;&#34;&#34;
+        s = arg_as_array(scale, ndim)
+        m = np.eye(len(s) + 1, dtype=s.dtype)
+        m[:-1, :-1] *= s
+
+        return cls(m, spaces=spaces)
+
+    @classmethod
+    def reflection(
+        cls,
+        axis: Union[int, Container[int]],
+        ndim: int,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ) -&gt; AffineTransform:
+        &#34;&#34;&#34;Create an affine reflection.
+
+        Parameters
+        ----------
+        axis : Union[int, Container[int]]
+            A single axis or multiple to reflect in.
+        ndim : int
+            How many dimensions to work in.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Returns
+        -------
+        AffineTransform
+        &#34;&#34;&#34;
+        if np.isscalar(axis):
+            axis = [axis]  # type: ignore
+        values = [-1 if idx in axis else 1 for idx in range(ndim)]  # type:ignore
+        m = np.eye(ndim + 1)
+        m[:-1, :-1] *= values
+
+        return cls(m, spaces=spaces)
+
+    @classmethod
+    def rotation2(
+        cls,
+        rotation: float,
+        degrees=True,
+        clockwise=False,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ) -&gt; AffineTransform:
+        &#34;&#34;&#34;Create a 2D affine rotation.
+
+        Parameters
+        ----------
+        rotation : float
+            Angle to rotate.
+        degrees : bool, optional
+            Whether rotation is in degrees (rather than radians), by default True
+        clockwise : bool, optional
+            Whether rotation is clockwise, by default False
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Returns
+        -------
+        AffineTransform
+        &#34;&#34;&#34;
+        if degrees:
+            rotation = np.deg2rad(rotation)
+        if clockwise:
+            rotation *= -1
+
+        vals = [
+            [np.cos(rotation), -np.sin(rotation)],
+            [np.sin(rotation), np.cos(rotation)],
+        ]
+        m = np.eye(3)
+        m[:-1, :-1] = vals
+
+        return cls(m, spaces=spaces)
+
+    @classmethod
+    def rotation3(
+        cls,
+        rotation: Union[float, Tuple[float, float, float]],
+        degrees=True,
+        clockwise=False,
+        order=(0, 1, 2),
+        *,
+        spaces: SpaceTuple = (None, None),
+    ) -&gt; AffineTransform:
+        &#34;&#34;&#34;Create a 3D affine rotation.
+
+        Parameters
+        ----------
+        rotation : Union[float, Tuple[float, float, float]]
+            Either a single rotation for all axes, or 1 for each.
+        degrees : bool, optional
+            Whether rotation is in degrees (rather than radians), by default True
+        clockwise : bool, optional
+            Whether rotation is clockwise, by default False
+        order : tuple, optional
+            What order to apply the rotations, by default (0, 1, 2)
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Returns
+        -------
+        AffineTransform
+
+        Raises
+        ------
+        ValueError
+            Incompatible order.
+        &#34;&#34;&#34;
+        if np.isscalar(rotation):
+            r = np.array([rotation] * 3)
+        else:
+            r = np.asarray(rotation)
+
+        if degrees:
+            r = np.deg2rad(r)
+        if clockwise:
+            r *= -1
+
+        if len(order) != 3 or set(order) != {0, 1, 2}:
+            raise ValueError(&#34;Order must contain only 0, 1, 2 in any order.&#34;)
+
+        order = list(order)
+
+        rots = [
+            np.array(
+                [
+                    [1, 0, 0],
+                    [0, np.cos(r[0]), -np.sin(r[0])],
+                    [0, np.sin(r[0]), np.cos(r[0])],
+                ]
+            ),
+            np.array(
+                [
+                    [np.cos(r[1]), 0, np.sin(r[1])],
+                    [0, 1, 0],
+                    [-np.sin(r[1]), 0, np.cos(r[1])],
+                ]
+            ),
+            np.array(
+                [
+                    [np.cos(r[2]), -np.sin(r[2]), 0],
+                    [np.sin(r[2]), np.cos(r[2]), 0],
+                    [0, 0, 1],
+                ]
+            ),
+        ]
+
+        rot = rots[order.pop(0)]
+        rot @= rots[order.pop(0)]
+        rot @= rots[order.pop(0)]
+
+        m = np.eye(4)
+        m[:-1, :-1] = rot
+
+        return cls(m, spaces=spaces)
+
+    @classmethod
+    def shearing(
+        cls,
+        factor: Union[float, np.ndarray],
+        ndim: Optional[int] = None,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ) -&gt; AffineTransform:
+        &#34;&#34;&#34;Create an affine shear.
+
+        ``factor`` can be a scalar to broadcast to all dimensions,
+        or a D-length list of D-1 lists.
+        The first inner list contains the shear factors in the first dimension
+        for all *but* the first dimension.
+        The second inner list contains the shear factors in the second dimension
+        for all the *but* the second dimension, etc.
+
+        Parameters
+        ----------
+        factor : Union[float, np.ndarray]
+            Shear scale factors; see above for more details.
+        ndim : Optional[int], optional
+            If factor is scalar, broadcast to this many dimensions, by default None
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Returns
+        -------
+        AffineTransform
+
+        Raises
+        ------
+        ValueError
+            Incompatible factor.
+        &#34;&#34;&#34;
+        if np.isscalar(factor):
+            if ndim is None:
+                raise ValueError(&#34;If factor is scalar, ndim must be defined&#34;)
+            s = np.full((ndim, ndim - 1), factor)
+        else:
+            s = np.asarray(factor)
+            if s.shape[0] != s.shape[1] + 1:
+                raise ValueError(&#34;Factor must be of shape (D, D-1)&#34;)
+            ndim = s.shape[0]
+
+        m = np.eye(ndim, dtype=s.dtype)
+        for col_idx in range(m.shape[1]):
+            it = iter(factor[col_idx])  # type: ignore
+            for row_idx in range(m.shape[0] - 1):
+                if m[row_idx, col_idx] == 0:
+                    m[row_idx, col_idx] = next(it)
+
+        return cls(m, spaces=spaces)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="transformnd.transforms.AffineTransform.from_linear_map"><code class="name flex">
+<span>def <span class="ident">from_linear_map</span></span>(<span>linear_map: ArrayLike, translation=0, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="affine.html#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create an augmented affine matrix from a linear map,
+with an optional translation.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>linear_map</code></strong> :&ensp;<code>ArrayLike</code></dt>
+<dd>Shape (D, D)</dd>
+<dt><strong><code>translation</code></strong> :&ensp;<code>ArrayLike</code>, optional</dt>
+<dd>Translation to add to the matrix, by default None</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="transformnd.transforms.AffineTransform" href="#transformnd.transforms.AffineTransform">AffineTransform</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_linear_map(
+    cls,
+    linear_map: ArrayLike,
+    translation=0,
+    *,
+    spaces: SpaceTuple = (None, None),
+) -&gt; AffineTransform:
+    &#34;&#34;&#34;Create an augmented affine matrix from a linear map,
+    with an optional translation.
+
+    Parameters
+    ----------
+    linear_map : ArrayLike
+        Shape (D, D)
+    translation : ArrayLike, optional
+        Translation to add to the matrix, by default None
+    spaces : tuple[SpaceRef, SpaceRef]
+        Optional source and target spaces
+
+    Returns
+    -------
+    AffineTransform
+    &#34;&#34;&#34;
+    lin_map = np.asarray(linear_map)
+
+    side = len(lin_map) + 1
+    matrix = np.eye(side, dtype=lin_map.dtype)
+    matrix[:-1, :] = lin_map
+    matrix[:-1, -1] = translation
+
+    return cls(matrix, spaces=spaces)</code></pre>
+</details>
+</dd>
+<dt id="transformnd.transforms.AffineTransform.identity"><code class="name flex">
+<span>def <span class="ident">identity</span></span>(<span>ndim: int, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="affine.html#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create an identity affine transformation.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ndim</code></strong> :&ensp;<code>int</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="transformnd.transforms.AffineTransform" href="#transformnd.transforms.AffineTransform">AffineTransform</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def identity(
+    cls,
+    ndim: int,
+    *,
+    spaces: SpaceTuple = (None, None),
+) -&gt; AffineTransform:
+    &#34;&#34;&#34;Create an identity affine transformation.
+
+    Parameters
+    ----------
+    ndim : int
+    spaces : tuple[SpaceRef, SpaceRef]
+        Optional source and target spaces
+
+    Returns
+    -------
+    AffineTransform
+    &#34;&#34;&#34;
+    return cls(
+        np.eye(ndim + 1),
+        spaces=spaces,
+    )</code></pre>
+</details>
+</dd>
+<dt id="transformnd.transforms.AffineTransform.reflection"><code class="name flex">
+<span>def <span class="ident">reflection</span></span>(<span>axis: Union[int, Container[int]], ndim: int, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="affine.html#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create an affine reflection.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>axis</code></strong> :&ensp;<code>Union[int, Container[int]]</code></dt>
+<dd>A single axis or multiple to reflect in.</dd>
+<dt><strong><code>ndim</code></strong> :&ensp;<code>int</code></dt>
+<dd>How many dimensions to work in.</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="transformnd.transforms.AffineTransform" href="#transformnd.transforms.AffineTransform">AffineTransform</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def reflection(
+    cls,
+    axis: Union[int, Container[int]],
+    ndim: int,
+    *,
+    spaces: SpaceTuple = (None, None),
+) -&gt; AffineTransform:
+    &#34;&#34;&#34;Create an affine reflection.
+
+    Parameters
+    ----------
+    axis : Union[int, Container[int]]
+        A single axis or multiple to reflect in.
+    ndim : int
+        How many dimensions to work in.
+    spaces : tuple[SpaceRef, SpaceRef]
+        Optional source and target spaces
+
+    Returns
+    -------
+    AffineTransform
+    &#34;&#34;&#34;
+    if np.isscalar(axis):
+        axis = [axis]  # type: ignore
+    values = [-1 if idx in axis else 1 for idx in range(ndim)]  # type:ignore
+    m = np.eye(ndim + 1)
+    m[:-1, :-1] *= values
+
+    return cls(m, spaces=spaces)</code></pre>
+</details>
+</dd>
+<dt id="transformnd.transforms.AffineTransform.rotation2"><code class="name flex">
+<span>def <span class="ident">rotation2</span></span>(<span>rotation: float, degrees=True, clockwise=False, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="affine.html#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a 2D affine rotation.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>rotation</code></strong> :&ensp;<code>float</code></dt>
+<dd>Angle to rotate.</dd>
+<dt><strong><code>degrees</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether rotation is in degrees (rather than radians), by default True</dd>
+<dt><strong><code>clockwise</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether rotation is clockwise, by default False</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="transformnd.transforms.AffineTransform" href="#transformnd.transforms.AffineTransform">AffineTransform</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def rotation2(
+    cls,
+    rotation: float,
+    degrees=True,
+    clockwise=False,
+    *,
+    spaces: SpaceTuple = (None, None),
+) -&gt; AffineTransform:
+    &#34;&#34;&#34;Create a 2D affine rotation.
+
+    Parameters
+    ----------
+    rotation : float
+        Angle to rotate.
+    degrees : bool, optional
+        Whether rotation is in degrees (rather than radians), by default True
+    clockwise : bool, optional
+        Whether rotation is clockwise, by default False
+    spaces : tuple[SpaceRef, SpaceRef]
+        Optional source and target spaces
+
+    Returns
+    -------
+    AffineTransform
+    &#34;&#34;&#34;
+    if degrees:
+        rotation = np.deg2rad(rotation)
+    if clockwise:
+        rotation *= -1
+
+    vals = [
+        [np.cos(rotation), -np.sin(rotation)],
+        [np.sin(rotation), np.cos(rotation)],
+    ]
+    m = np.eye(3)
+    m[:-1, :-1] = vals
+
+    return cls(m, spaces=spaces)</code></pre>
+</details>
+</dd>
+<dt id="transformnd.transforms.AffineTransform.rotation3"><code class="name flex">
+<span>def <span class="ident">rotation3</span></span>(<span>rotation: Union[float, Tuple[float, float, float]], degrees=True, clockwise=False, order=(0, 1, 2), *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="affine.html#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a 3D affine rotation.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>rotation</code></strong> :&ensp;<code>Union[float, Tuple[float, float, float]]</code></dt>
+<dd>Either a single rotation for all axes, or 1 for each.</dd>
+<dt><strong><code>degrees</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether rotation is in degrees (rather than radians), by default True</dd>
+<dt><strong><code>clockwise</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether rotation is clockwise, by default False</dd>
+<dt><strong><code>order</code></strong> :&ensp;<code>tuple</code>, optional</dt>
+<dd>What order to apply the rotations, by default (0, 1, 2)</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="transformnd.transforms.AffineTransform" href="#transformnd.transforms.AffineTransform">AffineTransform</a></code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>Incompatible order.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def rotation3(
+    cls,
+    rotation: Union[float, Tuple[float, float, float]],
+    degrees=True,
+    clockwise=False,
+    order=(0, 1, 2),
+    *,
+    spaces: SpaceTuple = (None, None),
+) -&gt; AffineTransform:
+    &#34;&#34;&#34;Create a 3D affine rotation.
+
+    Parameters
+    ----------
+    rotation : Union[float, Tuple[float, float, float]]
+        Either a single rotation for all axes, or 1 for each.
+    degrees : bool, optional
+        Whether rotation is in degrees (rather than radians), by default True
+    clockwise : bool, optional
+        Whether rotation is clockwise, by default False
+    order : tuple, optional
+        What order to apply the rotations, by default (0, 1, 2)
+    spaces : tuple[SpaceRef, SpaceRef]
+        Optional source and target spaces
+
+    Returns
+    -------
+    AffineTransform
+
+    Raises
+    ------
+    ValueError
+        Incompatible order.
+    &#34;&#34;&#34;
+    if np.isscalar(rotation):
+        r = np.array([rotation] * 3)
+    else:
+        r = np.asarray(rotation)
+
+    if degrees:
+        r = np.deg2rad(r)
+    if clockwise:
+        r *= -1
+
+    if len(order) != 3 or set(order) != {0, 1, 2}:
+        raise ValueError(&#34;Order must contain only 0, 1, 2 in any order.&#34;)
+
+    order = list(order)
+
+    rots = [
+        np.array(
+            [
+                [1, 0, 0],
+                [0, np.cos(r[0]), -np.sin(r[0])],
+                [0, np.sin(r[0]), np.cos(r[0])],
+            ]
+        ),
+        np.array(
+            [
+                [np.cos(r[1]), 0, np.sin(r[1])],
+                [0, 1, 0],
+                [-np.sin(r[1]), 0, np.cos(r[1])],
+            ]
+        ),
+        np.array(
+            [
+                [np.cos(r[2]), -np.sin(r[2]), 0],
+                [np.sin(r[2]), np.cos(r[2]), 0],
+                [0, 0, 1],
+            ]
+        ),
+    ]
+
+    rot = rots[order.pop(0)]
+    rot @= rots[order.pop(0)]
+    rot @= rots[order.pop(0)]
+
+    m = np.eye(4)
+    m[:-1, :-1] = rot
+
+    return cls(m, spaces=spaces)</code></pre>
+</details>
+</dd>
+<dt id="transformnd.transforms.AffineTransform.scaling"><code class="name flex">
+<span>def <span class="ident">scaling</span></span>(<span>scale: ArrayLike, ndim: Optional[int] = None, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="affine.html#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create an affine scaling.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>scale</code></strong> :&ensp;<code>ArrayLike</code></dt>
+<dd>If scalar, broadcast to ndim.</dd>
+<dt><strong><code>ndim</code></strong> :&ensp;<code>Optional[int]</code>, optional</dt>
+<dd>If scale is scalar, how many dimensions to use</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="transformnd.transforms.AffineTransform" href="#transformnd.transforms.AffineTransform">AffineTransform</a></code></dt>
+<dd>[description]</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def scaling(
+    cls,
+    scale: ArrayLike,
+    ndim: Optional[int] = None,
+    *,
+    spaces: SpaceTuple = (None, None),
+) -&gt; AffineTransform:
+    &#34;&#34;&#34;Create an affine scaling.
+
+    Parameters
+    ----------
+    scale : ArrayLike
+        If scalar, broadcast to ndim.
+    ndim : Optional[int], optional
+        If scale is scalar, how many dimensions to use
+    spaces : tuple[SpaceRef, SpaceRef]
+        Optional source and target spaces
+
+    Returns
+    -------
+    AffineTransform
+        [description]
+    &#34;&#34;&#34;
+    s = arg_as_array(scale, ndim)
+    m = np.eye(len(s) + 1, dtype=s.dtype)
+    m[:-1, :-1] *= s
+
+    return cls(m, spaces=spaces)</code></pre>
+</details>
+</dd>
+<dt id="transformnd.transforms.AffineTransform.shearing"><code class="name flex">
+<span>def <span class="ident">shearing</span></span>(<span>factor: Union[float, np.ndarray], ndim: Optional[int] = None, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="affine.html#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create an affine shear.</p>
+<p><code>factor</code> can be a scalar to broadcast to all dimensions,
+or a D-length list of D-1 lists.
+The first inner list contains the shear factors in the first dimension
+for all <em>but</em> the first dimension.
+The second inner list contains the shear factors in the second dimension
+for all the <em>but</em> the second dimension, etc.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>factor</code></strong> :&ensp;<code>Union[float, np.ndarray]</code></dt>
+<dd>Shear scale factors; see above for more details.</dd>
+<dt><strong><code>ndim</code></strong> :&ensp;<code>Optional[int]</code>, optional</dt>
+<dd>If factor is scalar, broadcast to this many dimensions, by default None</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="transformnd.transforms.AffineTransform" href="#transformnd.transforms.AffineTransform">AffineTransform</a></code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>Incompatible factor.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def shearing(
+    cls,
+    factor: Union[float, np.ndarray],
+    ndim: Optional[int] = None,
+    *,
+    spaces: SpaceTuple = (None, None),
+) -&gt; AffineTransform:
+    &#34;&#34;&#34;Create an affine shear.
+
+    ``factor`` can be a scalar to broadcast to all dimensions,
+    or a D-length list of D-1 lists.
+    The first inner list contains the shear factors in the first dimension
+    for all *but* the first dimension.
+    The second inner list contains the shear factors in the second dimension
+    for all the *but* the second dimension, etc.
+
+    Parameters
+    ----------
+    factor : Union[float, np.ndarray]
+        Shear scale factors; see above for more details.
+    ndim : Optional[int], optional
+        If factor is scalar, broadcast to this many dimensions, by default None
+    spaces : tuple[SpaceRef, SpaceRef]
+        Optional source and target spaces
+
+    Returns
+    -------
+    AffineTransform
+
+    Raises
+    ------
+    ValueError
+        Incompatible factor.
+    &#34;&#34;&#34;
+    if np.isscalar(factor):
+        if ndim is None:
+            raise ValueError(&#34;If factor is scalar, ndim must be defined&#34;)
+        s = np.full((ndim, ndim - 1), factor)
+    else:
+        s = np.asarray(factor)
+        if s.shape[0] != s.shape[1] + 1:
+            raise ValueError(&#34;Factor must be of shape (D, D-1)&#34;)
+        ndim = s.shape[0]
+
+    m = np.eye(ndim, dtype=s.dtype)
+    for col_idx in range(m.shape[1]):
+        it = iter(factor[col_idx])  # type: ignore
+        for row_idx in range(m.shape[0] - 1):
+            if m[row_idx, col_idx] == 0:
+                m[row_idx, col_idx] = next(it)
+
+    return cls(m, spaces=spaces)</code></pre>
+</details>
+</dd>
+<dt id="transformnd.transforms.AffineTransform.translation"><code class="name flex">
+<span>def <span class="ident">translation</span></span>(<span>translation: ArrayLike, ndim: Optional[int] = None, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="affine.html#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create an affine translation.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>translation</code></strong> :&ensp;<code>ArrayLike</code></dt>
+<dd>If scalar, broadcast to ndim.</dd>
+<dt><strong><code>ndim</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>If translation is scalar, how many dims to use.</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="transformnd.transforms.AffineTransform" href="#transformnd.transforms.AffineTransform">AffineTransform</a></code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def translation(
+    cls,
+    translation: ArrayLike,
+    ndim: Optional[int] = None,
+    *,
+    spaces: SpaceTuple = (None, None),
+) -&gt; AffineTransform:
+    &#34;&#34;&#34;Create an affine translation.
+
+    Parameters
+    ----------
+    translation : ArrayLike
+        If scalar, broadcast to ndim.
+    ndim : int, optional
+        If translation is scalar, how many dims to use.
+    spaces : tuple[SpaceRef, SpaceRef]
+        Optional source and target spaces
+
+    Returns
+    -------
+    AffineTransform
+    &#34;&#34;&#34;
+    t = arg_as_array(translation, ndim)
+    m = np.eye(len(t) + 1, dtype=t.dtype)
+    m[:-1, -1] = t
+
+    return cls(m, spaces=spaces)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="transformnd.transforms.IdentityTransform"><code class="flex name class">
+<span>class <span class="ident">IdentityTransform</span></span>
+<span>(</span><span>*, spaces: Tuple[Optional[Hashable], Optional[Hashable]] = (None, None))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Transform which does nothing.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>[description]</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IdentityTransform(Transform):
+    def __init__(
+        self,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ):
+        &#34;&#34;&#34;
+        Transform which does nothing.
+
+        Parameters
+        ----------
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Raises
+        ------
+        ValueError
+            [description]
+        &#34;&#34;&#34;
+        src = chain_or(*spaces, default=None)
+        tgt = chain_or(*spaces[::-1], default=None)
+        if src != tgt:
+            raise ValueError(&#34;Source and target spaces are different&#34;)
+        super().__init__(spaces=(src, src))
+
+    def __invert__(self) -&gt; Transform:
+        return self
+
+    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+        return coords.copy()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></li>
+<li>abc.ABC</li>
+</ul>
+</dd>
+<dt id="transformnd.transforms.Reflect"><code class="flex name class">
+<span>class <span class="ident">Reflect</span></span>
+<span>(</span><span>normals: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], point=0, *, spaces: Tuple[Optional[Hashable], Optional[Hashable]] = (None, None))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Reflection about arbitrary planes.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>normals</code></strong> :&ensp;<code>sequence</code> of <code>arrays</code></dt>
+<dd>Normal vectors to the planes of reflection.
+Unitised internally.</dd>
+<dt><strong><code>point</code></strong> :&ensp;<code>float</code> or <code>sequence</code> of <code>floats</code>, optional</dt>
+<dd>Intersection point of all reflection planes
+(can be broadcast from scalar), by default 0 (i.e. the origin)</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>Inconsistent dimensionality</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Reflect(Transform):
+    def __init__(
+        self,
+        normals: ArrayLike,
+        point=0,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ):
+        &#34;&#34;&#34;Reflection about arbitrary planes.
+
+        Parameters
+        ----------
+        normals : sequence of arrays
+            Normal vectors to the planes of reflection.
+            Unitised internally.
+        point : float or sequence of floats, optional
+            Intersection point of all reflection planes
+            (can be broadcast from scalar), by default 0 (i.e. the origin)
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Raises
+        ------
+        ValueError
+            Inconsistent dimensionality
+        &#34;&#34;&#34;
+        super().__init__(spaces=spaces)
+        normals = np.asarray(normals)
+        if normals.ndim == 1:
+            normals = [normals]
+
+        n1 = normals[0]
+        if not np.isscalar(point) and len(n1) != len(point):
+            raise ValueError(&#34;Point and normals are not of the same dimensionality&#34;)
+        self.point = point
+        self.ndim = {len(n1)}
+        self.normals = [unitise(n) for n in normals]
+        # todo: matmul is associative, so turn this into an affine in 2/3D?
+
+    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+        coords = self._validate_coords(coords)
+        out = coords - self.point
+        for n in self.normals:
+            # mul-&gt;sum vectorises dot product
+            # normals are unit, avoids unnecessary division by 1
+            out -= 2 * np.sum(coords * n, axis=1) * n
+        out += self.point
+        return out
+
+    @classmethod
+    def from_points(
+        cls,
+        points: ArrayLike,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ):
+        &#34;&#34;&#34;Infer a single plane of reflection from a minimal number of points on it.
+
+        Parameters
+        ----------
+        points :
+            NxD array of N points in D dimensions. N == D
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Returns
+        -------
+        Reflection
+        &#34;&#34;&#34;
+        point, normals = get_hyperplanes(np.asarray(points), unitise=False)
+        return cls(normals, point, spaces=spaces)
+
+    @classmethod
+    def from_axis(
+        cls,
+        axis: Union[int, Sequence[int]],
+        origin: ArrayLike,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ):
+        &#34;&#34;&#34;Reflect around hyperplane(s) parallel with axes.
+
+        Parameters
+        ----------
+        axis : int or sequence of int
+            Index (or indices) of axes in which to reflect.
+        origin : array-like
+            Point around which to reflect.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Returns
+        -------
+        Reflection
+
+        Raises
+        ------
+        ValueError
+            Selected axis does not exist.
+        &#34;&#34;&#34;
+        origin = np.asarray(origin)
+        axis = ensure_tuple(axis)
+
+        for a in axis:
+            if a &gt;= len(axis):
+                raise ValueError(
+                    &#34;Cannot reflect in axis which does not exist (too high)&#34;
+                )
+
+        normals = []
+        for i in range(len(origin) - len(axis) + 1):
+            if i not in axis:
+                v = np.zeros_like(origin)
+                v[i] += 1
+                normals.append(v)
+
+        return cls(normals, origin, spaces=spaces)
+
+    def __invert__(self):
+        return copy(self)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="transformnd.transforms.Reflect.from_axis"><code class="name flex">
+<span>def <span class="ident">from_axis</span></span>(<span>axis: Union[int, Sequence[int]], origin: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], *, spaces: Tuple[Optional[Hashable], Optional[Hashable]] = (None, None))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reflect around hyperplane(s) parallel with axes.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>axis</code></strong> :&ensp;<code>int</code> or <code>sequence</code> of <code>int</code></dt>
+<dd>Index (or indices) of axes in which to reflect.</dd>
+<dt><strong><code>origin</code></strong> :&ensp;<code>array-like</code></dt>
+<dd>Point around which to reflect.</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Reflection</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>Selected axis does not exist.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_axis(
+    cls,
+    axis: Union[int, Sequence[int]],
+    origin: ArrayLike,
+    *,
+    spaces: SpaceTuple = (None, None),
+):
+    &#34;&#34;&#34;Reflect around hyperplane(s) parallel with axes.
+
+    Parameters
+    ----------
+    axis : int or sequence of int
+        Index (or indices) of axes in which to reflect.
+    origin : array-like
+        Point around which to reflect.
+    spaces : tuple[SpaceRef, SpaceRef]
+        Optional source and target spaces
+
+    Returns
+    -------
+    Reflection
+
+    Raises
+    ------
+    ValueError
+        Selected axis does not exist.
+    &#34;&#34;&#34;
+    origin = np.asarray(origin)
+    axis = ensure_tuple(axis)
+
+    for a in axis:
+        if a &gt;= len(axis):
+            raise ValueError(
+                &#34;Cannot reflect in axis which does not exist (too high)&#34;
+            )
+
+    normals = []
+    for i in range(len(origin) - len(axis) + 1):
+        if i not in axis:
+            v = np.zeros_like(origin)
+            v[i] += 1
+            normals.append(v)
+
+    return cls(normals, origin, spaces=spaces)</code></pre>
+</details>
+</dd>
+<dt id="transformnd.transforms.Reflect.from_points"><code class="name flex">
+<span>def <span class="ident">from_points</span></span>(<span>points: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], *, spaces: Tuple[Optional[Hashable], Optional[Hashable]] = (None, None))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Infer a single plane of reflection from a minimal number of points on it.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt>points :</dt>
+<dt>NxD array of N points in D dimensions. N == D</dt>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Reflection</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_points(
+    cls,
+    points: ArrayLike,
+    *,
+    spaces: SpaceTuple = (None, None),
+):
+    &#34;&#34;&#34;Infer a single plane of reflection from a minimal number of points on it.
+
+    Parameters
+    ----------
+    points :
+        NxD array of N points in D dimensions. N == D
+    spaces : tuple[SpaceRef, SpaceRef]
+        Optional source and target spaces
+
+    Returns
+    -------
+    Reflection
+    &#34;&#34;&#34;
+    point, normals = get_hyperplanes(np.asarray(points), unitise=False)
+    return cls(normals, point, spaces=spaces)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="transformnd.transforms.Scale"><code class="flex name class">
+<span>class <span class="ident">Scale</span></span>
+<span>(</span><span>scale: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], *, spaces: Tuple[Optional[Hashable], Optional[Hashable]] = (None, None))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Simple scale transform.</p>
+<p>All points are scaled, i.e. distance from the origin may also change.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>scale</code></strong> :&ensp;<code>scalar</code> or <code>D-length array-like</code></dt>
+<dd>Scaling to apply in all dimensions, or each dimension.</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If scale is the wrong shape.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Scale(Transform):
+    def __init__(
+        self,
+        scale: ArrayLike,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ):
+        &#34;&#34;&#34;Simple scale transform.
+
+        All points are scaled, i.e. distance from the origin may also change.
+
+        Parameters
+        ----------
+        scale : scalar or D-length array-like
+            Scaling to apply in all dimensions, or each dimension.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Raises
+        ------
+        ValueError
+            If scale is the wrong shape.
+        &#34;&#34;&#34;
+        super().__init__(spaces=spaces)
+        self.scale = np.asarray(scale)
+        if self.scale.ndim &gt; 1:
+            raise ValueError(&#34;Scale must be scalar or 1D&#34;)
+
+        if self.scale.shape not in [(), (1,)]:
+            self.ndim = {self.scale.shape[0]}
+        # otherwise, can be broadcast to anything
+
+    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+        coords = self._validate_coords(coords)
+        return coords * self.scale
+
+    def __invert__(self) -&gt; Transform:
+        return type(self)(
+            1 / self.scale,
+            spaces=self.spaces[::-1],
+        )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></li>
+<li>abc.ABC</li>
+</ul>
+</dd>
+<dt id="transformnd.transforms.Translate"><code class="flex name class">
+<span>class <span class="ident">Translate</span></span>
+<span>(</span><span>translation: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], *, spaces: Tuple[Optional[Hashable], Optional[Hashable]] = (None, None))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Simple translation.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>translation</code></strong> :&ensp;<code>scalar</code> or <code>D-length array</code></dt>
+<dd>Translation to apply in all dimensions, or each dimension.</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If the translation is the wrong shape</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Translate(Transform):
+    def __init__(
+        self,
+        translation: ArrayLike,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ):
+        &#34;&#34;&#34;Simple translation.
+
+        Parameters
+        ----------
+        translation : scalar or D-length array
+            Translation to apply in all dimensions, or each dimension.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+
+        Raises
+        ------
+        ValueError
+            If the translation is the wrong shape
+        &#34;&#34;&#34;
+        super().__init__(spaces=spaces)
+        self.translation = np.asarray(translation)
+        if self.translation.ndim &gt; 1:
+            raise ValueError(&#34;Translation must be scalar or 1D&#34;)
+
+        if self.translation.shape not in [(), (1,)]:
+            self.ndim = {self.translation.shape[0]}
+        # otherwise, can be broadcast to anything
+
+    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+        self._validate_coords(coords)
+        return coords + self.translation
+
+    def __invert__(self) -&gt; Transform:
+        return type(self)(-self.translation, spaces=self.spaces[::-1])</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></li>
+<li>abc.ABC</li>
+</ul>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -80,6 +1542,39 @@
 <li><code><a title="transformnd.transforms.reflection" href="reflection.html">transformnd.transforms.reflection</a></code></li>
 <li><code><a title="transformnd.transforms.simple" href="simple.html">transformnd.transforms.simple</a></code></li>
 <li><code><a title="transformnd.transforms.thinplate" href="thinplate.html">transformnd.transforms.thinplate</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="transformnd.transforms.AffineTransform" href="#transformnd.transforms.AffineTransform">AffineTransform</a></code></h4>
+<ul class="two-column">
+<li><code><a title="transformnd.transforms.AffineTransform.from_linear_map" href="#transformnd.transforms.AffineTransform.from_linear_map">from_linear_map</a></code></li>
+<li><code><a title="transformnd.transforms.AffineTransform.identity" href="#transformnd.transforms.AffineTransform.identity">identity</a></code></li>
+<li><code><a title="transformnd.transforms.AffineTransform.reflection" href="#transformnd.transforms.AffineTransform.reflection">reflection</a></code></li>
+<li><code><a title="transformnd.transforms.AffineTransform.rotation2" href="#transformnd.transforms.AffineTransform.rotation2">rotation2</a></code></li>
+<li><code><a title="transformnd.transforms.AffineTransform.rotation3" href="#transformnd.transforms.AffineTransform.rotation3">rotation3</a></code></li>
+<li><code><a title="transformnd.transforms.AffineTransform.scaling" href="#transformnd.transforms.AffineTransform.scaling">scaling</a></code></li>
+<li><code><a title="transformnd.transforms.AffineTransform.shearing" href="#transformnd.transforms.AffineTransform.shearing">shearing</a></code></li>
+<li><code><a title="transformnd.transforms.AffineTransform.translation" href="#transformnd.transforms.AffineTransform.translation">translation</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="transformnd.transforms.IdentityTransform" href="#transformnd.transforms.IdentityTransform">IdentityTransform</a></code></h4>
+</li>
+<li>
+<h4><code><a title="transformnd.transforms.Reflect" href="#transformnd.transforms.Reflect">Reflect</a></code></h4>
+<ul class="">
+<li><code><a title="transformnd.transforms.Reflect.from_axis" href="#transformnd.transforms.Reflect.from_axis">from_axis</a></code></li>
+<li><code><a title="transformnd.transforms.Reflect.from_points" href="#transformnd.transforms.Reflect.from_points">from_points</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="transformnd.transforms.Scale" href="#transformnd.transforms.Scale">Scale</a></code></h4>
+</li>
+<li>
+<h4><code><a title="transformnd.transforms.Translate" href="#transformnd.transforms.Translate">Translate</a></code></h4>
+</li>
 </ul>
 </li>
 </ul>

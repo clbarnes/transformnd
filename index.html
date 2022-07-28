@@ -31,6 +31,7 @@
 as well as some common transforms.
 The goal is to allow downstream applications which require such transformations
 (e.g. image registration) to be generic over anything inheriting from <code><a title="transformnd.Transform" href="#transformnd.Transform">Transform</a></code>.</p>
+<p>The base classes and utilities are very lightweight with few dependencies, for use as an API; additional transforms and features use extras.</p>
 <p>Heavily inspired by/ cribbed directly from
 <a href="https://github.com/schlegelp/navis/tree/master/navis/transforms">Philipp Schlegel's work in navis</a>;
 co-developed with <a href="https://github.com/schlegelp/xform/">xform</a> as a red team prototype.</p>
@@ -43,6 +44,21 @@ Instances of <code><a title="transformnd.Transform" href="#transformnd.Transform
 Use <code>self._validate_coords(coords)</code> in <code>__call__</code> to ensure the coordinates
 are of valid type and dimensions.</p>
 <p>See the <a href="https://github.com/clbarnes/transformnd/blob/main/examples/tutorial.ipynb">tutorial here</a>.</p>
+<h2 id="implemented-transforms">Implemented transforms</h2>
+<ul>
+<li>Identity (<code><a title="transformnd.transforms.IdentityTransform" href="transforms/index.html#transformnd.transforms.IdentityTransform">IdentityTransform</a></code>)</li>
+<li>Translation (<code>transformnd.transforms.Translation</code>)</li>
+<li>Scale (<code><a title="transformnd.transforms.Scale" href="transforms/index.html#transformnd.transforms.Scale">Scale</a></code>)</li>
+<li>Reflection (<code><a title="transformnd.transforms.Reflect" href="transforms/index.html#transformnd.transforms.Reflect">Reflect</a></code>)</li>
+<li>Affine (<code><a title="transformnd.transforms.AffineTransform" href="transforms/index.html#transformnd.transforms.AffineTransform">AffineTransform</a></code>)</li>
+<li>Can be composed with <code>@</code> operator</li>
+<li>Moving Least Squares, affine (<code><a title="transformnd.transforms.moving_least_squares.MovingLeastSquares" href="transforms/moving_least_squares.html#transformnd.transforms.moving_least_squares.MovingLeastSquares">MovingLeastSquares</a></code>)</li>
+<li>uses <code>movingleastsquares</code> extra</li>
+<li>Thin Plate Splines (<code><a title="transformnd.transforms.thinplate.ThinPlateSplines" href="transforms/thinplate.html#transformnd.transforms.thinplate.ThinPlateSplines">ThinPlateSplines</a></code>)</li>
+<li>uses <code>thinplatesplines</code> extra</li>
+</ul>
+<p>Arbitrary transforms can be composed into a <code><a title="transformnd.TransformSequence" href="#transformnd.TransformSequence">TransformSequence</a></code> with <code>transform1 | transform2</code>.
+A graph of transforms between defined spaces can be traversed using the <code>TransformGraph</code> (uses the <code><a title="transformnd.graph" href="graph.html">transformnd.graph</a></code> extra).</p>
 <h2 id="additional-transforms">Additional transforms</h2>
 <p>Contributions of additional transforms are welcome!
 Even if they're only thin wrappers around an external library,
@@ -672,6 +688,7 @@ NxD numpy array of N D-dimensional coordinates.</p>
 <div class="toc">
 <ul>
 <li><a href="#transformnd">transformnd</a><ul>
+<li><a href="#implemented-transforms">Implemented transforms</a></li>
 <li><a href="#additional-transforms">Additional transforms</a></li>
 </ul>
 </li>
