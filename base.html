@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import Iterator, List, Optional, Set, Union
+from typing import Iterator, List, Optional, Set, Tuple, Union
 
 import numpy as np
 
@@ -46,6 +46,8 @@ from .util import (
     window,
 )
 
+SpaceTuple = Tuple[Optional[SpaceRef], Optional[SpaceRef]]
+
 
 class Transform(ABC):
     ndim: Optional[Set[int]] = None
@@ -53,20 +55,24 @@ class Transform(ABC):
     def __init__(
         self,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         &#34;&#34;&#34;Base class for transformations.
 
         Parameters
         ----------
-        source_space : Optional[SpaceRef]
-            To refer to the source space.
-        target_space : Optional[SpaceRef]
-            To refer to the target space.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
         &#34;&#34;&#34;
-        self.source_space = source_space
-        self.target_space = target_space
+        self.spaces = spaces
+
+    @property
+    def source_space(self):
+        return self.spaces[0]
+
+    @property
+    def target_space(self):
+        return self.spaces[1]
 
     def _validate_coords(self, coords) -&gt; np.ndarray:
         &#34;&#34;&#34;Check that dimension of coords are supported.
@@ -132,7 +138,8 @@ class Transform(ABC):
             return NotImplemented
         transforms = get_transform_list(self) + get_transform_list(other)
         return TransformSequence(
-            transforms, source_space=self.source_space, target_space=other.target_space
+            transforms,
+            spaces=(self.source_space, other.target_space),
         )
 
     def __ror__(self, other) -&gt; TransformSequence:
@@ -152,7 +159,8 @@ class Transform(ABC):
             return NotImplemented
         transforms = get_transform_list(other) + get_transform_list(self)
         return TransformSequence(
-            transforms, source_space=other.source_space, target_space=self.target_space
+            transforms,
+            spaces=(other.source_space, self.target_space),
         )
 
     def __str__(self) -&gt; str:
@@ -168,8 +176,7 @@ class TransformWrapper(Transform):
         fn: TransformSignature,
         ndim: Optional[Union[Set[int], int]] = None,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         &#34;&#34;&#34;Wrapper around an arbitrary function.
 
@@ -180,12 +187,10 @@ class TransformWrapper(Transform):
         ----------
         fn : TransformSignature
             Callable.
-        source_space : Optional[SpaceRef]
-            Any hashable, to refer to the source space.
-        target_space : Optional[SpaceRef]
-            Any hashable, to refer to the target space.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
         &#34;&#34;&#34;
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         self.fn = fn
         if ndim is not None:
             if isinstance(ndim, int):
@@ -204,8 +209,7 @@ def _with_spaces(t: Transform, source_space=None, target_space=None):
     tgt = same_or_none(src_tgt[1], target_space, default=None)
     if (src, tgt) != src_tgt:
         t = copy(t)
-        t.source_space = src
-        t.target_space = tgt
+        t.spaces = (src, tgt)
     return t
 
 
@@ -238,8 +242,7 @@ class TransformSequence(Transform):
         self,
         transforms: List[Transform],
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ) -&gt; None:
         &#34;&#34;&#34;Combine transforms by chaining them.
 
@@ -251,23 +254,22 @@ class TransformSequence(Transform):
         transforms : List[Transform]
             Items which are a TransformSequences
             will each still be treated as a single transform.
-        source_space : Optional[SpaceRef]
-            Any hashable, to refer to the source space.
-            Can also be inferred from the first transform.
-        target_space : Optional[SpaceRef]
-            Any hashable, to refer to the target space.
-            Can also be inferred from the last transform.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces.
+            Can also be inferred from the first and last transforms.
 
         Raises
         ------
         ValueError
             If spaces are incompatible.
         &#34;&#34;&#34;
-        ts = infer_spaces(transforms, source_space, target_space)
+        ts = infer_spaces(transforms, *spaces)
 
         super().__init__(
-            source_space=ts[0].source_space,
-            target_space=ts[-1].target_space,
+            spaces=(
+                ts[0].source_space,
+                ts[-1].target_space,
+            ),
         )
 
         self.transforms: List[Transform] = ts
@@ -303,7 +305,8 @@ class TransformSequence(Transform):
         except NotImplementedError:
             return NotImplemented
         return TransformSequence(
-            transforms, source_space=self.target_space, target_space=self.source_space
+            transforms,
+            spaces=self.spaces[::-1],
         )
 
     def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
@@ -311,7 +314,7 @@ class TransformSequence(Transform):
             coords = t(coords)
         return coords
 
-    def spaces(self, skip_none=False) -&gt; List[SpaceRef]:
+    def list_spaces(self, skip_none=False) -&gt; List[SpaceRef]:
         &#34;&#34;&#34;List spaces in this transform.
 
         Parameters
@@ -330,7 +333,7 @@ class TransformSequence(Transform):
 
     def __str__(self) -&gt; str:
         cls_name = type(self).__name__
-        spaces_str = &#34;-&gt;&#34;.join(space_str(s) for s in self.spaces())
+        spaces_str = &#34;-&gt;&#34;.join(space_str(s) for s in self.list_spaces())
         return f&#34;{cls_name}[{spaces_str}]&#34;
 
     def __getitem__(self, idx: Union[slice, int]):
@@ -395,7 +398,7 @@ class TransformSequence(Transform):
 <dl>
 <dt id="transformnd.base.Transform"><code class="flex name class">
 <span>class <span class="ident">Transform</span></span>
-<span>(</span><span>*, source_space: Optional[SpaceRef] = None, target_space: Optional[SpaceRef] = None)</span>
+<span>(</span><span>*, spaces: SpaceTuple = (None, None))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -403,10 +406,8 @@ inheritance.</p>
 <p>Base class for transformations.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>source_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>To refer to the source space.</dd>
-<dt><strong><code>target_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>To refer to the target space.</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -418,20 +419,24 @@ inheritance.</p>
     def __init__(
         self,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         &#34;&#34;&#34;Base class for transformations.
 
         Parameters
         ----------
-        source_space : Optional[SpaceRef]
-            To refer to the source space.
-        target_space : Optional[SpaceRef]
-            To refer to the target space.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
         &#34;&#34;&#34;
-        self.source_space = source_space
-        self.target_space = target_space
+        self.spaces = spaces
+
+    @property
+    def source_space(self):
+        return self.spaces[0]
+
+    @property
+    def target_space(self):
+        return self.spaces[1]
 
     def _validate_coords(self, coords) -&gt; np.ndarray:
         &#34;&#34;&#34;Check that dimension of coords are supported.
@@ -497,7 +502,8 @@ inheritance.</p>
             return NotImplemented
         transforms = get_transform_list(self) + get_transform_list(other)
         return TransformSequence(
-            transforms, source_space=self.source_space, target_space=other.target_space
+            transforms,
+            spaces=(self.source_space, other.target_space),
         )
 
     def __ror__(self, other) -&gt; TransformSequence:
@@ -517,7 +523,8 @@ inheritance.</p>
             return NotImplemented
         transforms = get_transform_list(other) + get_transform_list(self)
         return TransformSequence(
-            transforms, source_space=other.source_space, target_space=self.target_space
+            transforms,
+            spaces=(other.source_space, self.target_space),
         )
 
     def __str__(self) -&gt; str:
@@ -549,10 +556,37 @@ inheritance.</p>
 <div class="desc"></div>
 </dd>
 </dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="transformnd.base.Transform.source_space"><code class="name">var <span class="ident">source_space</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def source_space(self):
+    return self.spaces[0]</code></pre>
+</details>
+</dd>
+<dt id="transformnd.base.Transform.target_space"><code class="name">var <span class="ident">target_space</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def target_space(self):
+    return self.spaces[1]</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="transformnd.base.TransformSequence"><code class="flex name class">
 <span>class <span class="ident">TransformSequence</span></span>
-<span>(</span><span>transforms: List[<a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a>], *, source_space: Optional[SpaceRef] = None, target_space: Optional[SpaceRef] = None)</span>
+<span>(</span><span>transforms: List[<a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a>], *, spaces: SpaceTuple = (None, None))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -565,12 +599,9 @@ inferring if None.</p>
 <dt><strong><code>transforms</code></strong> :&ensp;<code>List[<a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a>]</code></dt>
 <dd>Items which are a TransformSequences
 will each still be treated as a single transform.</dd>
-<dt><strong><code>source_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>Any hashable, to refer to the source space.
-Can also be inferred from the first transform.</dd>
-<dt><strong><code>target_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>Any hashable, to refer to the target space.
-Can also be inferred from the last transform.</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces.
+Can also be inferred from the first and last transforms.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -586,8 +617,7 @@ Can also be inferred from the last transform.</dd>
         self,
         transforms: List[Transform],
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ) -&gt; None:
         &#34;&#34;&#34;Combine transforms by chaining them.
 
@@ -599,23 +629,22 @@ Can also be inferred from the last transform.</dd>
         transforms : List[Transform]
             Items which are a TransformSequences
             will each still be treated as a single transform.
-        source_space : Optional[SpaceRef]
-            Any hashable, to refer to the source space.
-            Can also be inferred from the first transform.
-        target_space : Optional[SpaceRef]
-            Any hashable, to refer to the target space.
-            Can also be inferred from the last transform.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces.
+            Can also be inferred from the first and last transforms.
 
         Raises
         ------
         ValueError
             If spaces are incompatible.
         &#34;&#34;&#34;
-        ts = infer_spaces(transforms, source_space, target_space)
+        ts = infer_spaces(transforms, *spaces)
 
         super().__init__(
-            source_space=ts[0].source_space,
-            target_space=ts[-1].target_space,
+            spaces=(
+                ts[0].source_space,
+                ts[-1].target_space,
+            ),
         )
 
         self.transforms: List[Transform] = ts
@@ -651,7 +680,8 @@ Can also be inferred from the last transform.</dd>
         except NotImplementedError:
             return NotImplemented
         return TransformSequence(
-            transforms, source_space=self.target_space, target_space=self.source_space
+            transforms,
+            spaces=self.spaces[::-1],
         )
 
     def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
@@ -659,7 +689,7 @@ Can also be inferred from the last transform.</dd>
             coords = t(coords)
         return coords
 
-    def spaces(self, skip_none=False) -&gt; List[SpaceRef]:
+    def list_spaces(self, skip_none=False) -&gt; List[SpaceRef]:
         &#34;&#34;&#34;List spaces in this transform.
 
         Parameters
@@ -678,7 +708,7 @@ Can also be inferred from the last transform.</dd>
 
     def __str__(self) -&gt; str:
         cls_name = type(self).__name__
-        spaces_str = &#34;-&gt;&#34;.join(space_str(s) for s in self.spaces())
+        spaces_str = &#34;-&gt;&#34;.join(space_str(s) for s in self.list_spaces())
         return f&#34;{cls_name}[{spaces_str}]&#34;
 
     def __getitem__(self, idx: Union[slice, int]):
@@ -693,8 +723,8 @@ Can also be inferred from the last transform.</dd>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="transformnd.base.TransformSequence.spaces"><code class="name flex">
-<span>def <span class="ident">spaces</span></span>(<span>self, skip_none=False) ‑> List[Hashable]</span>
+<dt id="transformnd.base.TransformSequence.list_spaces"><code class="name flex">
+<span>def <span class="ident">list_spaces</span></span>(<span>self, skip_none=False) ‑> List[Hashable]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>List spaces in this transform.</p>
@@ -712,7 +742,7 @@ Can also be inferred from the last transform.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def spaces(self, skip_none=False) -&gt; List[SpaceRef]:
+<pre><code class="python">def list_spaces(self, skip_none=False) -&gt; List[SpaceRef]:
     &#34;&#34;&#34;List spaces in this transform.
 
     Parameters
@@ -734,7 +764,7 @@ Can also be inferred from the last transform.</dd>
 </dd>
 <dt id="transformnd.base.TransformWrapper"><code class="flex name class">
 <span>class <span class="ident">TransformWrapper</span></span>
-<span>(</span><span>fn: TransformSignature, ndim: Optional[Union[Set[int], int]] = None, *, source_space: Optional[SpaceRef] = None, target_space: Optional[SpaceRef] = None)</span>
+<span>(</span><span>fn: TransformSignature, ndim: Optional[Union[Set[int], int]] = None, *, spaces: SpaceTuple = (None, None))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -746,10 +776,8 @@ NxD numpy array of N D-dimensional coordinates.</p>
 <dl>
 <dt><strong><code>fn</code></strong> :&ensp;<code>TransformSignature</code></dt>
 <dd>Callable.</dd>
-<dt><strong><code>source_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>Any hashable, to refer to the source space.</dd>
-<dt><strong><code>target_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>Any hashable, to refer to the target space.</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -761,8 +789,7 @@ NxD numpy array of N D-dimensional coordinates.</p>
         fn: TransformSignature,
         ndim: Optional[Union[Set[int], int]] = None,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         &#34;&#34;&#34;Wrapper around an arbitrary function.
 
@@ -773,12 +800,10 @@ NxD numpy array of N D-dimensional coordinates.</p>
         ----------
         fn : TransformSignature
             Callable.
-        source_space : Optional[SpaceRef]
-            Any hashable, to refer to the source space.
-        target_space : Optional[SpaceRef]
-            Any hashable, to refer to the target space.
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
         &#34;&#34;&#34;
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         self.fn = fn
         if ndim is not None:
             if isinstance(ndim, int):
@@ -822,12 +847,14 @@ NxD numpy array of N D-dimensional coordinates.</p>
 <h4><code><a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a></code></h4>
 <ul class="">
 <li><code><a title="transformnd.base.Transform.ndim" href="#transformnd.base.Transform.ndim">ndim</a></code></li>
+<li><code><a title="transformnd.base.Transform.source_space" href="#transformnd.base.Transform.source_space">source_space</a></code></li>
+<li><code><a title="transformnd.base.Transform.target_space" href="#transformnd.base.Transform.target_space">target_space</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="transformnd.base.TransformSequence" href="#transformnd.base.TransformSequence">TransformSequence</a></code></h4>
 <ul class="">
-<li><code><a title="transformnd.base.TransformSequence.spaces" href="#transformnd.base.TransformSequence.spaces">spaces</a></code></li>
+<li><code><a title="transformnd.base.TransformSequence.list_spaces" href="#transformnd.base.TransformSequence.list_spaces">list_spaces</a></code></li>
 </ul>
 </li>
 <li>

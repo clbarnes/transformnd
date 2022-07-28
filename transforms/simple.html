@@ -30,40 +30,37 @@
 <pre><code class="python">&#34;&#34;&#34;
 Simple transformations like rigid translation and scaling.
 &#34;&#34;&#34;
-from typing import Optional
-
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ..base import Transform
-from ..util import SpaceRef, chain_or
+from ..base import SpaceTuple, Transform
+from ..util import chain_or
 
 
 class IdentityTransform(Transform):
     def __init__(
         self,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         &#34;&#34;&#34;
         Transform which does nothing.
 
         Parameters
         ----------
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             [description]
         &#34;&#34;&#34;
-        src = chain_or(source_space, target_space, default=None)
-        tgt = chain_or(target_space, source_space, default=None)
+        src = chain_or(*spaces, default=None)
+        tgt = chain_or(*spaces, default=None)
         if src != tgt:
             raise ValueError(&#34;Source and target spaces are different&#34;)
-        super().__init__(source_space=src, target_space=src)
+        super().__init__(spaces=(src, src))
 
     def __invert__(self) -&gt; Transform:
         return self
@@ -77,8 +74,7 @@ class Translate(Transform):
         self,
         translation: ArrayLike,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         &#34;&#34;&#34;Simple translation.
 
@@ -86,15 +82,15 @@ class Translate(Transform):
         ----------
         translation : scalar or D-length array
             Translation to apply in all dimensions, or each dimension.
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             If the translation is the wrong shape
         &#34;&#34;&#34;
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         self.translation = np.asarray(translation)
         if self.translation.ndim &gt; 1:
             raise ValueError(&#34;Translation must be scalar or 1D&#34;)
@@ -108,11 +104,7 @@ class Translate(Transform):
         return coords + self.translation
 
     def __invert__(self) -&gt; Transform:
-        return type(self)(
-            -self.translation,
-            source_space=self.target_space,
-            target_space=self.source_space,
-        )
+        return type(self)(-self.translation, spaces=self.spaces[::-1])
 
 
 class Scale(Transform):
@@ -120,8 +112,7 @@ class Scale(Transform):
         self,
         scale: ArrayLike,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         &#34;&#34;&#34;Simple scale transform.
 
@@ -131,15 +122,15 @@ class Scale(Transform):
         ----------
         scale : scalar or D-length array-like
             Scaling to apply in all dimensions, or each dimension.
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             If scale is the wrong shape.
         &#34;&#34;&#34;
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         self.scale = np.asarray(scale)
         if self.scale.ndim &gt; 1:
             raise ValueError(&#34;Scale must be scalar or 1D&#34;)
@@ -155,8 +146,7 @@ class Scale(Transform):
     def __invert__(self) -&gt; Transform:
         return type(self)(
             1 / self.scale,
-            source_space=self.target_space,
-            target_space=self.source_space,
+            spaces=self.spaces[::-1],
         )</code></pre>
 </details>
 </section>
@@ -171,7 +161,7 @@ class Scale(Transform):
 <dl>
 <dt id="transformnd.transforms.simple.IdentityTransform"><code class="flex name class">
 <span>class <span class="ident">IdentityTransform</span></span>
-<span>(</span><span>*, source_space: Optional[Hashable] = None, target_space: Optional[Hashable] = None)</span>
+<span>(</span><span>*, spaces: Tuple[Optional[Hashable], Optional[Hashable]] = (None, None))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -179,10 +169,8 @@ inheritance.</p>
 <p>Transform which does nothing.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>source_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>target_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -197,27 +185,26 @@ inheritance.</p>
     def __init__(
         self,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         &#34;&#34;&#34;
         Transform which does nothing.
 
         Parameters
         ----------
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             [description]
         &#34;&#34;&#34;
-        src = chain_or(source_space, target_space, default=None)
-        tgt = chain_or(target_space, source_space, default=None)
+        src = chain_or(*spaces, default=None)
+        tgt = chain_or(*spaces, default=None)
         if src != tgt:
             raise ValueError(&#34;Source and target spaces are different&#34;)
-        super().__init__(source_space=src, target_space=src)
+        super().__init__(spaces=(src, src))
 
     def __invert__(self) -&gt; Transform:
         return self
@@ -233,7 +220,7 @@ inheritance.</p>
 </dd>
 <dt id="transformnd.transforms.simple.Scale"><code class="flex name class">
 <span>class <span class="ident">Scale</span></span>
-<span>(</span><span>scale: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], *, source_space: Optional[Hashable] = None, target_space: Optional[Hashable] = None)</span>
+<span>(</span><span>scale: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], *, spaces: Tuple[Optional[Hashable], Optional[Hashable]] = (None, None))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -244,10 +231,8 @@ inheritance.</p>
 <dl>
 <dt><strong><code>scale</code></strong> :&ensp;<code>scalar</code> or <code>D-length array-like</code></dt>
 <dd>Scaling to apply in all dimensions, or each dimension.</dd>
-<dt><strong><code>source_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>target_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -263,8 +248,7 @@ inheritance.</p>
         self,
         scale: ArrayLike,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         &#34;&#34;&#34;Simple scale transform.
 
@@ -274,15 +258,15 @@ inheritance.</p>
         ----------
         scale : scalar or D-length array-like
             Scaling to apply in all dimensions, or each dimension.
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             If scale is the wrong shape.
         &#34;&#34;&#34;
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         self.scale = np.asarray(scale)
         if self.scale.ndim &gt; 1:
             raise ValueError(&#34;Scale must be scalar or 1D&#34;)
@@ -298,8 +282,7 @@ inheritance.</p>
     def __invert__(self) -&gt; Transform:
         return type(self)(
             1 / self.scale,
-            source_space=self.target_space,
-            target_space=self.source_space,
+            spaces=self.spaces[::-1],
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -310,7 +293,7 @@ inheritance.</p>
 </dd>
 <dt id="transformnd.transforms.simple.Translate"><code class="flex name class">
 <span>class <span class="ident">Translate</span></span>
-<span>(</span><span>translation: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], *, source_space: Optional[Hashable] = None, target_space: Optional[Hashable] = None)</span>
+<span>(</span><span>translation: Union[numpy.__array_like._SupportsArray[numpy.dtype], numpy.__nested_sequence._NestedSequence[numpy.__array_like._SupportsArray[numpy.dtype]], bool, int, float, complex, str, bytes, numpy.__nested_sequence._NestedSequence[Union[bool, int, float, complex, str, bytes]]], *, spaces: Tuple[Optional[Hashable], Optional[Hashable]] = (None, None))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -320,10 +303,8 @@ inheritance.</p>
 <dl>
 <dt><strong><code>translation</code></strong> :&ensp;<code>scalar</code> or <code>D-length array</code></dt>
 <dd>Translation to apply in all dimensions, or each dimension.</dd>
-<dt><strong><code>source_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>target_space</code></strong> :&ensp;<code>Optional[SpaceRef]</code></dt>
-<dd>&nbsp;</dd>
+<dt><strong><code>spaces</code></strong> :&ensp;<code>tuple[SpaceRef, SpaceRef]</code></dt>
+<dd>Optional source and target spaces</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -339,8 +320,7 @@ inheritance.</p>
         self,
         translation: ArrayLike,
         *,
-        source_space: Optional[SpaceRef] = None,
-        target_space: Optional[SpaceRef] = None,
+        spaces: SpaceTuple = (None, None),
     ):
         &#34;&#34;&#34;Simple translation.
 
@@ -348,15 +328,15 @@ inheritance.</p>
         ----------
         translation : scalar or D-length array
             Translation to apply in all dimensions, or each dimension.
-        source_space : Optional[SpaceRef]
-        target_space : Optional[SpaceRef]
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
 
         Raises
         ------
         ValueError
             If the translation is the wrong shape
         &#34;&#34;&#34;
-        super().__init__(source_space=source_space, target_space=target_space)
+        super().__init__(spaces=spaces)
         self.translation = np.asarray(translation)
         if self.translation.ndim &gt; 1:
             raise ValueError(&#34;Translation must be scalar or 1D&#34;)
@@ -370,11 +350,7 @@ inheritance.</p>
         return coords + self.translation
 
     def __invert__(self) -&gt; Transform:
-        return type(self)(
-            -self.translation,
-            source_space=self.target_space,
-            target_space=self.source_space,
-        )</code></pre>
+        return type(self)(-self.translation, spaces=self.spaces[::-1])</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

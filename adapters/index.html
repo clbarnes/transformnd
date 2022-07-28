@@ -149,7 +149,7 @@ to apply the transform to those attributes.</dd>
             try:
                 transformed = v(transform, member, in_place=True)  # type: ignore
             except TypeError as e:
-                if &#34;got an unexpected keyword argument: &#39;in_place&#39;&#34; in str(e):
+                if &#34;got an unexpected keyword argument &#39;in_place&#39;&#34; in str(e):
                     transformed = v(transform, member)
                 else:
                     raise e

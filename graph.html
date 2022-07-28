@@ -155,7 +155,8 @@ class TransformGraph:
                 self.graph.edges[src, tgt][&#34;transform&#34;] for src, tgt in window(path, 2)
             ]
         return TransformSequence(
-            transforms, source_space=source_space, target_space=target_space
+            transforms,
+            spaces=(source_space, target_space),
         )
 
     def transform(
@@ -363,7 +364,8 @@ into another, via some intermediate spaces.</p>
                 self.graph.edges[src, tgt][&#34;transform&#34;] for src, tgt in window(path, 2)
             ]
         return TransformSequence(
-            transforms, source_space=source_space, target_space=target_space
+            transforms,
+            spaces=(source_space, target_space),
         )
 
     def transform(
@@ -528,7 +530,8 @@ def get_sequence(
             self.graph.edges[src, tgt][&#34;transform&#34;] for src, tgt in window(path, 2)
         ]
     return TransformSequence(
-        transforms, source_space=source_space, target_space=target_space
+        transforms,
+        spaces=(source_space, target_space),
     )</code></pre>
 </details>
 </dd>
