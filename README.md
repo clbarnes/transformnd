@@ -10,6 +10,8 @@ as well as some common transforms.
 The goal is to allow downstream applications which require such transformations
 (e.g. image registration) to be generic over anything inheriting from `transformnd.Transform`.
 
+The base classes and utilities are very lightweight with few dependencies, for use as an API; additional transforms and features use extras.
+
 Heavily inspired by/ cribbed directly from
 [Philipp Schlegel's work in navis](https://github.com/schlegelp/navis/tree/master/navis/transforms);
 co-developed with [xform](https://github.com/schlegelp/xform/) as a red team prototype.
@@ -25,6 +27,22 @@ Use `self._validate_coords(coords)` in `__call__` to ensure the coordinates
 are of valid type and dimensions.
 
 See the [tutorial here](https://github.com/clbarnes/transformnd/blob/main/examples/tutorial.ipynb).
+
+## Implemented transforms
+
+- Identity (`transformnd.transforms.IdentityTransform`)
+- Translation (`transformnd.transforms.Translation`)
+- Scale (`transformnd.transforms.Scale`)
+- Reflection (`transformnd.transforms.Reflect`)
+- Affine (`transformnd.transforms.AffineTransform`)
+  - Can be composed with `@` operator
+- Moving Least Squares, affine (`transformnd.transforms.moving_least_squares.MovingLeastSquares`)
+  - uses `movingleastsquares` extra
+- Thin Plate Splines (`transformnd.transforms.thinplate.ThinPlateSplines`)
+  - uses `thinplatesplines` extra
+
+Arbitrary transforms can be composed into a `TransformSequence` with `transform1 | transform2`.
+A graph of transforms between defined spaces can be traversed using the `TransformGraph` (uses the `graph` extra).
 
 ## Additional transforms
 
