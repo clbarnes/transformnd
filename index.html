@@ -24,9 +24,9 @@
 <section id="section-intro">
 <h1 id="transformnd">transformnd</h1>
 <p><a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
-<img alt="GitHub" src="https://img.shields.io/github/license/clbarnes/transformnd">
-<img alt="Test Status" src="https://img.shields.io/github/workflow/status/clbarnes/transformnd/ci">
-<img alt="Docs Status" src="https://img.shields.io/github/workflow/status/clbarnes/transformnd/docs?label=docs"></p>
+<a href="https://github.com/clbarnes/transformnd/blob/main/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/clbarnes/transformnd"></a>
+<a href="https://github.com/clbarnes/transformnd/actions/workflows/ci.yaml"><img alt="Test Status" src="https://img.shields.io/github/workflow/status/clbarnes/transformnd/ci"></a>
+<a href="https://clbarnes.github.io/transformnd/"><img alt="Docs Status" src="https://img.shields.io/github/workflow/status/clbarnes/transformnd/docs?label=docs"></a></p>
 <p>A library providing an API for coordinate transformations,
 as well as some common transforms.
 The goal is to allow downstream applications which require such transformations
@@ -522,7 +522,7 @@ Can also be inferred from the first and last transforms.</dd>
             transforms = [~t for t in reversed(self.transforms)]
         except NotImplementedError:
             return NotImplemented
-        return TransformSequence(
+        return type(self)(
             transforms,
             spaces=self.spaces[::-1],
         )
