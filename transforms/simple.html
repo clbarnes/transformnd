@@ -57,7 +57,7 @@ class IdentityTransform(Transform):
             [description]
         &#34;&#34;&#34;
         src = chain_or(*spaces, default=None)
-        tgt = chain_or(*spaces, default=None)
+        tgt = chain_or(*spaces[::-1], default=None)
         if src != tgt:
             raise ValueError(&#34;Source and target spaces are different&#34;)
         super().__init__(spaces=(src, src))
@@ -201,7 +201,7 @@ inheritance.</p>
             [description]
         &#34;&#34;&#34;
         src = chain_or(*spaces, default=None)
-        tgt = chain_or(*spaces, default=None)
+        tgt = chain_or(*spaces[::-1], default=None)
         if src != tgt:
             raise ValueError(&#34;Source and target spaces are different&#34;)
         super().__init__(spaces=(src, src))
