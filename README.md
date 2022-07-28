@@ -1,5 +1,10 @@
 # transformnd
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+![GitHub](https://img.shields.io/github/license/clbarnes/transformnd)
+![Test Status](https://img.shields.io/github/workflow/status/clbarnes/transformnd/ci)
+![Docs Status](https://img.shields.io/github/workflow/status/clbarnes/transformnd/docs?label=docs)
+
 A library providing an API for coordinate transformations,
 as well as some common transforms.
 The goal is to allow downstream applications which require such transformations
@@ -8,8 +13,6 @@ The goal is to allow downstream applications which require such transformations
 Heavily inspired by/ cribbed directly from
 [Philipp Schlegel's work in navis](https://github.com/schlegelp/navis/tree/master/navis/transforms);
 co-developed with [xform](https://github.com/schlegelp/xform/) as a red team prototype.
-
-## Conventions
 
 `N` coordinates in `D` dimensions are given as a numpy array of shape `(N, D)`.
 `transformnd.flatten()` converts arrays into a compatible shape,
@@ -20,6 +23,8 @@ can specify this in their `ndim` class variable.
 Instances of `Transform` subclasses can further restrict their `ndim`.
 Use `self._validate_coords(coords)` in `__call__` to ensure the coordinates
 are of valid type and dimensions.
+
+See the [tutorial here](https://github.com/clbarnes/transformnd/blob/main/examples/tutorial.ipynb).
 
 ## Additional transforms
 
