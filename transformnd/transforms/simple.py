@@ -28,7 +28,7 @@ class IdentityTransform(Transform):
             [description]
         """
         src = chain_or(*spaces, default=None)
-        tgt = chain_or(*spaces, default=None)
+        tgt = chain_or(*spaces[::-1], default=None)
         if src != tgt:
             raise ValueError("Source and target spaces are different")
         super().__init__(spaces=(src, src))
