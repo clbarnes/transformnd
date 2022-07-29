@@ -1,7 +1,6 @@
-import numpy as np
 import pytest
 
-from transformnd.util import chain_or, flatten, none_eq, same_or_none, window
+from transformnd.util import chain_or, none_eq, same_or_none, window
 
 
 def test_same_or_none():
@@ -27,20 +26,6 @@ def test_chain_or():
     with pytest.raises(ValueError):
         chain_or(None)
     assert chain_or(None, default=1) == 1
-
-
-@pytest.mark.parametrize(
-    ["shape", "dim"],
-    [
-        ((5, 4, 3), -1),
-        ((5, 4, 3), 1),
-    ],
-)
-def test_flatten(shape, dim):
-    original = np.arange(np.product(shape)).reshape(shape)
-    flat, unflatten = flatten(original, dim)
-    assert flat.shape[-1] == shape[dim]
-    assert np.allclose(unflatten(flat), original)
 
 
 def test_window():

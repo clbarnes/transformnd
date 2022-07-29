@@ -140,55 +140,6 @@ def window(iterable: Iterable, length: int) -> Iterator[Tuple[Any, ...]]:
         yield tuple(q)
 
 
-def flatten(
-    arr,
-    dim_axis=-1,
-    transpose=False,
-) -> Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]:
-    """Convert array into 2D, and provide a routine to reclaim original shape.
-
-    Parameters
-    ----------
-    arr : np.ndarray
-        Array to be flattened
-    dim_axis : int, optional
-        Which axis contains dimensions, default -1
-    transpose : bool, optional
-        Whether to return DxN array, default False
-
-    Returns
-    -------
-    Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]
-        The flattened array, and a function
-        for converting an identically-shaped flat array
-        into one the same shape as the original.
-
-    Example
-    -------
-    >>> my_coords = np.random.random((30, 20, 3))
-    >>> flat, unflatten = flatten(my_coords)
-    >>> flat.shape == (30*20, 3)
-    >>> recovered = unflatten(flat)
-    >>> np.allclose(recovered, my_coords)
-    """
-    # todo: reduce copies if possible
-    if dim_axis < 0:
-        dim_axis = arr.ndim + dim_axis
-    moved = np.moveaxis(arr, dim_axis, -1)
-    m_shape = moved.shape
-
-    flattened = np.reshape(moved, (-1, m_shape[-1]))
-    if transpose:
-        flattened = flattened.T
-
-    def unflatten(flat):
-        if transpose:
-            flat = flat.T
-        return np.moveaxis(np.reshape(flat, m_shape), -1, dim_axis)
-
-    return flattened, unflatten
-
-
 def check_ndim(given_ndim: int, supported_ndim: Optional[Set[int]]):
     """Raise a ValueError if dimensionality is unsupported.
 
