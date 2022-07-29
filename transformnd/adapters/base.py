@@ -134,6 +134,14 @@ class ReshapeAdapter(BaseAdapter[np.ndarray], ABC):
     """Adapter which reshapes a numpy.ndarray"""
 
     def __init__(self, dim_axis=-1) -> None:
+        """Adapt numpy arrays which are not of the correct shape.
+
+        Parameters
+        ----------
+        dim_axis : int, optional
+            Which axis contains the coordinates' dimensions,
+            by default -1 (last)
+        """
         self.dim_axis: int = dim_axis
 
     def __call__(self, transform: Transform, arr: np.ndarray) -> np.ndarray:
