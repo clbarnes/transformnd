@@ -17,14 +17,15 @@ Heavily inspired by/ cribbed directly from
 co-developed with [xform](https://github.com/schlegelp/xform/) as a red team prototype.
 
 `N` coordinates in `D` dimensions are given as a numpy array of shape `(N, D)`.
-`transformnd.flatten()` converts arrays into a compatible shape,
-and provides a routine for returning to the original shape.
 
 `Transform` subclasses which are restricted to certain dimensionalities
 can specify this in their `ndim` class variable.
 Instances of `Transform` subclasses can further restrict their `ndim`.
 Use `self._validate_coords(coords)` in `__call__` to ensure the coordinates
 are of valid type and dimensions.
+
+Additionally, `transformnd` provides an interface for transforming types other than NxD numpy arrays,
+and implements these adapters for a few common types.
 
 See the [tutorial here](https://github.com/clbarnes/transformnd/blob/main/examples/tutorial.ipynb).
 
@@ -35,18 +36,28 @@ See the [tutorial here](https://github.com/clbarnes/transformnd/blob/main/exampl
 - Scale (`transformnd.transforms.Scale`)
 - Reflection (`transformnd.transforms.Reflect`)
 - Affine (`transformnd.transforms.Affine`)
-  - Can be composed with `@` operator
+    - Can be composed with `@` operator
 - Moving Least Squares, affine (`transformnd.transforms.moving_least_squares.MovingLeastSquares`)
   - uses `movingleastsquares` extra
-- Thin Plate Splines (`transformnd.transforms.thinplate.ThinPlateSplines`)
-  - uses `thinplatesplines` extra
+-   Thin Plate Splines (`transformnd.transforms.thinplate.ThinPlateSplines`)
+    - uses `thinplatesplines` extra
 
 Arbitrary transforms can be composed into a `TransformSequence` with `transform1 | transform2`.
 A graph of transforms between defined spaces can be traversed using the `TransformGraph` (uses the `graph` extra).
 
-## Additional transforms
+## Implemented adapters
 
-Contributions of additional transforms are welcome!
+- Numpy arrays of shape `(..., D, ...)` (`transformnd.adapters.ReshapeAdapter`)
+- `meshio.Mesh` (`transformnd.adapters.meshio.MeshAdapter`)
+- `pandas.DataFrame` (`transformnd.adapters.pandas.DataFrameAdapter`)
+    - Takes a subset of columns as a coordinate array
+- Geometries from `shapely` (`transformnd.adapters.shapely.GeometryAdapter`)
+
+Objects which compose over transformable objects can easily be adapted with the `transformnd.adapters.AttrAdapter`.
+
+## Additional transforms and adapters
+
+Contributions of additional transforms and adapters are welcome!
 Even if they're only thin wrappers around an external library,
 the downstream ecosystem benefits from a consistent API.
 
