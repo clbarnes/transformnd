@@ -128,3 +128,22 @@ class SimpleAdapter(BaseAdapter, Generic[T], ABC):
         coords = self._to_array(obj)
         transformed = transform(coords)
         return self._from_array(transformed)
+
+
+class ReshapeAdapter(BaseAdapter[np.ndarray], ABC):
+    """Adapter which reshapes a numpy.ndarray"""
+
+    def __init__(self, dim_axis=-1) -> None:
+        self.dim_axis: int = dim_axis
+
+    def __call__(self, transform: Transform, arr: np.ndarray) -> np.ndarray:
+        dim_axis = self.dim_axis
+        if self.dim_axis < 0:
+            dim_axis += arr.ndim
+
+        moved = np.moveaxis(arr, dim_axis, -1)
+        m_shape = moved.shape
+
+        flattened = np.reshape(moved, (-1, m_shape[-1]))
+        transformed = transform(flattened)
+        return np.moveaxis(np.reshape(transformed, m_shape), -1, dim_axis)
