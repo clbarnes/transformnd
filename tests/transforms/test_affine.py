@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
 
-from transformnd.transforms.affine import AffineTransform
+from transformnd.transforms.affine import Affine
 
 
 def test_identity():
-    i2 = AffineTransform.identity(2)
+    i2 = Affine.identity(2)
     test = np.array([(1, 1), (2, 3), (-2, 50)])
     ref = test.copy()
     assert np.allclose(i2(test), ref)
@@ -18,8 +18,8 @@ def test_translation(ndim, rng):
 
     coords = rng.random((5, ndim)) - 0.5
     t_arr = [t] * ndim
-    trans = AffineTransform.translation(t, ndim)
-    trans_arr = AffineTransform.translation(t_arr)
+    trans = Affine.translation(t, ndim)
+    trans_arr = Affine.translation(t_arr)
     assert np.allclose(trans(coords), coords + t)
     assert np.allclose(trans_arr(coords), coords + t)
     assert np.allclose((~trans)(coords), coords - t)
@@ -30,17 +30,17 @@ def test_scaling(ndim, rng):
     s = 2
 
     coords = rng.random((5, ndim)) - 0.5
-    trans = AffineTransform.scaling(s, ndim)
+    trans = Affine.scaling(s, ndim)
     assert np.allclose(trans(coords), coords * s)
     assert np.allclose((~trans)(coords), coords / s)
 
     t_arr = [s] * ndim
-    trans_arr = AffineTransform.scaling(t_arr)
+    trans_arr = Affine.scaling(t_arr)
     assert np.allclose(trans_arr(coords), coords * s)
 
 
 def test_rotation2():
-    rot90 = AffineTransform.rotation2(90)
+    rot90 = Affine.rotation2(90)
     coords = np.array([[1, 1]])
     expected = np.array([[-1, 1], [-1, -1], [1, -1], [1, 1]])
     for exp in expected:

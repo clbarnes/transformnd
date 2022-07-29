@@ -23,7 +23,7 @@ def arg_as_array(arg: ArrayLike, ndim: Optional[int]):
     return arr
 
 
-class AffineTransform(Transform):
+class Affine(Transform):
     def __init__(
         self,
         matrix: ArrayLike,
@@ -77,7 +77,7 @@ class AffineTransform(Transform):
             spaces=self.spaces[::-1],
         )
 
-    def __matmul__(self, rhs: AffineTransform) -> AffineTransform:
+    def __matmul__(self, rhs: Affine) -> Affine:
         """Compose two affine transforms by matrix multiplication.
 
         Parameters
@@ -93,7 +93,7 @@ class AffineTransform(Transform):
         ValueError
             Incompatible transforms.
         """
-        if not isinstance(rhs, AffineTransform):
+        if not isinstance(rhs, Affine):
             return NotImplemented
         if self.matrix.shape != rhs.matrix.shape:
             raise ValueError(
@@ -101,7 +101,7 @@ class AffineTransform(Transform):
             )
         if not none_eq(self.target_space, rhs.source_space):
             raise ValueError("Affine transforms do not share a space")
-        return AffineTransform(
+        return Affine(
             self.matrix @ rhs.matrix,
             spaces=(self.source_space, rhs.target_space),
         )
@@ -113,7 +113,7 @@ class AffineTransform(Transform):
         translation=0,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> AffineTransform:
+    ) -> Affine:
         """Create an augmented affine matrix from a linear map,
         with an optional translation.
 
@@ -145,7 +145,7 @@ class AffineTransform(Transform):
         ndim: int,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> AffineTransform:
+    ) -> Affine:
         """Create an identity affine transformation.
 
         Parameters
@@ -170,7 +170,7 @@ class AffineTransform(Transform):
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> AffineTransform:
+    ) -> Affine:
         """Create an affine translation.
 
         Parameters
@@ -199,7 +199,7 @@ class AffineTransform(Transform):
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> AffineTransform:
+    ) -> Affine:
         """Create an affine scaling.
 
         Parameters
@@ -229,7 +229,7 @@ class AffineTransform(Transform):
         ndim: int,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> AffineTransform:
+    ) -> Affine:
         """Create an affine reflection.
 
         Parameters
@@ -261,7 +261,7 @@ class AffineTransform(Transform):
         clockwise=False,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> AffineTransform:
+    ) -> Affine:
         """Create a 2D affine rotation.
 
         Parameters
@@ -302,7 +302,7 @@ class AffineTransform(Transform):
         order=(0, 1, 2),
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> AffineTransform:
+    ) -> Affine:
         """Create a 3D affine rotation.
 
         Parameters
@@ -382,7 +382,7 @@ class AffineTransform(Transform):
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> AffineTransform:
+    ) -> Affine:
         """Create an affine shear.
 
         ``factor`` can be a scalar to broadcast to all dimensions,

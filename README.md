@@ -30,11 +30,11 @@ See the [tutorial here](https://github.com/clbarnes/transformnd/blob/main/exampl
 
 ## Implemented transforms
 
-- Identity (`transformnd.transforms.IdentityTransform`)
-- Translation (`transformnd.transforms.Translation`)
+- Identity (`transformnd.transforms.Identity`)
+- Translation (`transformnd.transforms.Translate`)
 - Scale (`transformnd.transforms.Scale`)
 - Reflection (`transformnd.transforms.Reflect`)
-- Affine (`transformnd.transforms.AffineTransform`)
+- Affine (`transformnd.transforms.Affine`)
   - Can be composed with `@` operator
 - Moving Least Squares, affine (`transformnd.transforms.moving_least_squares.MovingLeastSquares`)
   - uses `movingleastsquares` extra

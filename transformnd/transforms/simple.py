@@ -8,7 +8,7 @@ from ..base import SpaceTuple, Transform
 from ..util import chain_or
 
 
-class IdentityTransform(Transform):
+class Identity(Transform):
     def __init__(
         self,
         *,
