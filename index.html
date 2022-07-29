@@ -35,32 +35,47 @@ The goal is to allow downstream applications which require such transformations
 <p>Heavily inspired by/ cribbed directly from
 <a href="https://github.com/schlegelp/navis/tree/master/navis/transforms">Philipp Schlegel's work in navis</a>;
 co-developed with <a href="https://github.com/schlegelp/xform/">xform</a> as a red team prototype.</p>
-<p><code>N</code> coordinates in <code>D</code> dimensions are given as a numpy array of shape <code>(N, D)</code>.
-<code><a title="transformnd.flatten" href="#transformnd.flatten">flatten()</a></code> converts arrays into a compatible shape,
-and provides a routine for returning to the original shape.</p>
+<p><code>N</code> coordinates in <code>D</code> dimensions are given as a numpy array of shape <code>(N, D)</code>.</p>
 <p><code><a title="transformnd.Transform" href="#transformnd.Transform">Transform</a></code> subclasses which are restricted to certain dimensionalities
 can specify this in their <code>ndim</code> class variable.
 Instances of <code><a title="transformnd.Transform" href="#transformnd.Transform">Transform</a></code> subclasses can further restrict their <code>ndim</code>.
 Use <code>self._validate_coords(coords)</code> in <code>__call__</code> to ensure the coordinates
 are of valid type and dimensions.</p>
+<p>Additionally, <code><a title="transformnd" href="#transformnd">transformnd</a></code> provides an interface for transforming types other than NxD numpy arrays,
+and implements these adapters for a few common types.</p>
 <p>See the <a href="https://github.com/clbarnes/transformnd/blob/main/examples/tutorial.ipynb">tutorial here</a>.</p>
 <h2 id="implemented-transforms">Implemented transforms</h2>
 <ul>
-<li>Identity (<code><a title="transformnd.transforms.IdentityTransform" href="transforms/index.html#transformnd.transforms.IdentityTransform">IdentityTransform</a></code>)</li>
-<li>Translation (<code>transformnd.transforms.Translation</code>)</li>
+<li>Identity (<code><a title="transformnd.transforms.Identity" href="transforms/index.html#transformnd.transforms.Identity">Identity</a></code>)</li>
+<li>Translation (<code><a title="transformnd.transforms.Translate" href="transforms/index.html#transformnd.transforms.Translate">Translate</a></code>)</li>
 <li>Scale (<code><a title="transformnd.transforms.Scale" href="transforms/index.html#transformnd.transforms.Scale">Scale</a></code>)</li>
 <li>Reflection (<code><a title="transformnd.transforms.Reflect" href="transforms/index.html#transformnd.transforms.Reflect">Reflect</a></code>)</li>
-<li>Affine (<code><a title="transformnd.transforms.AffineTransform" href="transforms/index.html#transformnd.transforms.AffineTransform">AffineTransform</a></code>)</li>
+<li>Affine (<code><a title="transformnd.transforms.Affine" href="transforms/index.html#transformnd.transforms.Affine">Affine</a></code>)<ul>
 <li>Can be composed with <code>@</code> operator</li>
+</ul>
+</li>
 <li>Moving Least Squares, affine (<code><a title="transformnd.transforms.moving_least_squares.MovingLeastSquares" href="transforms/moving_least_squares.html#transformnd.transforms.moving_least_squares.MovingLeastSquares">MovingLeastSquares</a></code>)</li>
 <li>uses <code>movingleastsquares</code> extra</li>
-<li>Thin Plate Splines (<code><a title="transformnd.transforms.thinplate.ThinPlateSplines" href="transforms/thinplate.html#transformnd.transforms.thinplate.ThinPlateSplines">ThinPlateSplines</a></code>)</li>
+<li>Thin Plate Splines (<code><a title="transformnd.transforms.thinplate.ThinPlateSplines" href="transforms/thinplate.html#transformnd.transforms.thinplate.ThinPlateSplines">ThinPlateSplines</a></code>)<ul>
 <li>uses <code>thinplatesplines</code> extra</li>
+</ul>
+</li>
 </ul>
 <p>Arbitrary transforms can be composed into a <code><a title="transformnd.TransformSequence" href="#transformnd.TransformSequence">TransformSequence</a></code> with <code>transform1 | transform2</code>.
 A graph of transforms between defined spaces can be traversed using the <code>TransformGraph</code> (uses the <code><a title="transformnd.graph" href="graph.html">transformnd.graph</a></code> extra).</p>
-<h2 id="additional-transforms">Additional transforms</h2>
-<p>Contributions of additional transforms are welcome!
+<h2 id="implemented-adapters">Implemented adapters</h2>
+<ul>
+<li>Numpy arrays of shape <code>(&hellip;, D, &hellip;)</code> (<code><a title="transformnd.adapters.ReshapeAdapter" href="adapters/index.html#transformnd.adapters.ReshapeAdapter">ReshapeAdapter</a></code>)</li>
+<li><code>meshio.Mesh</code> (<code><a title="transformnd.adapters.meshio.MeshAdapter" href="adapters/meshio.html#transformnd.adapters.meshio.MeshAdapter">MeshAdapter</a></code>)</li>
+<li><code>pandas.DataFrame</code> (<code><a title="transformnd.adapters.pandas.DataFrameAdapter" href="adapters/pandas.html#transformnd.adapters.pandas.DataFrameAdapter">DataFrameAdapter</a></code>)<ul>
+<li>Takes a subset of columns as a coordinate array</li>
+</ul>
+</li>
+<li>Geometries from <code>shapely</code> (<code><a title="transformnd.adapters.shapely.GeometryAdapter" href="adapters/shapely.html#transformnd.adapters.shapely.GeometryAdapter">GeometryAdapter</a></code>)</li>
+</ul>
+<p>Objects which compose over transformable objects can easily be adapted with the <code><a title="transformnd.adapters.AttrAdapter" href="adapters/index.html#transformnd.adapters.AttrAdapter">AttrAdapter</a></code>.</p>
+<h2 id="additional-transforms-and-adapters">Additional transforms and adapters</h2>
+<p>Contributions of additional transforms and adapters are welcome!
 Even if they're only thin wrappers around an external library,
 the downstream ecosystem benefits from a consistent API.</p>
 <p>Such external libraries should be specified as "extras",
@@ -76,7 +91,7 @@ and have your transformation instantly compatible for downstream users.</p>
 .. include:: ../README.md
 &#34;&#34;&#34;
 from .base import Transform, TransformSequence, TransformWrapper
-from .util import SpaceRef, TransformSignature, check_ndim, flatten
+from .util import SpaceRef, TransformSignature, check_ndim
 from .version import version as __version__  # noqa: F401
 from .version import version_tuple as __version_info__  # noqa: F401
 
@@ -86,7 +101,6 @@ __all__ = [
     &#34;TransformWrapper&#34;,
     &#34;TransformSignature&#34;,
     &#34;SpaceRef&#34;,
-    &#34;flatten&#34;,
     &#34;check_ndim&#34;,
 ]</code></pre>
 </details>
@@ -167,87 +181,6 @@ If None, the check passes.</dd>
         raise ValueError(
             f&#34;Transform supported for {format_dims(supported_ndim)}, not {given_ndim}&#34;
         )</code></pre>
-</details>
-</dd>
-<dt id="transformnd.flatten"><code class="name flex">
-<span>def <span class="ident">flatten</span></span>(<span>arr, dim_axis=-1, transpose=False) ‑> Tuple[numpy.ndarray, Callable[[numpy.ndarray], numpy.ndarray]]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Convert array into 2D, and provide a routine to reclaim original shape.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>arr</code></strong> :&ensp;<code>np.ndarray</code></dt>
-<dd>Array to be flattened</dd>
-<dt><strong><code>dim_axis</code></strong> :&ensp;<code>int</code>, optional</dt>
-<dd>Which axis contains dimensions, default -1</dd>
-<dt><strong><code>transpose</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>Whether to return DxN array, default False</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]</code></dt>
-<dd>The flattened array, and a function
-for converting an identically-shaped flat array
-into one the same shape as the original.</dd>
-</dl>
-<h2 id="example">Example</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; my_coords = np.random.random((30, 20, 3))
-&gt;&gt;&gt; flat, unflatten = flatten(my_coords)
-&gt;&gt;&gt; flat.shape == (30*20, 3)
-&gt;&gt;&gt; recovered = unflatten(flat)
-&gt;&gt;&gt; np.allclose(recovered, my_coords)
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def flatten(
-    arr,
-    dim_axis=-1,
-    transpose=False,
-) -&gt; Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]:
-    &#34;&#34;&#34;Convert array into 2D, and provide a routine to reclaim original shape.
-
-    Parameters
-    ----------
-    arr : np.ndarray
-        Array to be flattened
-    dim_axis : int, optional
-        Which axis contains dimensions, default -1
-    transpose : bool, optional
-        Whether to return DxN array, default False
-
-    Returns
-    -------
-    Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]
-        The flattened array, and a function
-        for converting an identically-shaped flat array
-        into one the same shape as the original.
-
-    Example
-    -------
-    &gt;&gt;&gt; my_coords = np.random.random((30, 20, 3))
-    &gt;&gt;&gt; flat, unflatten = flatten(my_coords)
-    &gt;&gt;&gt; flat.shape == (30*20, 3)
-    &gt;&gt;&gt; recovered = unflatten(flat)
-    &gt;&gt;&gt; np.allclose(recovered, my_coords)
-    &#34;&#34;&#34;
-    # todo: reduce copies if possible
-    if dim_axis &lt; 0:
-        dim_axis = arr.ndim + dim_axis
-    moved = np.moveaxis(arr, dim_axis, -1)
-    m_shape = moved.shape
-
-    flattened = np.reshape(moved, (-1, m_shape[-1]))
-    if transpose:
-        flattened = flattened.T
-
-    def unflatten(flat):
-        if transpose:
-            flat = flat.T
-        return np.moveaxis(np.reshape(flat, m_shape), -1, dim_axis)
-
-    return flattened, unflatten</code></pre>
 </details>
 </dd>
 </dl>
@@ -400,10 +333,10 @@ inheritance.</p>
 <ul class="hlist">
 <li><a title="transformnd.base.TransformSequence" href="base.html#transformnd.base.TransformSequence">TransformSequence</a></li>
 <li><a title="transformnd.base.TransformWrapper" href="base.html#transformnd.base.TransformWrapper">TransformWrapper</a></li>
-<li><a title="transformnd.transforms.affine.AffineTransform" href="transforms/affine.html#transformnd.transforms.affine.AffineTransform">AffineTransform</a></li>
+<li><a title="transformnd.transforms.affine.Affine" href="transforms/affine.html#transformnd.transforms.affine.Affine">Affine</a></li>
 <li><a title="transformnd.transforms.moving_least_squares.MovingLeastSquares" href="transforms/moving_least_squares.html#transformnd.transforms.moving_least_squares.MovingLeastSquares">MovingLeastSquares</a></li>
 <li><a title="transformnd.transforms.reflection.Reflect" href="transforms/reflection.html#transformnd.transforms.reflection.Reflect">Reflect</a></li>
-<li><a title="transformnd.transforms.simple.IdentityTransform" href="transforms/simple.html#transformnd.transforms.simple.IdentityTransform">IdentityTransform</a></li>
+<li><a title="transformnd.transforms.simple.Identity" href="transforms/simple.html#transformnd.transforms.simple.Identity">Identity</a></li>
 <li><a title="transformnd.transforms.simple.Scale" href="transforms/simple.html#transformnd.transforms.simple.Scale">Scale</a></li>
 <li><a title="transformnd.transforms.simple.Translate" href="transforms/simple.html#transformnd.transforms.simple.Translate">Translate</a></li>
 <li><a title="transformnd.transforms.thinplate.ThinPlateSplines" href="transforms/thinplate.html#transformnd.transforms.thinplate.ThinPlateSplines">ThinPlateSplines</a></li>
@@ -689,7 +622,8 @@ NxD numpy array of N D-dimensional coordinates.</p>
 <ul>
 <li><a href="#transformnd">transformnd</a><ul>
 <li><a href="#implemented-transforms">Implemented transforms</a></li>
-<li><a href="#additional-transforms">Additional transforms</a></li>
+<li><a href="#implemented-adapters">Implemented adapters</a></li>
+<li><a href="#additional-transforms-and-adapters">Additional transforms and adapters</a></li>
 </ul>
 </li>
 </ul>
@@ -708,7 +642,6 @@ NxD numpy array of N D-dimensional coordinates.</p>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="transformnd.check_ndim" href="#transformnd.check_ndim">check_ndim</a></code></li>
-<li><code><a title="transformnd.flatten" href="#transformnd.flatten">flatten</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

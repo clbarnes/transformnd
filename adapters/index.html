@@ -51,9 +51,23 @@ Implement your own adapter by inheriting from `BaseAdapter`.
 See `pd.DataFrameAdapter` for an example of creating an adapter for an external type.
 
 &#34;&#34;&#34;
-from .base import AttrAdapter, BaseAdapter, FnAdapter, NullAdapter, SimpleAdapter
+from .base import (
+    AttrAdapter,
+    BaseAdapter,
+    FnAdapter,
+    NullAdapter,
+    ReshapeAdapter,
+    SimpleAdapter,
+)
 
-__all__ = [&#34;BaseAdapter&#34;, &#34;SimpleAdapter&#34;, &#34;NullAdapter&#34;, &#34;FnAdapter&#34;, &#34;AttrAdapter&#34;]</code></pre>
+__all__ = [
+    &#34;BaseAdapter&#34;,
+    &#34;SimpleAdapter&#34;,
+    &#34;NullAdapter&#34;,
+    &#34;FnAdapter&#34;,
+    &#34;AttrAdapter&#34;,
+    &#34;ReshapeAdapter&#34;,
+]</code></pre>
 </details>
 </section>
 <section>
@@ -238,6 +252,7 @@ return default</p></div>
 <li><a title="transformnd.adapters.base.AttrAdapter" href="base.html#transformnd.adapters.base.AttrAdapter">AttrAdapter</a></li>
 <li><a title="transformnd.adapters.base.FnAdapter" href="base.html#transformnd.adapters.base.FnAdapter">FnAdapter</a></li>
 <li><a title="transformnd.adapters.base.NullAdapter" href="base.html#transformnd.adapters.base.NullAdapter">NullAdapter</a></li>
+<li><a title="transformnd.adapters.base.ReshapeAdapter" href="base.html#transformnd.adapters.base.ReshapeAdapter">ReshapeAdapter</a></li>
 <li><a title="transformnd.adapters.base.SimpleAdapter" href="base.html#transformnd.adapters.base.SimpleAdapter">SimpleAdapter</a></li>
 <li><a title="transformnd.adapters.pandas.DataFrameAdapter" href="pandas.html#transformnd.adapters.pandas.DataFrameAdapter">DataFrameAdapter</a></li>
 <li><a title="transformnd.adapters.shapely.GeometryAdapter" href="shapely.html#transformnd.adapters.shapely.GeometryAdapter">GeometryAdapter</a></li>
@@ -369,6 +384,64 @@ and applies the transformation to it.</dd>
 </li>
 </ul>
 </dd>
+<dt id="transformnd.adapters.ReshapeAdapter"><code class="flex name class">
+<span>class <span class="ident">ReshapeAdapter</span></span>
+<span>(</span><span>dim_axis=-1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adapter which reshapes a numpy.ndarray</p>
+<p>Adapt numpy arrays which are not of the correct shape.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dim_axis</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Which axis contains the coordinates' dimensions,
+by default -1 (last)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReshapeAdapter(BaseAdapter[np.ndarray], ABC):
+    &#34;&#34;&#34;Adapter which reshapes a numpy.ndarray&#34;&#34;&#34;
+
+    def __init__(self, dim_axis=-1) -&gt; None:
+        &#34;&#34;&#34;Adapt numpy arrays which are not of the correct shape.
+
+        Parameters
+        ----------
+        dim_axis : int, optional
+            Which axis contains the coordinates&#39; dimensions,
+            by default -1 (last)
+        &#34;&#34;&#34;
+        self.dim_axis: int = dim_axis
+
+    def __call__(self, transform: Transform, arr: np.ndarray) -&gt; np.ndarray:
+        dim_axis = self.dim_axis
+        if self.dim_axis &lt; 0:
+            dim_axis += arr.ndim
+
+        moved = np.moveaxis(arr, dim_axis, -1)
+        m_shape = moved.shape
+
+        flattened = np.reshape(moved, (-1, m_shape[-1]))
+        transformed = transform(flattened)
+        return np.moveaxis(np.reshape(transformed, m_shape), -1, dim_axis)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></b></code>:
+<ul class="hlist">
+<li><code><a title="transformnd.adapters.base.BaseAdapter.partial" href="base.html#transformnd.adapters.base.BaseAdapter.partial">partial</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="transformnd.adapters.SimpleAdapter"><code class="flex name class">
 <span>class <span class="ident">SimpleAdapter</span></span>
 </code></dt>
@@ -451,6 +524,9 @@ and applies the transformation to it.</dd>
 </li>
 <li>
 <h4><code><a title="transformnd.adapters.NullAdapter" href="#transformnd.adapters.NullAdapter">NullAdapter</a></code></h4>
+</li>
+<li>
+<h4><code><a title="transformnd.adapters.ReshapeAdapter" href="#transformnd.adapters.ReshapeAdapter">ReshapeAdapter</a></code></h4>
 </li>
 <li>
 <h4><code><a title="transformnd.adapters.SimpleAdapter" href="#transformnd.adapters.SimpleAdapter">SimpleAdapter</a></code></h4>

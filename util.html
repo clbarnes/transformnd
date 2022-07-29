@@ -169,55 +169,6 @@ def window(iterable: Iterable, length: int) -&gt; Iterator[Tuple[Any, ...]]:
         yield tuple(q)
 
 
-def flatten(
-    arr,
-    dim_axis=-1,
-    transpose=False,
-) -&gt; Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]:
-    &#34;&#34;&#34;Convert array into 2D, and provide a routine to reclaim original shape.
-
-    Parameters
-    ----------
-    arr : np.ndarray
-        Array to be flattened
-    dim_axis : int, optional
-        Which axis contains dimensions, default -1
-    transpose : bool, optional
-        Whether to return DxN array, default False
-
-    Returns
-    -------
-    Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]
-        The flattened array, and a function
-        for converting an identically-shaped flat array
-        into one the same shape as the original.
-
-    Example
-    -------
-    &gt;&gt;&gt; my_coords = np.random.random((30, 20, 3))
-    &gt;&gt;&gt; flat, unflatten = flatten(my_coords)
-    &gt;&gt;&gt; flat.shape == (30*20, 3)
-    &gt;&gt;&gt; recovered = unflatten(flat)
-    &gt;&gt;&gt; np.allclose(recovered, my_coords)
-    &#34;&#34;&#34;
-    # todo: reduce copies if possible
-    if dim_axis &lt; 0:
-        dim_axis = arr.ndim + dim_axis
-    moved = np.moveaxis(arr, dim_axis, -1)
-    m_shape = moved.shape
-
-    flattened = np.reshape(moved, (-1, m_shape[-1]))
-    if transpose:
-        flattened = flattened.T
-
-    def unflatten(flat):
-        if transpose:
-            flat = flat.T
-        return np.moveaxis(np.reshape(flat, m_shape), -1, dim_axis)
-
-    return flattened, unflatten
-
-
 def check_ndim(given_ndim: int, supported_ndim: Optional[Set[int]]):
     &#34;&#34;&#34;Raise a ValueError if dimensionality is unsupported.
 
@@ -413,87 +364,6 @@ If None, the check passes.</dd>
         return dims1
     else:
         return dims1.intersection(dims2)</code></pre>
-</details>
-</dd>
-<dt id="transformnd.util.flatten"><code class="name flex">
-<span>def <span class="ident">flatten</span></span>(<span>arr, dim_axis=-1, transpose=False) ‑> Tuple[numpy.ndarray, Callable[[numpy.ndarray], numpy.ndarray]]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Convert array into 2D, and provide a routine to reclaim original shape.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>arr</code></strong> :&ensp;<code>np.ndarray</code></dt>
-<dd>Array to be flattened</dd>
-<dt><strong><code>dim_axis</code></strong> :&ensp;<code>int</code>, optional</dt>
-<dd>Which axis contains dimensions, default -1</dd>
-<dt><strong><code>transpose</code></strong> :&ensp;<code>bool</code>, optional</dt>
-<dd>Whether to return DxN array, default False</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]</code></dt>
-<dd>The flattened array, and a function
-for converting an identically-shaped flat array
-into one the same shape as the original.</dd>
-</dl>
-<h2 id="example">Example</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; my_coords = np.random.random((30, 20, 3))
-&gt;&gt;&gt; flat, unflatten = flatten(my_coords)
-&gt;&gt;&gt; flat.shape == (30*20, 3)
-&gt;&gt;&gt; recovered = unflatten(flat)
-&gt;&gt;&gt; np.allclose(recovered, my_coords)
-</code></pre></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def flatten(
-    arr,
-    dim_axis=-1,
-    transpose=False,
-) -&gt; Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]:
-    &#34;&#34;&#34;Convert array into 2D, and provide a routine to reclaim original shape.
-
-    Parameters
-    ----------
-    arr : np.ndarray
-        Array to be flattened
-    dim_axis : int, optional
-        Which axis contains dimensions, default -1
-    transpose : bool, optional
-        Whether to return DxN array, default False
-
-    Returns
-    -------
-    Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]
-        The flattened array, and a function
-        for converting an identically-shaped flat array
-        into one the same shape as the original.
-
-    Example
-    -------
-    &gt;&gt;&gt; my_coords = np.random.random((30, 20, 3))
-    &gt;&gt;&gt; flat, unflatten = flatten(my_coords)
-    &gt;&gt;&gt; flat.shape == (30*20, 3)
-    &gt;&gt;&gt; recovered = unflatten(flat)
-    &gt;&gt;&gt; np.allclose(recovered, my_coords)
-    &#34;&#34;&#34;
-    # todo: reduce copies if possible
-    if dim_axis &lt; 0:
-        dim_axis = arr.ndim + dim_axis
-    moved = np.moveaxis(arr, dim_axis, -1)
-    m_shape = moved.shape
-
-    flattened = np.reshape(moved, (-1, m_shape[-1]))
-    if transpose:
-        flattened = flattened.T
-
-    def unflatten(flat):
-        if transpose:
-            flat = flat.T
-        return np.moveaxis(np.reshape(flat, m_shape), -1, dim_axis)
-
-    return flattened, unflatten</code></pre>
 </details>
 </dd>
 <dt id="transformnd.util.format_dims"><code class="name flex">
@@ -748,7 +618,6 @@ if all *args are None.</dd>
 <li><code><a title="transformnd.util.chain_or" href="#transformnd.util.chain_or">chain_or</a></code></li>
 <li><code><a title="transformnd.util.check_ndim" href="#transformnd.util.check_ndim">check_ndim</a></code></li>
 <li><code><a title="transformnd.util.dim_intersection" href="#transformnd.util.dim_intersection">dim_intersection</a></code></li>
-<li><code><a title="transformnd.util.flatten" href="#transformnd.util.flatten">flatten</a></code></li>
 <li><code><a title="transformnd.util.format_dims" href="#transformnd.util.format_dims">format_dims</a></code></li>
 <li><code><a title="transformnd.util.is_square" href="#transformnd.util.is_square">is_square</a></code></li>
 <li><code><a title="transformnd.util.none_eq" href="#transformnd.util.none_eq">none_eq</a></code></li>

@@ -37,7 +37,7 @@ from ..base import SpaceTuple, Transform
 from ..util import chain_or
 
 
-class IdentityTransform(Transform):
+class Identity(Transform):
     def __init__(
         self,
         *,
@@ -159,8 +159,8 @@ class Scale(Transform):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="transformnd.transforms.simple.IdentityTransform"><code class="flex name class">
-<span>class <span class="ident">IdentityTransform</span></span>
+<dt id="transformnd.transforms.simple.Identity"><code class="flex name class">
+<span>class <span class="ident">Identity</span></span>
 <span>(</span><span>*, spaces: Tuple[Optional[Hashable], Optional[Hashable]] = (None, None))</span>
 </code></dt>
 <dd>
@@ -181,7 +181,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class IdentityTransform(Transform):
+<pre><code class="python">class Identity(Transform):
     def __init__(
         self,
         *,
@@ -375,7 +375,7 @@ inheritance.</p>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="transformnd.transforms.simple.IdentityTransform" href="#transformnd.transforms.simple.IdentityTransform">IdentityTransform</a></code></h4>
+<h4><code><a title="transformnd.transforms.simple.Identity" href="#transformnd.transforms.simple.Identity">Identity</a></code></h4>
 </li>
 <li>
 <h4><code><a title="transformnd.transforms.simple.Scale" href="#transformnd.transforms.simple.Scale">Scale</a></code></h4>

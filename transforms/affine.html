@@ -52,7 +52,7 @@ def arg_as_array(arg: ArrayLike, ndim: Optional[int]):
     return arr
 
 
-class AffineTransform(Transform):
+class Affine(Transform):
     def __init__(
         self,
         matrix: ArrayLike,
@@ -106,7 +106,7 @@ class AffineTransform(Transform):
             spaces=self.spaces[::-1],
         )
 
-    def __matmul__(self, rhs: AffineTransform) -&gt; AffineTransform:
+    def __matmul__(self, rhs: Affine) -&gt; Affine:
         &#34;&#34;&#34;Compose two affine transforms by matrix multiplication.
 
         Parameters
@@ -122,7 +122,7 @@ class AffineTransform(Transform):
         ValueError
             Incompatible transforms.
         &#34;&#34;&#34;
-        if not isinstance(rhs, AffineTransform):
+        if not isinstance(rhs, Affine):
             return NotImplemented
         if self.matrix.shape != rhs.matrix.shape:
             raise ValueError(
@@ -130,7 +130,7 @@ class AffineTransform(Transform):
             )
         if not none_eq(self.target_space, rhs.source_space):
             raise ValueError(&#34;Affine transforms do not share a space&#34;)
-        return AffineTransform(
+        return Affine(
             self.matrix @ rhs.matrix,
             spaces=(self.source_space, rhs.target_space),
         )
@@ -142,7 +142,7 @@ class AffineTransform(Transform):
         translation=0,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an augmented affine matrix from a linear map,
         with an optional translation.
 
@@ -174,7 +174,7 @@ class AffineTransform(Transform):
         ndim: int,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an identity affine transformation.
 
         Parameters
@@ -199,7 +199,7 @@ class AffineTransform(Transform):
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an affine translation.
 
         Parameters
@@ -228,7 +228,7 @@ class AffineTransform(Transform):
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an affine scaling.
 
         Parameters
@@ -258,7 +258,7 @@ class AffineTransform(Transform):
         ndim: int,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an affine reflection.
 
         Parameters
@@ -290,7 +290,7 @@ class AffineTransform(Transform):
         clockwise=False,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create a 2D affine rotation.
 
         Parameters
@@ -331,7 +331,7 @@ class AffineTransform(Transform):
         order=(0, 1, 2),
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create a 3D affine rotation.
 
         Parameters
@@ -411,7 +411,7 @@ class AffineTransform(Transform):
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an affine shear.
 
         ``factor`` can be a scalar to broadcast to all dimensions,
@@ -491,8 +491,8 @@ class AffineTransform(Transform):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="transformnd.transforms.affine.AffineTransform"><code class="flex name class">
-<span>class <span class="ident">AffineTransform</span></span>
+<dt id="transformnd.transforms.affine.Affine"><code class="flex name class">
+<span>class <span class="ident">Affine</span></span>
 <span>(</span><span>matrix: ArrayLike, *, spaces: SpaceTuple = (None, None))</span>
 </code></dt>
 <dd>
@@ -517,7 +517,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AffineTransform(Transform):
+<pre><code class="python">class Affine(Transform):
     def __init__(
         self,
         matrix: ArrayLike,
@@ -571,7 +571,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
             spaces=self.spaces[::-1],
         )
 
-    def __matmul__(self, rhs: AffineTransform) -&gt; AffineTransform:
+    def __matmul__(self, rhs: Affine) -&gt; Affine:
         &#34;&#34;&#34;Compose two affine transforms by matrix multiplication.
 
         Parameters
@@ -587,7 +587,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
         ValueError
             Incompatible transforms.
         &#34;&#34;&#34;
-        if not isinstance(rhs, AffineTransform):
+        if not isinstance(rhs, Affine):
             return NotImplemented
         if self.matrix.shape != rhs.matrix.shape:
             raise ValueError(
@@ -595,7 +595,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
             )
         if not none_eq(self.target_space, rhs.source_space):
             raise ValueError(&#34;Affine transforms do not share a space&#34;)
-        return AffineTransform(
+        return Affine(
             self.matrix @ rhs.matrix,
             spaces=(self.source_space, rhs.target_space),
         )
@@ -607,7 +607,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
         translation=0,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an augmented affine matrix from a linear map,
         with an optional translation.
 
@@ -639,7 +639,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
         ndim: int,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an identity affine transformation.
 
         Parameters
@@ -664,7 +664,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an affine translation.
 
         Parameters
@@ -693,7 +693,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an affine scaling.
 
         Parameters
@@ -723,7 +723,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
         ndim: int,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an affine reflection.
 
         Parameters
@@ -755,7 +755,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
         clockwise=False,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create a 2D affine rotation.
 
         Parameters
@@ -796,7 +796,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
         order=(0, 1, 2),
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create a 3D affine rotation.
 
         Parameters
@@ -876,7 +876,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -&gt; AffineTransform:
+    ) -&gt; Affine:
         &#34;&#34;&#34;Create an affine shear.
 
         ``factor`` can be a scalar to broadcast to all dimensions,
@@ -930,8 +930,8 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
 </ul>
 <h3>Static methods</h3>
 <dl>
-<dt id="transformnd.transforms.affine.AffineTransform.from_linear_map"><code class="name flex">
-<span>def <span class="ident">from_linear_map</span></span>(<span>linear_map: ArrayLike, translation=0, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+<dt id="transformnd.transforms.affine.Affine.from_linear_map"><code class="name flex">
+<span>def <span class="ident">from_linear_map</span></span>(<span>linear_map: ArrayLike, translation=0, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.Affine" href="#transformnd.transforms.affine.Affine">Affine</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create an augmented affine matrix from a linear map,
@@ -947,7 +947,7 @@ with an optional translation.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></code></dt>
+<dt><code>AffineTransform</code></dt>
 <dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
@@ -961,7 +961,7 @@ def from_linear_map(
     translation=0,
     *,
     spaces: SpaceTuple = (None, None),
-) -&gt; AffineTransform:
+) -&gt; Affine:
     &#34;&#34;&#34;Create an augmented affine matrix from a linear map,
     with an optional translation.
 
@@ -988,8 +988,8 @@ def from_linear_map(
     return cls(matrix, spaces=spaces)</code></pre>
 </details>
 </dd>
-<dt id="transformnd.transforms.affine.AffineTransform.identity"><code class="name flex">
-<span>def <span class="ident">identity</span></span>(<span>ndim: int, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+<dt id="transformnd.transforms.affine.Affine.identity"><code class="name flex">
+<span>def <span class="ident">identity</span></span>(<span>ndim: int, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.Affine" href="#transformnd.transforms.affine.Affine">Affine</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create an identity affine transformation.</p>
@@ -1002,7 +1002,7 @@ def from_linear_map(
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></code></dt>
+<dt><code>AffineTransform</code></dt>
 <dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
@@ -1015,7 +1015,7 @@ def identity(
     ndim: int,
     *,
     spaces: SpaceTuple = (None, None),
-) -&gt; AffineTransform:
+) -&gt; Affine:
     &#34;&#34;&#34;Create an identity affine transformation.
 
     Parameters
@@ -1034,8 +1034,8 @@ def identity(
     )</code></pre>
 </details>
 </dd>
-<dt id="transformnd.transforms.affine.AffineTransform.reflection"><code class="name flex">
-<span>def <span class="ident">reflection</span></span>(<span>axis: Union[int, Container[int]], ndim: int, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+<dt id="transformnd.transforms.affine.Affine.reflection"><code class="name flex">
+<span>def <span class="ident">reflection</span></span>(<span>axis: Union[int, Container[int]], ndim: int, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.Affine" href="#transformnd.transforms.affine.Affine">Affine</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create an affine reflection.</p>
@@ -1050,7 +1050,7 @@ def identity(
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></code></dt>
+<dt><code>AffineTransform</code></dt>
 <dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
@@ -1064,7 +1064,7 @@ def reflection(
     ndim: int,
     *,
     spaces: SpaceTuple = (None, None),
-) -&gt; AffineTransform:
+) -&gt; Affine:
     &#34;&#34;&#34;Create an affine reflection.
 
     Parameters
@@ -1089,8 +1089,8 @@ def reflection(
     return cls(m, spaces=spaces)</code></pre>
 </details>
 </dd>
-<dt id="transformnd.transforms.affine.AffineTransform.rotation2"><code class="name flex">
-<span>def <span class="ident">rotation2</span></span>(<span>rotation: float, degrees=True, clockwise=False, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+<dt id="transformnd.transforms.affine.Affine.rotation2"><code class="name flex">
+<span>def <span class="ident">rotation2</span></span>(<span>rotation: float, degrees=True, clockwise=False, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.Affine" href="#transformnd.transforms.affine.Affine">Affine</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create a 2D affine rotation.</p>
@@ -1107,7 +1107,7 @@ def reflection(
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></code></dt>
+<dt><code>AffineTransform</code></dt>
 <dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
@@ -1122,7 +1122,7 @@ def rotation2(
     clockwise=False,
     *,
     spaces: SpaceTuple = (None, None),
-) -&gt; AffineTransform:
+) -&gt; Affine:
     &#34;&#34;&#34;Create a 2D affine rotation.
 
     Parameters
@@ -1155,8 +1155,8 @@ def rotation2(
     return cls(m, spaces=spaces)</code></pre>
 </details>
 </dd>
-<dt id="transformnd.transforms.affine.AffineTransform.rotation3"><code class="name flex">
-<span>def <span class="ident">rotation3</span></span>(<span>rotation: Union[float, Tuple[float, float, float]], degrees=True, clockwise=False, order=(0, 1, 2), *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+<dt id="transformnd.transforms.affine.Affine.rotation3"><code class="name flex">
+<span>def <span class="ident">rotation3</span></span>(<span>rotation: Union[float, Tuple[float, float, float]], degrees=True, clockwise=False, order=(0, 1, 2), *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.Affine" href="#transformnd.transforms.affine.Affine">Affine</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create a 3D affine rotation.</p>
@@ -1175,7 +1175,7 @@ def rotation2(
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></code></dt>
+<dt><code>AffineTransform</code></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1196,7 +1196,7 @@ def rotation3(
     order=(0, 1, 2),
     *,
     spaces: SpaceTuple = (None, None),
-) -&gt; AffineTransform:
+) -&gt; Affine:
     &#34;&#34;&#34;Create a 3D affine rotation.
 
     Parameters
@@ -1270,8 +1270,8 @@ def rotation3(
     return cls(m, spaces=spaces)</code></pre>
 </details>
 </dd>
-<dt id="transformnd.transforms.affine.AffineTransform.scaling"><code class="name flex">
-<span>def <span class="ident">scaling</span></span>(<span>scale: ArrayLike, ndim: Optional[int] = None, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+<dt id="transformnd.transforms.affine.Affine.scaling"><code class="name flex">
+<span>def <span class="ident">scaling</span></span>(<span>scale: ArrayLike, ndim: Optional[int] = None, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.Affine" href="#transformnd.transforms.affine.Affine">Affine</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create an affine scaling.</p>
@@ -1286,7 +1286,7 @@ def rotation3(
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></code></dt>
+<dt><code>AffineTransform</code></dt>
 <dd>[description]</dd>
 </dl></div>
 <details class="source">
@@ -1300,7 +1300,7 @@ def scaling(
     ndim: Optional[int] = None,
     *,
     spaces: SpaceTuple = (None, None),
-) -&gt; AffineTransform:
+) -&gt; Affine:
     &#34;&#34;&#34;Create an affine scaling.
 
     Parameters
@@ -1324,8 +1324,8 @@ def scaling(
     return cls(m, spaces=spaces)</code></pre>
 </details>
 </dd>
-<dt id="transformnd.transforms.affine.AffineTransform.shearing"><code class="name flex">
-<span>def <span class="ident">shearing</span></span>(<span>factor: Union[float, np.ndarray], ndim: Optional[int] = None, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+<dt id="transformnd.transforms.affine.Affine.shearing"><code class="name flex">
+<span>def <span class="ident">shearing</span></span>(<span>factor: Union[float, np.ndarray], ndim: Optional[int] = None, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.Affine" href="#transformnd.transforms.affine.Affine">Affine</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create an affine shear.</p>
@@ -1346,7 +1346,7 @@ for all the <em>but</em> the second dimension, etc.</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></code></dt>
+<dt><code>AffineTransform</code></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1365,7 +1365,7 @@ def shearing(
     ndim: Optional[int] = None,
     *,
     spaces: SpaceTuple = (None, None),
-) -&gt; AffineTransform:
+) -&gt; Affine:
     &#34;&#34;&#34;Create an affine shear.
 
     ``factor`` can be a scalar to broadcast to all dimensions,
@@ -1413,8 +1413,8 @@ def shearing(
     return cls(m, spaces=spaces)</code></pre>
 </details>
 </dd>
-<dt id="transformnd.transforms.affine.AffineTransform.translation"><code class="name flex">
-<span>def <span class="ident">translation</span></span>(<span>translation: ArrayLike, ndim: Optional[int] = None, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></span>
+<dt id="transformnd.transforms.affine.Affine.translation"><code class="name flex">
+<span>def <span class="ident">translation</span></span>(<span>translation: ArrayLike, ndim: Optional[int] = None, *, spaces: SpaceTuple = (None, None)) ‑> <a title="transformnd.transforms.affine.Affine" href="#transformnd.transforms.affine.Affine">Affine</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create an affine translation.</p>
@@ -1429,7 +1429,7 @@ def shearing(
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code><a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></code></dt>
+<dt><code>AffineTransform</code></dt>
 <dd>&nbsp;</dd>
 </dl></div>
 <details class="source">
@@ -1443,7 +1443,7 @@ def translation(
     ndim: Optional[int] = None,
     *,
     spaces: SpaceTuple = (None, None),
-) -&gt; AffineTransform:
+) -&gt; Affine:
     &#34;&#34;&#34;Create an affine translation.
 
     Parameters
@@ -1490,16 +1490,16 @@ def translation(
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="transformnd.transforms.affine.AffineTransform" href="#transformnd.transforms.affine.AffineTransform">AffineTransform</a></code></h4>
+<h4><code><a title="transformnd.transforms.affine.Affine" href="#transformnd.transforms.affine.Affine">Affine</a></code></h4>
 <ul class="two-column">
-<li><code><a title="transformnd.transforms.affine.AffineTransform.from_linear_map" href="#transformnd.transforms.affine.AffineTransform.from_linear_map">from_linear_map</a></code></li>
-<li><code><a title="transformnd.transforms.affine.AffineTransform.identity" href="#transformnd.transforms.affine.AffineTransform.identity">identity</a></code></li>
-<li><code><a title="transformnd.transforms.affine.AffineTransform.reflection" href="#transformnd.transforms.affine.AffineTransform.reflection">reflection</a></code></li>
-<li><code><a title="transformnd.transforms.affine.AffineTransform.rotation2" href="#transformnd.transforms.affine.AffineTransform.rotation2">rotation2</a></code></li>
-<li><code><a title="transformnd.transforms.affine.AffineTransform.rotation3" href="#transformnd.transforms.affine.AffineTransform.rotation3">rotation3</a></code></li>
-<li><code><a title="transformnd.transforms.affine.AffineTransform.scaling" href="#transformnd.transforms.affine.AffineTransform.scaling">scaling</a></code></li>
-<li><code><a title="transformnd.transforms.affine.AffineTransform.shearing" href="#transformnd.transforms.affine.AffineTransform.shearing">shearing</a></code></li>
-<li><code><a title="transformnd.transforms.affine.AffineTransform.translation" href="#transformnd.transforms.affine.AffineTransform.translation">translation</a></code></li>
+<li><code><a title="transformnd.transforms.affine.Affine.from_linear_map" href="#transformnd.transforms.affine.Affine.from_linear_map">from_linear_map</a></code></li>
+<li><code><a title="transformnd.transforms.affine.Affine.identity" href="#transformnd.transforms.affine.Affine.identity">identity</a></code></li>
+<li><code><a title="transformnd.transforms.affine.Affine.reflection" href="#transformnd.transforms.affine.Affine.reflection">reflection</a></code></li>
+<li><code><a title="transformnd.transforms.affine.Affine.rotation2" href="#transformnd.transforms.affine.Affine.rotation2">rotation2</a></code></li>
+<li><code><a title="transformnd.transforms.affine.Affine.rotation3" href="#transformnd.transforms.affine.Affine.rotation3">rotation3</a></code></li>
+<li><code><a title="transformnd.transforms.affine.Affine.scaling" href="#transformnd.transforms.affine.Affine.scaling">scaling</a></code></li>
+<li><code><a title="transformnd.transforms.affine.Affine.shearing" href="#transformnd.transforms.affine.Affine.shearing">shearing</a></code></li>
+<li><code><a title="transformnd.transforms.affine.Affine.translation" href="#transformnd.transforms.affine.Affine.translation">translation</a></code></li>
 </ul>
 </li>
 </ul>
