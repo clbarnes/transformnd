@@ -51,18 +51,20 @@ and implements these adapters for a few common types.</p>
 <li>Scale (<code><a title="transformnd.transforms.Scale" href="transforms/index.html#transformnd.transforms.Scale">Scale</a></code>)</li>
 <li>Reflection (<code><a title="transformnd.transforms.Reflect" href="transforms/index.html#transformnd.transforms.Reflect">Reflect</a></code>)</li>
 <li>Affine (<code><a title="transformnd.transforms.Affine" href="transforms/index.html#transformnd.transforms.Affine">Affine</a></code>)<ul>
-<li>Can be composed with <code>@</code> operator</li>
+<li>Can be composed efficiently with <code>@</code> operator</li>
 </ul>
 </li>
-<li>Moving Least Squares, affine (<code><a title="transformnd.transforms.moving_least_squares.MovingLeastSquares" href="transforms/moving_least_squares.html#transformnd.transforms.moving_least_squares.MovingLeastSquares">MovingLeastSquares</a></code>)</li>
+<li>Moving Least Squares, affine (<code><a title="transformnd.transforms.moving_least_squares.MovingLeastSquares" href="transforms/moving_least_squares.html#transformnd.transforms.moving_least_squares.MovingLeastSquares">MovingLeastSquares</a></code>)<ul>
 <li>uses <code>movingleastsquares</code> extra</li>
+</ul>
+</li>
 <li>Thin Plate Splines (<code><a title="transformnd.transforms.thinplate.ThinPlateSplines" href="transforms/thinplate.html#transformnd.transforms.thinplate.ThinPlateSplines">ThinPlateSplines</a></code>)<ul>
 <li>uses <code>thinplatesplines</code> extra</li>
 </ul>
 </li>
 </ul>
 <p>Arbitrary transforms can be composed into a <code><a title="transformnd.TransformSequence" href="#transformnd.TransformSequence">TransformSequence</a></code> with <code>transform1 | transform2</code>.
-A graph of transforms between defined spaces can be traversed using the <code>TransformGraph</code> (uses the <code><a title="transformnd.graph" href="graph.html">transformnd.graph</a></code> extra).</p>
+A graph of transforms between defined spaces can be traversed using the <code>TransformGraph</code>.</p>
 <h2 id="implemented-adapters">Implemented adapters</h2>
 <ul>
 <li>Numpy arrays of shape <code>(&hellip;, D, &hellip;)</code> (<code><a title="transformnd.adapters.ReshapeAdapter" href="adapters/index.html#transformnd.adapters.ReshapeAdapter">ReshapeAdapter</a></code>)</li>
@@ -72,8 +74,8 @@ A graph of transforms between defined spaces can be traversed using the <code>Tr
 </ul>
 </li>
 <li>Geometries from <code>shapely</code> (<code><a title="transformnd.adapters.shapely.GeometryAdapter" href="adapters/shapely.html#transformnd.adapters.shapely.GeometryAdapter">GeometryAdapter</a></code>)</li>
+<li>Objects composed of transformable attributes (<code><a title="transformnd.adapters.AttrAdapter" href="adapters/index.html#transformnd.adapters.AttrAdapter">AttrAdapter</a></code>).</li>
 </ul>
-<p>Objects which compose over transformable objects can easily be adapted with the <code><a title="transformnd.adapters.AttrAdapter" href="adapters/index.html#transformnd.adapters.AttrAdapter">AttrAdapter</a></code>.</p>
 <h2 id="additional-transforms-and-adapters">Additional transforms and adapters</h2>
 <p>Contributions of additional transforms and adapters are welcome!
 Even if they're only thin wrappers around an external library,
