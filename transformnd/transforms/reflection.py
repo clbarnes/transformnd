@@ -117,7 +117,7 @@ class Reflect(Transform):
         self.normals = [unitise(n) for n in normals]
         # todo: matmul is associative, so turn this into an affine in 2/3D?
 
-    def __call__(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: np.ndarray) -> np.ndarray:
         coords = self._validate_coords(coords)
         out = coords - self.point
         for n in self.normals:

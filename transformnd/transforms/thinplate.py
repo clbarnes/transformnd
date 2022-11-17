@@ -75,7 +75,7 @@ class ThinPlateSplines(Transform):
             spaces=self.spaces[::-1],
         )
 
-    def __call__(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: np.ndarray) -> np.ndarray:
         coords = self._validate_coords(coords)
         U = mops.K_matrix(coords, self.source_control_points)
         P = mops.P_matrix(coords)

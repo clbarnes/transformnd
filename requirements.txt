@@ -14,7 +14,10 @@ shapely
 
 black[jupyter]
 flake8
+ipykernel
 isort
+jupyter
+matplotlib
 mypy
 pdoc3
 pytest

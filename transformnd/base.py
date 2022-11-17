@@ -67,7 +67,7 @@ class Transform(ABC):
         return coords
 
     @abstractmethod
-    def __call__(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: np.ndarray) -> np.ndarray:
         """Apply transformation.
 
         Parameters
@@ -169,7 +169,7 @@ class TransformWrapper(Transform):
             else:
                 self.ndim = set(ndim)
 
-    def __call__(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: np.ndarray) -> np.ndarray:
         self._validate_coords(coords)
         return self.fn(coords)
 
@@ -280,9 +280,9 @@ class TransformSequence(Transform):
             spaces=self.spaces[::-1],
         )
 
-    def __call__(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: np.ndarray) -> np.ndarray:
         for t in self.transforms:
-            coords = t(coords)
+            coords = t.apply(coords)
         return coords
 
     def list_spaces(self, skip_none=False) -> List[SpaceRef]:

@@ -15,7 +15,7 @@ def noop(arg):
 def test_transform(coords5x3):
     t = TransformWrapper(noop, spaces=(1, 2))
 
-    assert np.allclose(t(coords5x3), coords5x3)
+    assert np.allclose(t.apply(coords5x3), coords5x3)
 
 
 def test_sequence(coords5x3):
@@ -25,7 +25,7 @@ def test_sequence(coords5x3):
         ts.append(TransformWrapper(noop, spaces=(a, b)))
 
     t = TransformSequence(ts)
-    assert np.allclose(t(coords5x3), coords5x3)
+    assert np.allclose(t.apply(coords5x3), coords5x3)
     assert t.source_space == 0
     assert t.target_space == last
 
@@ -77,5 +77,5 @@ def test_maths():
     t1 = Translate(1)
     coords = np.zeros((5, 3))
 
-    assert np.allclose((t1 | ~t1)(coords), coords)
-    assert np.allclose((~t1)(t1(coords)), coords)
+    assert np.allclose((t1 | ~t1).apply(coords), coords)
+    assert np.allclose((~t1).apply(t1.apply(coords)), coords)

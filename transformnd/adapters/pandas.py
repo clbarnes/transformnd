@@ -14,11 +14,11 @@ class DataFrameAdapter(BaseAdapter[pd.DataFrame]):
         Parameters
         ----------
         columns : list of keys
-            Keys for columns containing coordinates, e.g. ``["x", "y", "z"]``
+            Keys for columns containing coordinates, e.g. `["x", "y", "z"]`
         """
         self.columns = columns
 
-    def __call__(
+    def apply(
         self, transform: Transform, df: pd.DataFrame, in_place=False
     ) -> pd.DataFrame:
         """Transform the dataframe, optionally in-place.
@@ -37,7 +37,7 @@ class DataFrameAdapter(BaseAdapter[pd.DataFrame]):
         pandas.DataFrame
         """
         coords = df[self.columns].to_numpy()
-        transformed = transform(coords)
+        transformed = transform.apply(coords)
         if not in_place:
             df = df.copy()
         df[self.columns] = transformed

@@ -36,7 +36,7 @@ class MovingLeastSquares(Transform):
         )
         self.ndim = {self._transformer.control_points.shape[1]}
 
-    def __call__(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: np.ndarray) -> np.ndarray:
         coords = self._validate_coords(coords)
         return self._transformer.transform(coords)
 

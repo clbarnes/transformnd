@@ -63,7 +63,7 @@ class Affine(Transform):
         self.matrix = m
         self.ndim = {len(self.matrix) - 1}
 
-    def __call__(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: np.ndarray) -> np.ndarray:
         coords = self._validate_coords(coords)
         # todo: replace with writing into full ones?
         coords = np.concatenate(
@@ -385,7 +385,7 @@ class Affine(Transform):
     ) -> Affine:
         """Create an affine shear.
 
-        ``factor`` can be a scalar to broadcast to all dimensions,
+        `factor` can be a scalar to broadcast to all dimensions,
         or a D-length list of D-1 lists.
         The first inner list contains the shear factors in the first dimension
         for all *but* the first dimension.

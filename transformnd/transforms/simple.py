@@ -36,7 +36,7 @@ class Identity(Transform):
     def __invert__(self) -> Transform:
         return self
 
-    def __call__(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: np.ndarray) -> np.ndarray:
         return coords.copy()
 
 
@@ -70,7 +70,7 @@ class Translate(Transform):
             self.ndim = {self.translation.shape[0]}
         # otherwise, can be broadcast to anything
 
-    def __call__(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: np.ndarray) -> np.ndarray:
         self._validate_coords(coords)
         return coords + self.translation
 
@@ -110,7 +110,7 @@ class Scale(Transform):
             self.ndim = {self.scale.shape[0]}
         # otherwise, can be broadcast to anything
 
-    def __call__(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: np.ndarray) -> np.ndarray:
         coords = self._validate_coords(coords)
         return coords * self.scale
 

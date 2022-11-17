@@ -25,17 +25,17 @@ class GeometryAdapter(BaseAdapter[BaseGeometry]):
     """
 
     def transform_point(self, transform: Transform, point: Point) -> Point:
-        return Point(*transform(np.array(point.coords))[0])
+        return Point(*transform.apply(np.array(point.coords))[0])
 
     def transform_linestring(
         self, transform: Transform, linestring: LineString
     ) -> LineString:
-        return LineString(transform(np.array(linestring.coords)))
+        return LineString(transform.apply(np.array(linestring.coords)))
 
     def transform_linear_ring(
         self, transform: Transform, linear_ring: LinearRing
     ) -> LinearRing:
-        return LinearRing(transform(np.array(linear_ring.coords)))
+        return LinearRing(transform.apply(np.array(linear_ring.coords)))
 
     def transform_polygon(self, transform: Transform, polygon: Polygon) -> Polygon:
         return Polygon(
@@ -52,7 +52,7 @@ class GeometryAdapter(BaseAdapter[BaseGeometry]):
         }[cls]
         return cls([method(transform, obj) for obj in multi_geom])
 
-    def __call__(
+    def apply(
         self,
         transform: Transform,
         obj: BaseGeometry,

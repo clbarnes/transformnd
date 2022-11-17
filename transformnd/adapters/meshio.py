@@ -1,6 +1,6 @@
 from meshio import Mesh
 
-from .base import AttrAdapter, NullAdapter
+from .base import AttrAdapter
 
 
 class MeshAdapter(AttrAdapter[Mesh]):
@@ -11,4 +11,4 @@ class MeshAdapter(AttrAdapter[Mesh]):
     """
 
     def __init__(self):
-        super().__init__(points=NullAdapter())
+        super().__init__(points=None)

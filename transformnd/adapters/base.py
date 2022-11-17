@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
-from typing import Callable, Generic, TypeVar
+from typing import Callable, Generic, Optional, TypeVar
 
 import numpy as np
 
@@ -13,7 +13,7 @@ T = TypeVar("T")
 
 class BaseAdapter(Generic[T], ABC):
     @abstractmethod
-    def __call__(self, transform: Transform, obj: T) -> T:
+    def apply(self, transform: Transform, obj: T) -> T:
         """Apply the given transformation to a non-array object.
 
         Parameters
@@ -39,14 +39,14 @@ class BaseAdapter(Generic[T], ABC):
         -------
         Callable
         """
-        return partial(self, *args, **kwargs)
+        return partial(self.apply, *args, **kwargs)
 
 
 class NullAdapter(BaseAdapter[np.ndarray]):
     """Adapter which simply applies the transform."""
 
-    def __call__(self, transform: Transform, obj: np.ndarray) -> np.ndarray:
-        return transform(obj)
+    def apply(self, transform: Transform, obj: np.ndarray) -> np.ndarray:
+        return transform.apply(obj)
 
 
 class FnAdapter(BaseAdapter[T]):
@@ -61,23 +61,29 @@ class FnAdapter(BaseAdapter[T]):
         """
         self.fn = fn
 
-    def __call__(self, transform: Transform, obj: T) -> T:
+    def apply(self, transform: Transform, obj: T) -> T:
         return self.fn(transform, obj)
 
 
+NULL = NullAdapter()
+
+
 class AttrAdapter(BaseAdapter[T]):
-    def __init__(self, **kwargs: BaseAdapter) -> None:
+    def __init__(self, **kwargs: Optional[BaseAdapter]) -> None:
         """Adapter which transforms an object by applying transforms to its member variables.
 
         Parameters
         ----------
-        adapters : Dict[str, BaseAdapter]
+        adapters : Dict[str, Optional[BaseAdapter]]
             Keys are attribute names, values are adapters with which
             to apply the transform to those attributes.
+            `None` is shorthand for `NullAdapter()`;
+            i.e. the attribute is a numpy.ndarray and can be transformed
+            without being adapted.
         """
-        self.adapters = kwargs
+        self.adapters = {k: NULL if v is None else v for k, v in kwargs.items()}
 
-    def __call__(self, transform: Transform, obj: T, in_place=False) -> T:
+    def apply(self, transform: Transform, obj: T, in_place=False) -> T:
         """Apply the given transformation to the object, via its attributes.
 
         Parameters
@@ -98,10 +104,10 @@ class AttrAdapter(BaseAdapter[T]):
         for k, v in self.adapters.items():
             member = getattr(obj, k)
             try:
-                transformed = v(transform, member, in_place=True)  # type: ignore
+                transformed = v.apply(transform, member, in_place=True)  # type: ignore
             except TypeError as e:
                 if "got an unexpected keyword argument 'in_place'" in str(e):
-                    transformed = v(transform, member)
+                    transformed = v.apply(transform, member)
                 else:
                     raise e
             setattr(obj, k, transformed)
@@ -124,13 +130,13 @@ class SimpleAdapter(BaseAdapter, Generic[T], ABC):
         """Convert an array of coordinates into the correct type."""
         pass
 
-    def __call__(self, transform: Transform, obj: T) -> T:
+    def apply(self, transform: Transform, obj: T) -> T:
         coords = self._to_array(obj)
-        transformed = transform(coords)
+        transformed = transform.apply(coords)
         return self._from_array(transformed)
 
 
-class ReshapeAdapter(BaseAdapter[np.ndarray], ABC):
+class ReshapeAdapter(BaseAdapter[np.ndarray]):
     """Adapter which reshapes a numpy.ndarray"""
 
     def __init__(self, dim_axis=-1) -> None:
@@ -144,7 +150,7 @@ class ReshapeAdapter(BaseAdapter[np.ndarray], ABC):
         """
         self.dim_axis: int = dim_axis
 
-    def __call__(self, transform: Transform, arr: np.ndarray) -> np.ndarray:
+    def apply(self, transform: Transform, arr: np.ndarray) -> np.ndarray:
         dim_axis = self.dim_axis
         if self.dim_axis < 0:
             dim_axis += arr.ndim
@@ -153,5 +159,5 @@ class ReshapeAdapter(BaseAdapter[np.ndarray], ABC):
         m_shape = moved.shape
 
         flattened = np.reshape(moved, (-1, m_shape[-1]))
-        transformed = transform(flattened)
+        transformed = transform.apply(flattened)
         return np.moveaxis(np.reshape(transformed, m_shape), -1, dim_axis)

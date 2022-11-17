@@ -43,7 +43,7 @@ class TransformGraph:
         Finds the shortest path for transforming one space
         into another, via some intermediate spaces.
 
-        Populate with ``my_transform_graph.add_transforms(my_transforms)``.
+        Populate with `my_transform_graph.add_transforms(my_transforms)`.
 
         """
         self.graph = nx.OrderedDiGraph()
@@ -147,7 +147,7 @@ class TransformGraph:
         np.ndarray
         """
         t = self.get_sequence(source_space, target_space)
-        return t(coords)
+        return t.apply(coords)
 
     def __iter__(self) -> Iterator[Transform]:
         """Iterate through the transforms present in the graph.
