@@ -14,6 +14,7 @@ shapely
 
 black[jupyter]
 flake8
+flake8-pyproject
 ipykernel
 isort
 jupyter

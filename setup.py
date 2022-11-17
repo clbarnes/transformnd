@@ -8,11 +8,7 @@ with open(Path(__file__).resolve().parent / "README.md") as f:
 
 extras = {
     "thinplatesplines": ["morphops", "scipy"],
-    "graph": ["networkx"],
     "movingleastsquares": ["molesq"],
-    # "pandas": ["pandas"],
-    # "meshio": ["meshio"],
-    # "shapely": ["shapely"]
 }
 extras["all"] = list(set(chain.from_iterable(extras.values())))
 extras["test"] = ["pytest"]
@@ -24,8 +20,9 @@ setup(
     description="ND coordinate transformations",
     long_description=readme,
     long_description_content_type="text/markdown",
-    packages=find_packages(include=["transformnd*"]),
-    install_requires=["numpy>=1.20"],
+    package_dir={"": "src"},
+    packages=find_packages(where="src", include=["transformnd*"]),
+    install_requires=["numpy>=1.20", "networkx"],
     extras_require=extras,
     tests_require=["pytest"],
     python_requires=">=3.7, <4.0",
