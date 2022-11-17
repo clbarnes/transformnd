@@ -104,7 +104,7 @@ class ThinPlateSplines(Transform):
             spaces=self.spaces[::-1],
         )
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         coords = self._validate_coords(coords)
         U = mops.K_matrix(coords, self.source_control_points)
         P = mops.P_matrix(coords)
@@ -204,7 +204,7 @@ inheritance.</p>
             spaces=self.spaces[::-1],
         )
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         coords = self._validate_coords(coords)
         U = mops.K_matrix(coords, self.source_control_points)
         P = mops.P_matrix(coords)
@@ -223,6 +223,14 @@ inheritance.</p>
 <div class="desc"></div>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></b></code>:
+<ul class="hlist">
+<li><code><a title="transformnd.base.Transform.apply" href="../base.html#transformnd.base.Transform.apply">apply</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>

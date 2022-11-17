@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import Iterator, List, Optional, Set, Tuple, Union
+from typing import Iterator, List, Optional, Sequence, Set, Tuple, Union
 
 import numpy as np
 
@@ -96,7 +96,7 @@ class Transform(ABC):
         return coords
 
     @abstractmethod
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         &#34;&#34;&#34;Apply transformation.
 
         Parameters
@@ -198,7 +198,7 @@ class TransformWrapper(Transform):
             else:
                 self.ndim = set(ndim)
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         self._validate_coords(coords)
         return self.fn(coords)
 
@@ -214,7 +214,7 @@ def _with_spaces(t: Transform, source_space=None, target_space=None):
 
 
 def infer_spaces(
-    transforms: List[Transform], source_space=None, target_space=None
+    transforms: Sequence[Transform], source_space=None, target_space=None
 ) -&gt; List[Transform]:
     prev_tgts = [source_space]
     next_srcs = []
@@ -237,10 +237,10 @@ def get_transform_list(t: Transform) -&gt; List[Transform]:
         return [t]
 
 
-class TransformSequence(Transform):
+class TransformSequence(Transform, Sequence[Transform]):
     def __init__(
         self,
-        transforms: List[Transform],
+        transforms: Sequence[Transform],
         *,
         spaces: SpaceTuple = (None, None),
     ) -&gt; None:
@@ -309,9 +309,9 @@ class TransformSequence(Transform):
             spaces=self.spaces[::-1],
         )
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         for t in self.transforms:
-            coords = t(coords)
+            coords = t.apply(coords)
         return coords
 
     def list_spaces(self, skip_none=False) -&gt; List[SpaceRef]:
@@ -366,7 +366,7 @@ class TransformSequence(Transform):
 </details>
 </dd>
 <dt id="transformnd.base.infer_spaces"><code class="name flex">
-<span>def <span class="ident">infer_spaces</span></span>(<span>transforms: List[<a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a>], source_space=None, target_space=None) ‑> List[<a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a>]</span>
+<span>def <span class="ident">infer_spaces</span></span>(<span>transforms: Sequence[<a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a>], source_space=None, target_space=None) ‑> List[<a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -375,7 +375,7 @@ class TransformSequence(Transform):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def infer_spaces(
-    transforms: List[Transform], source_space=None, target_space=None
+    transforms: Sequence[Transform], source_space=None, target_space=None
 ) -&gt; List[Transform]:
     prev_tgts = [source_space]
     next_srcs = []
@@ -460,7 +460,7 @@ inheritance.</p>
         return coords
 
     @abstractmethod
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         &#34;&#34;&#34;Apply transformation.
 
         Parameters
@@ -583,10 +583,49 @@ def target_space(self):
 </details>
 </dd>
 </dl>
+<h3>Methods</h3>
+<dl>
+<dt id="transformnd.base.Transform.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, coords: np.ndarray) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Apply transformation.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>coords</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>NxD array of N D-dimensional coordinates.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>Transformed coordinates in the same shape.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def apply(self, coords: np.ndarray) -&gt; np.ndarray:
+    &#34;&#34;&#34;Apply transformation.
+
+    Parameters
+    ----------
+    coords : np.ndarray
+        NxD array of N D-dimensional coordinates.
+
+    Returns
+    -------
+    np.ndarray
+        Transformed coordinates in the same shape.
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="transformnd.base.TransformSequence"><code class="flex name class">
 <span>class <span class="ident">TransformSequence</span></span>
-<span>(</span><span>transforms: List[<a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a>], *, spaces: SpaceTuple = (None, None))</span>
+<span>(</span><span>transforms: Sequence[<a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a>], *, spaces: SpaceTuple = (None, None))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -612,10 +651,10 @@ Can also be inferred from the first and last transforms.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TransformSequence(Transform):
+<pre><code class="python">class TransformSequence(Transform, Sequence[Transform]):
     def __init__(
         self,
-        transforms: List[Transform],
+        transforms: Sequence[Transform],
         *,
         spaces: SpaceTuple = (None, None),
     ) -&gt; None:
@@ -684,9 +723,9 @@ Can also be inferred from the first and last transforms.</dd>
             spaces=self.spaces[::-1],
         )
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         for t in self.transforms:
-            coords = t(coords)
+            coords = t.apply(coords)
         return coords
 
     def list_spaces(self, skip_none=False) -&gt; List[SpaceRef]:
@@ -720,6 +759,13 @@ Can also be inferred from the first and last transforms.</dd>
 <ul class="hlist">
 <li><a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a></li>
 <li>abc.ABC</li>
+<li>collections.abc.Sequence</li>
+<li>collections.abc.Reversible</li>
+<li>collections.abc.Collection</li>
+<li>collections.abc.Sized</li>
+<li>collections.abc.Iterable</li>
+<li>collections.abc.Container</li>
+<li>typing.Generic</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -761,6 +807,14 @@ Can also be inferred from the first and last transforms.</dd>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a></b></code>:
+<ul class="hlist">
+<li><code><a title="transformnd.base.Transform.apply" href="#transformnd.base.Transform.apply">apply</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="transformnd.base.TransformWrapper"><code class="flex name class">
 <span>class <span class="ident">TransformWrapper</span></span>
@@ -811,7 +865,7 @@ NxD numpy array of N D-dimensional coordinates.</p>
             else:
                 self.ndim = set(ndim)
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         self._validate_coords(coords)
         return self.fn(coords)</code></pre>
 </details>
@@ -819,6 +873,14 @@ NxD numpy array of N D-dimensional coordinates.</p>
 <ul class="hlist">
 <li><a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a></li>
 <li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a></b></code>:
+<ul class="hlist">
+<li><code><a title="transformnd.base.Transform.apply" href="#transformnd.base.Transform.apply">apply</a></code></li>
+</ul>
+</li>
 </ul>
 </dd>
 </dl>
@@ -846,6 +908,7 @@ NxD numpy array of N D-dimensional coordinates.</p>
 <li>
 <h4><code><a title="transformnd.base.Transform" href="#transformnd.base.Transform">Transform</a></code></h4>
 <ul class="">
+<li><code><a title="transformnd.base.Transform.apply" href="#transformnd.base.Transform.apply">apply</a></code></li>
 <li><code><a title="transformnd.base.Transform.ndim" href="#transformnd.base.Transform.ndim">ndim</a></code></li>
 <li><code><a title="transformnd.base.Transform.source_space" href="#transformnd.base.Transform.source_space">source_space</a></code></li>
 <li><code><a title="transformnd.base.Transform.target_space" href="#transformnd.base.Transform.target_space">target_space</a></code></li>

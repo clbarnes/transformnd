@@ -72,7 +72,7 @@ class TransformGraph:
         Finds the shortest path for transforming one space
         into another, via some intermediate spaces.
 
-        Populate with ``my_transform_graph.add_transforms(my_transforms)``.
+        Populate with `my_transform_graph.add_transforms(my_transforms)`.
 
         &#34;&#34;&#34;
         self.graph = nx.OrderedDiGraph()
@@ -176,7 +176,7 @@ class TransformGraph:
         np.ndarray
         &#34;&#34;&#34;
         t = self.get_sequence(source_space, target_space)
-        return t(coords)
+        return t.apply(coords)
 
     def __iter__(self) -&gt; Iterator[Transform]:
         &#34;&#34;&#34;Iterate through the transforms present in the graph.
@@ -281,7 +281,7 @@ into another, via some intermediate spaces.</p>
         Finds the shortest path for transforming one space
         into another, via some intermediate spaces.
 
-        Populate with ``my_transform_graph.add_transforms(my_transforms)``.
+        Populate with `my_transform_graph.add_transforms(my_transforms)`.
 
         &#34;&#34;&#34;
         self.graph = nx.OrderedDiGraph()
@@ -385,7 +385,7 @@ into another, via some intermediate spaces.</p>
         np.ndarray
         &#34;&#34;&#34;
         t = self.get_sequence(source_space, target_space)
-        return t(coords)
+        return t.apply(coords)
 
     def __iter__(self) -&gt; Iterator[Transform]:
         &#34;&#34;&#34;Iterate through the transforms present in the graph.
@@ -576,7 +576,7 @@ possibly via intermediates.</p>
     np.ndarray
     &#34;&#34;&#34;
     t = self.get_sequence(source_space, target_space)
-    return t(coords)</code></pre>
+    return t.apply(coords)</code></pre>
 </details>
 </dd>
 </dl>

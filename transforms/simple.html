@@ -65,7 +65,7 @@ class Identity(Transform):
     def __invert__(self) -&gt; Transform:
         return self
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         return coords.copy()
 
 
@@ -99,7 +99,7 @@ class Translate(Transform):
             self.ndim = {self.translation.shape[0]}
         # otherwise, can be broadcast to anything
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         self._validate_coords(coords)
         return coords + self.translation
 
@@ -139,7 +139,7 @@ class Scale(Transform):
             self.ndim = {self.scale.shape[0]}
         # otherwise, can be broadcast to anything
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         coords = self._validate_coords(coords)
         return coords * self.scale
 
@@ -209,13 +209,21 @@ inheritance.</p>
     def __invert__(self) -&gt; Transform:
         return self
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         return coords.copy()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></li>
 <li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></b></code>:
+<ul class="hlist">
+<li><code><a title="transformnd.base.Transform.apply" href="../base.html#transformnd.base.Transform.apply">apply</a></code></li>
+</ul>
+</li>
 </ul>
 </dd>
 <dt id="transformnd.transforms.simple.Scale"><code class="flex name class">
@@ -275,7 +283,7 @@ inheritance.</p>
             self.ndim = {self.scale.shape[0]}
         # otherwise, can be broadcast to anything
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         coords = self._validate_coords(coords)
         return coords * self.scale
 
@@ -289,6 +297,14 @@ inheritance.</p>
 <ul class="hlist">
 <li><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></li>
 <li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></b></code>:
+<ul class="hlist">
+<li><code><a title="transformnd.base.Transform.apply" href="../base.html#transformnd.base.Transform.apply">apply</a></code></li>
+</ul>
+</li>
 </ul>
 </dd>
 <dt id="transformnd.transforms.simple.Translate"><code class="flex name class">
@@ -345,7 +361,7 @@ inheritance.</p>
             self.ndim = {self.translation.shape[0]}
         # otherwise, can be broadcast to anything
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         self._validate_coords(coords)
         return coords + self.translation
 
@@ -356,6 +372,14 @@ inheritance.</p>
 <ul class="hlist">
 <li><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></li>
 <li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></b></code>:
+<ul class="hlist">
+<li><code><a title="transformnd.base.Transform.apply" href="../base.html#transformnd.base.Transform.apply">apply</a></code></li>
+</ul>
+</li>
 </ul>
 </dd>
 </dl>

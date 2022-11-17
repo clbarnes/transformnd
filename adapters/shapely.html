@@ -53,17 +53,17 @@ class GeometryAdapter(BaseAdapter[BaseGeometry]):
     &#34;&#34;&#34;
 
     def transform_point(self, transform: Transform, point: Point) -&gt; Point:
-        return Point(*transform(np.array(point.coords))[0])
+        return Point(*transform.apply(np.array(point.coords))[0])
 
     def transform_linestring(
         self, transform: Transform, linestring: LineString
     ) -&gt; LineString:
-        return LineString(transform(np.array(linestring.coords)))
+        return LineString(transform.apply(np.array(linestring.coords)))
 
     def transform_linear_ring(
         self, transform: Transform, linear_ring: LinearRing
     ) -&gt; LinearRing:
-        return LinearRing(transform(np.array(linear_ring.coords)))
+        return LinearRing(transform.apply(np.array(linear_ring.coords)))
 
     def transform_polygon(self, transform: Transform, polygon: Polygon) -&gt; Polygon:
         return Polygon(
@@ -80,7 +80,7 @@ class GeometryAdapter(BaseAdapter[BaseGeometry]):
         }[cls]
         return cls([method(transform, obj) for obj in multi_geom])
 
-    def __call__(
+    def apply(
         self,
         transform: Transform,
         obj: BaseGeometry,
@@ -143,17 +143,17 @@ there are methods for transforming different geometry subclasses.</p>
     &#34;&#34;&#34;
 
     def transform_point(self, transform: Transform, point: Point) -&gt; Point:
-        return Point(*transform(np.array(point.coords))[0])
+        return Point(*transform.apply(np.array(point.coords))[0])
 
     def transform_linestring(
         self, transform: Transform, linestring: LineString
     ) -&gt; LineString:
-        return LineString(transform(np.array(linestring.coords)))
+        return LineString(transform.apply(np.array(linestring.coords)))
 
     def transform_linear_ring(
         self, transform: Transform, linear_ring: LinearRing
     ) -&gt; LinearRing:
-        return LinearRing(transform(np.array(linear_ring.coords)))
+        return LinearRing(transform.apply(np.array(linear_ring.coords)))
 
     def transform_polygon(self, transform: Transform, polygon: Polygon) -&gt; Polygon:
         return Polygon(
@@ -170,7 +170,7 @@ there are methods for transforming different geometry subclasses.</p>
         }[cls]
         return cls([method(transform, obj) for obj in multi_geom])
 
-    def __call__(
+    def apply(
         self,
         transform: Transform,
         obj: BaseGeometry,
@@ -207,6 +207,57 @@ there are methods for transforming different geometry subclasses.</p>
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="transformnd.adapters.shapely.GeometryAdapter.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, transform: <a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a>, obj: shapely.geometry.base.BaseGeometry) ‑> shapely.geometry.base.BaseGeometry</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transform the shapely geometry.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>transform</code></strong> :&ensp;<code>Transform</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>obj</code></strong> :&ensp;<code>BaseGeometry</code></dt>
+<dd>Some shapely geometry in 2 or 3D</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>BaseGeometry</code></dt>
+<dd>An object of the same type as the input.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(
+    self,
+    transform: Transform,
+    obj: BaseGeometry,
+) -&gt; BaseGeometry:
+    &#34;&#34;&#34;Transform the shapely geometry.
+
+    Parameters
+    ----------
+    transform : Transform
+    obj : BaseGeometry
+        Some shapely geometry in 2 or 3D
+
+    Returns
+    -------
+    BaseGeometry
+        An object of the same type as the input.
+    &#34;&#34;&#34;
+    if isinstance(obj, BaseMultipartGeometry):
+        return self.transform_multi(transform, obj)
+
+    method = {
+        Point: self.transform_point,
+        LineString: self.transform_linestring,
+        LinearRing: self.transform_linear_ring,
+        Polygon: self.transform_polygon,
+    }[type(obj)]
+    return method(transform, obj)</code></pre>
+</details>
+</dd>
 <dt id="transformnd.adapters.shapely.GeometryAdapter.transform_linear_ring"><code class="name flex">
 <span>def <span class="ident">transform_linear_ring</span></span>(<span>self, transform: <a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a>, linear_ring: shapely.geometry.polygon.LinearRing) ‑> shapely.geometry.polygon.LinearRing</span>
 </code></dt>
@@ -219,7 +270,7 @@ there are methods for transforming different geometry subclasses.</p>
 <pre><code class="python">def transform_linear_ring(
     self, transform: Transform, linear_ring: LinearRing
 ) -&gt; LinearRing:
-    return LinearRing(transform(np.array(linear_ring.coords)))</code></pre>
+    return LinearRing(transform.apply(np.array(linear_ring.coords)))</code></pre>
 </details>
 </dd>
 <dt id="transformnd.adapters.shapely.GeometryAdapter.transform_linestring"><code class="name flex">
@@ -234,7 +285,7 @@ there are methods for transforming different geometry subclasses.</p>
 <pre><code class="python">def transform_linestring(
     self, transform: Transform, linestring: LineString
 ) -&gt; LineString:
-    return LineString(transform(np.array(linestring.coords)))</code></pre>
+    return LineString(transform.apply(np.array(linestring.coords)))</code></pre>
 </details>
 </dd>
 <dt id="transformnd.adapters.shapely.GeometryAdapter.transform_multi"><code class="name flex">
@@ -266,7 +317,7 @@ there are methods for transforming different geometry subclasses.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def transform_point(self, transform: Transform, point: Point) -&gt; Point:
-    return Point(*transform(np.array(point.coords))[0])</code></pre>
+    return Point(*transform.apply(np.array(point.coords))[0])</code></pre>
 </details>
 </dd>
 <dt id="transformnd.adapters.shapely.GeometryAdapter.transform_polygon"><code class="name flex">
@@ -314,6 +365,7 @@ there are methods for transforming different geometry subclasses.</p>
 <li>
 <h4><code><a title="transformnd.adapters.shapely.GeometryAdapter" href="#transformnd.adapters.shapely.GeometryAdapter">GeometryAdapter</a></code></h4>
 <ul class="">
+<li><code><a title="transformnd.adapters.shapely.GeometryAdapter.apply" href="#transformnd.adapters.shapely.GeometryAdapter.apply">apply</a></code></li>
 <li><code><a title="transformnd.adapters.shapely.GeometryAdapter.transform_linear_ring" href="#transformnd.adapters.shapely.GeometryAdapter.transform_linear_ring">transform_linear_ring</a></code></li>
 <li><code><a title="transformnd.adapters.shapely.GeometryAdapter.transform_linestring" href="#transformnd.adapters.shapely.GeometryAdapter.transform_linestring">transform_linestring</a></code></li>
 <li><code><a title="transformnd.adapters.shapely.GeometryAdapter.transform_multi" href="#transformnd.adapters.shapely.GeometryAdapter.transform_multi">transform_multi</a></code></li>

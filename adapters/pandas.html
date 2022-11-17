@@ -43,11 +43,11 @@ class DataFrameAdapter(BaseAdapter[pd.DataFrame]):
         Parameters
         ----------
         columns : list of keys
-            Keys for columns containing coordinates, e.g. ``[&#34;x&#34;, &#34;y&#34;, &#34;z&#34;]``
+            Keys for columns containing coordinates, e.g. `[&#34;x&#34;, &#34;y&#34;, &#34;z&#34;]`
         &#34;&#34;&#34;
         self.columns = columns
 
-    def __call__(
+    def apply(
         self, transform: Transform, df: pd.DataFrame, in_place=False
     ) -&gt; pd.DataFrame:
         &#34;&#34;&#34;Transform the dataframe, optionally in-place.
@@ -66,7 +66,7 @@ class DataFrameAdapter(BaseAdapter[pd.DataFrame]):
         pandas.DataFrame
         &#34;&#34;&#34;
         coords = df[self.columns].to_numpy()
-        transformed = transform(coords)
+        transformed = transform.apply(coords)
         if not in_place:
             df = df.copy()
         df[self.columns] = transformed
@@ -118,11 +118,11 @@ return default</p>
         Parameters
         ----------
         columns : list of keys
-            Keys for columns containing coordinates, e.g. ``[&#34;x&#34;, &#34;y&#34;, &#34;z&#34;]``
+            Keys for columns containing coordinates, e.g. `[&#34;x&#34;, &#34;y&#34;, &#34;z&#34;]`
         &#34;&#34;&#34;
         self.columns = columns
 
-    def __call__(
+    def apply(
         self, transform: Transform, df: pd.DataFrame, in_place=False
     ) -&gt; pd.DataFrame:
         &#34;&#34;&#34;Transform the dataframe, optionally in-place.
@@ -141,7 +141,7 @@ return default</p>
         pandas.DataFrame
         &#34;&#34;&#34;
         coords = df[self.columns].to_numpy()
-        transformed = transform(coords)
+        transformed = transform.apply(coords)
         if not in_place:
             df = df.copy()
         df[self.columns] = transformed
@@ -153,6 +153,59 @@ return default</p>
 <li>typing.Generic</li>
 <li>abc.ABC</li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="transformnd.adapters.pandas.DataFrameAdapter.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, transform: <a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a>, df: pandas.core.frame.DataFrame, in_place=False) ‑> pandas.core.frame.DataFrame</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transform the dataframe, optionally in-place.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>transform</code></strong> :&ensp;<code>Transform</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>df</code></strong> :&ensp;<code>pd.DataFrame</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>in_place</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to mutate the dataframe in place,
+by default False (i.e. make a copy of it).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pandas.DataFrame</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(
+    self, transform: Transform, df: pd.DataFrame, in_place=False
+) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;Transform the dataframe, optionally in-place.
+
+    Parameters
+    ----------
+    transform : Transform
+    df : pd.DataFrame
+
+    in_place : bool, optional
+        Whether to mutate the dataframe in place,
+        by default False (i.e. make a copy of it).
+
+    Returns
+    -------
+    pandas.DataFrame
+    &#34;&#34;&#34;
+    coords = df[self.columns].to_numpy()
+    transformed = transform.apply(coords)
+    if not in_place:
+        df = df.copy()
+    df[self.columns] = transformed
+    return df</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></b></code>:
@@ -180,6 +233,9 @@ return default</p>
 <ul>
 <li>
 <h4><code><a title="transformnd.adapters.pandas.DataFrameAdapter" href="#transformnd.adapters.pandas.DataFrameAdapter">DataFrameAdapter</a></code></h4>
+<ul class="">
+<li><code><a title="transformnd.adapters.pandas.DataFrameAdapter.apply" href="#transformnd.adapters.pandas.DataFrameAdapter.apply">apply</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

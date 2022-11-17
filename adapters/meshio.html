@@ -28,7 +28,7 @@
 </summary>
 <pre><code class="python">from meshio import Mesh
 
-from .base import AttrAdapter, NullAdapter
+from .base import AttrAdapter
 
 
 class MeshAdapter(AttrAdapter[Mesh]):
@@ -39,7 +39,7 @@ class MeshAdapter(AttrAdapter[Mesh]):
     &#34;&#34;&#34;
 
     def __init__(self):
-        super().__init__(points=NullAdapter())</code></pre>
+        super().__init__(points=None)</code></pre>
 </details>
 </section>
 <section>
@@ -58,12 +58,15 @@ class MeshAdapter(AttrAdapter[Mesh]):
 <div class="desc"><p>Transform meshio.Mesh objects.</p>
 <p>N.B. Some transformations may create invalid meshes
 (incorrect winding, self-intersections, inversions etc.).</p>
-<p>Adapter which transforms an object by applying transforms to its member variables.</p>
+<p>Adapter which transforms an object by applying transforms to its attributes.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>adapters</code></strong> :&ensp;<code>Dict[str, BaseAdapter]</code></dt>
+<dt><strong><code>adapters</code></strong> :&ensp;<code>Dict[str, Optional[BaseAdapter]]</code></dt>
 <dd>Keys are attribute names, values are adapters with which
-to apply the transform to those attributes.</dd>
+to apply the transform to those attributes.
+<code>None</code> is shorthand for <code>NullAdapter()</code>;
+i.e. the attribute is a numpy.ndarray and can be transformed
+without being adapted.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -77,7 +80,7 @@ to apply the transform to those attributes.</dd>
     &#34;&#34;&#34;
 
     def __init__(self):
-        super().__init__(points=NullAdapter())</code></pre>
+        super().__init__(points=None)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -90,6 +93,7 @@ to apply the transform to those attributes.</dd>
 <ul class="hlist">
 <li><code><b><a title="transformnd.adapters.base.AttrAdapter" href="base.html#transformnd.adapters.base.AttrAdapter">AttrAdapter</a></b></code>:
 <ul class="hlist">
+<li><code><a title="transformnd.adapters.base.AttrAdapter.apply" href="base.html#transformnd.adapters.base.AttrAdapter.apply">apply</a></code></li>
 <li><code><a title="transformnd.adapters.base.AttrAdapter.partial" href="base.html#transformnd.adapters.base.BaseAdapter.partial">partial</a></code></li>
 </ul>
 </li>

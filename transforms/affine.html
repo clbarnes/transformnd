@@ -92,7 +92,7 @@ class Affine(Transform):
         self.matrix = m
         self.ndim = {len(self.matrix) - 1}
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         coords = self._validate_coords(coords)
         # todo: replace with writing into full ones?
         coords = np.concatenate(
@@ -414,7 +414,7 @@ class Affine(Transform):
     ) -&gt; Affine:
         &#34;&#34;&#34;Create an affine shear.
 
-        ``factor`` can be a scalar to broadcast to all dimensions,
+        `factor` can be a scalar to broadcast to all dimensions,
         or a D-length list of D-1 lists.
         The first inner list contains the shear factors in the first dimension
         for all *but* the first dimension.
@@ -557,7 +557,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
         self.matrix = m
         self.ndim = {len(self.matrix) - 1}
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         coords = self._validate_coords(coords)
         # todo: replace with writing into full ones?
         coords = np.concatenate(
@@ -879,7 +879,7 @@ the bottom row is assumed to be [0, 0, &hellip;, 0, 1].</p>
     ) -&gt; Affine:
         &#34;&#34;&#34;Create an affine shear.
 
-        ``factor`` can be a scalar to broadcast to all dimensions,
+        `factor` can be a scalar to broadcast to all dimensions,
         or a D-length list of D-1 lists.
         The first inner list contains the shear factors in the first dimension
         for all *but* the first dimension.
@@ -1368,7 +1368,7 @@ def shearing(
 ) -&gt; Affine:
     &#34;&#34;&#34;Create an affine shear.
 
-    ``factor`` can be a scalar to broadcast to all dimensions,
+    `factor` can be a scalar to broadcast to all dimensions,
     or a D-length list of D-1 lists.
     The first inner list contains the shear factors in the first dimension
     for all *but* the first dimension.
@@ -1467,6 +1467,14 @@ def translation(
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></b></code>:
+<ul class="hlist">
+<li><code><a title="transformnd.base.Transform.apply" href="../base.html#transformnd.base.Transform.apply">apply</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>

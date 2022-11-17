@@ -100,7 +100,7 @@ __all__ = [
 <dl>
 <dt id="transformnd.adapters.AttrAdapter"><code class="flex name class">
 <span>class <span class="ident">AttrAdapter</span></span>
-<span>(</span><span>**kwargs: <a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a>)</span>
+<span>(</span><span>**kwargs: Optional[<a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a>])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Abstract base class for generic types.</p>
@@ -117,30 +117,36 @@ try:
 return mapping[key]
 except KeyError:
 return default</p>
-<p>Adapter which transforms an object by applying transforms to its member variables.</p>
+<p>Adapter which transforms an object by applying transforms to its attributes.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>adapters</code></strong> :&ensp;<code>Dict[str, <a title="transformnd.adapters.BaseAdapter" href="#transformnd.adapters.BaseAdapter">BaseAdapter</a>]</code></dt>
+<dt><strong><code>adapters</code></strong> :&ensp;<code>Dict[str, Optional[<a title="transformnd.adapters.BaseAdapter" href="#transformnd.adapters.BaseAdapter">BaseAdapter</a>]]</code></dt>
 <dd>Keys are attribute names, values are adapters with which
-to apply the transform to those attributes.</dd>
+to apply the transform to those attributes.
+<code>None</code> is shorthand for <code><a title="transformnd.adapters.NullAdapter" href="#transformnd.adapters.NullAdapter">NullAdapter</a></code>;
+i.e. the attribute is a numpy.ndarray and can be transformed
+without being adapted.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AttrAdapter(BaseAdapter[T]):
-    def __init__(self, **kwargs: BaseAdapter) -&gt; None:
-        &#34;&#34;&#34;Adapter which transforms an object by applying transforms to its member variables.
+    def __init__(self, **kwargs: Optional[BaseAdapter]) -&gt; None:
+        &#34;&#34;&#34;Adapter which transforms an object by applying transforms to its attributes.
 
         Parameters
         ----------
-        adapters : Dict[str, BaseAdapter]
+        adapters : Dict[str, Optional[BaseAdapter]]
             Keys are attribute names, values are adapters with which
             to apply the transform to those attributes.
+            `None` is shorthand for `NullAdapter()`;
+            i.e. the attribute is a numpy.ndarray and can be transformed
+            without being adapted.
         &#34;&#34;&#34;
-        self.adapters = kwargs
+        self.adapters = {k: NULL if v is None else v for k, v in kwargs.items()}
 
-    def __call__(self, transform: Transform, obj: T, in_place=False) -&gt; T:
+    def apply(self, transform: Transform, obj: T, in_place=False) -&gt; T:
         &#34;&#34;&#34;Apply the given transformation to the object, via its attributes.
 
         Parameters
@@ -161,10 +167,10 @@ to apply the transform to those attributes.</dd>
         for k, v in self.adapters.items():
             member = getattr(obj, k)
             try:
-                transformed = v(transform, member, in_place=True)  # type: ignore
+                transformed = v.apply(transform, member, in_place=True)  # type: ignore
             except TypeError as e:
                 if &#34;got an unexpected keyword argument &#39;in_place&#39;&#34; in str(e):
-                    transformed = v(transform, member)
+                    transformed = v.apply(transform, member)
                 else:
                     raise e
             setattr(obj, k, transformed)
@@ -181,6 +187,65 @@ to apply the transform to those attributes.</dd>
 <ul class="hlist">
 <li><a title="transformnd.adapters.meshio.MeshAdapter" href="meshio.html#transformnd.adapters.meshio.MeshAdapter">MeshAdapter</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="transformnd.adapters.AttrAdapter.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, transform: <a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a>, obj: ~T, in_place=False) ‑> ~T</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Apply the given transformation to the object, via its attributes.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>transform</code></strong> :&ensp;<code>Transform</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>obj</code></strong> :&ensp;<code>T</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>in_place</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to mutate the given object in place,
+by default False (i.e. make a deep copy of it).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>T</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, transform: Transform, obj: T, in_place=False) -&gt; T:
+    &#34;&#34;&#34;Apply the given transformation to the object, via its attributes.
+
+    Parameters
+    ----------
+    transform : Transform
+    obj : T
+    in_place : bool, optional
+        Whether to mutate the given object in place,
+        by default False (i.e. make a deep copy of it).
+
+    Returns
+    -------
+    T
+    &#34;&#34;&#34;
+    if not in_place:
+        obj = deepcopy(obj)
+
+    for k, v in self.adapters.items():
+        member = getattr(obj, k)
+        try:
+            transformed = v.apply(transform, member, in_place=True)  # type: ignore
+        except TypeError as e:
+            if &#34;got an unexpected keyword argument &#39;in_place&#39;&#34; in str(e):
+                transformed = v.apply(transform, member)
+            else:
+                raise e
+        setattr(obj, k, transformed)
+
+    return obj</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></b></code>:
@@ -214,7 +279,7 @@ return default</p></div>
 </summary>
 <pre><code class="python">class BaseAdapter(Generic[T], ABC):
     @abstractmethod
-    def __call__(self, transform: Transform, obj: T) -&gt; T:
+    def apply(self, transform: Transform, obj: T) -&gt; T:
         &#34;&#34;&#34;Apply the given transformation to a non-array object.
 
         Parameters
@@ -240,7 +305,7 @@ return default</p></div>
         -------
         Callable
         &#34;&#34;&#34;
-        return partial(self, *args, **kwargs)</code></pre>
+        return partial(self.apply, *args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -259,6 +324,43 @@ return default</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="transformnd.adapters.BaseAdapter.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, transform: <a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a>, obj: ~T) ‑> ~T</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Apply the given transformation to a non-array object.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>transform</code></strong> :&ensp;<code>Transform</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>obj</code></strong> :&ensp;<code>T</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>T</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def apply(self, transform: Transform, obj: T) -&gt; T:
+    &#34;&#34;&#34;Apply the given transformation to a non-array object.
+
+    Parameters
+    ----------
+    transform : Transform
+    obj : T
+
+    Returns
+    -------
+    T
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+</dd>
 <dt id="transformnd.adapters.BaseAdapter.partial"><code class="name flex">
 <span>def <span class="ident">partial</span></span>(<span>self, *args, **kwargs) ‑> Callable</span>
 </code></dt>
@@ -289,7 +391,7 @@ using the same config repeatedly.</p>
     -------
     Callable
     &#34;&#34;&#34;
-    return partial(self, *args, **kwargs)</code></pre>
+    return partial(self.apply, *args, **kwargs)</code></pre>
 </details>
 </dd>
 </dl>
@@ -336,7 +438,7 @@ and applies the transformation to it.</dd>
         &#34;&#34;&#34;
         self.fn = fn
 
-    def __call__(self, transform: Transform, obj: T) -&gt; T:
+    def apply(self, transform: Transform, obj: T) -&gt; T:
         return self.fn(transform, obj)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -349,6 +451,7 @@ and applies the transformation to it.</dd>
 <ul class="hlist">
 <li><code><b><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></b></code>:
 <ul class="hlist">
+<li><code><a title="transformnd.adapters.base.BaseAdapter.apply" href="base.html#transformnd.adapters.base.BaseAdapter.apply">apply</a></code></li>
 <li><code><a title="transformnd.adapters.base.BaseAdapter.partial" href="base.html#transformnd.adapters.base.BaseAdapter.partial">partial</a></code></li>
 </ul>
 </li>
@@ -366,8 +469,8 @@ and applies the transformation to it.</dd>
 <pre><code class="python">class NullAdapter(BaseAdapter[np.ndarray]):
     &#34;&#34;&#34;Adapter which simply applies the transform.&#34;&#34;&#34;
 
-    def __call__(self, transform: Transform, obj: np.ndarray) -&gt; np.ndarray:
-        return transform(obj)</code></pre>
+    def apply(self, transform: Transform, obj: np.ndarray) -&gt; np.ndarray:
+        return transform.apply(obj)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -379,6 +482,7 @@ and applies the transformation to it.</dd>
 <ul class="hlist">
 <li><code><b><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></b></code>:
 <ul class="hlist">
+<li><code><a title="transformnd.adapters.base.BaseAdapter.apply" href="base.html#transformnd.adapters.base.BaseAdapter.apply">apply</a></code></li>
 <li><code><a title="transformnd.adapters.base.BaseAdapter.partial" href="base.html#transformnd.adapters.base.BaseAdapter.partial">partial</a></code></li>
 </ul>
 </li>
@@ -401,7 +505,7 @@ by default -1 (last)</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ReshapeAdapter(BaseAdapter[np.ndarray], ABC):
+<pre><code class="python">class ReshapeAdapter(BaseAdapter[np.ndarray]):
     &#34;&#34;&#34;Adapter which reshapes a numpy.ndarray&#34;&#34;&#34;
 
     def __init__(self, dim_axis=-1) -&gt; None:
@@ -415,7 +519,7 @@ by default -1 (last)</dd>
         &#34;&#34;&#34;
         self.dim_axis: int = dim_axis
 
-    def __call__(self, transform: Transform, arr: np.ndarray) -&gt; np.ndarray:
+    def apply(self, transform: Transform, arr: np.ndarray) -&gt; np.ndarray:
         dim_axis = self.dim_axis
         if self.dim_axis &lt; 0:
             dim_axis += arr.ndim
@@ -424,7 +528,7 @@ by default -1 (last)</dd>
         m_shape = moved.shape
 
         flattened = np.reshape(moved, (-1, m_shape[-1]))
-        transformed = transform(flattened)
+        transformed = transform.apply(flattened)
         return np.moveaxis(np.reshape(transformed, m_shape), -1, dim_axis)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -437,6 +541,7 @@ by default -1 (last)</dd>
 <ul class="hlist">
 <li><code><b><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></b></code>:
 <ul class="hlist">
+<li><code><a title="transformnd.adapters.base.BaseAdapter.apply" href="base.html#transformnd.adapters.base.BaseAdapter.apply">apply</a></code></li>
 <li><code><a title="transformnd.adapters.base.BaseAdapter.partial" href="base.html#transformnd.adapters.base.BaseAdapter.partial">partial</a></code></li>
 </ul>
 </li>
@@ -466,9 +571,9 @@ by default -1 (last)</dd>
         &#34;&#34;&#34;Convert an array of coordinates into the correct type.&#34;&#34;&#34;
         pass
 
-    def __call__(self, transform: Transform, obj: T) -&gt; T:
+    def apply(self, transform: Transform, obj: T) -&gt; T:
         coords = self._to_array(obj)
-        transformed = transform(coords)
+        transformed = transform.apply(coords)
         return self._from_array(transformed)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -481,6 +586,7 @@ by default -1 (last)</dd>
 <ul class="hlist">
 <li><code><b><a title="transformnd.adapters.base.BaseAdapter" href="base.html#transformnd.adapters.base.BaseAdapter">BaseAdapter</a></b></code>:
 <ul class="hlist">
+<li><code><a title="transformnd.adapters.base.BaseAdapter.apply" href="base.html#transformnd.adapters.base.BaseAdapter.apply">apply</a></code></li>
 <li><code><a title="transformnd.adapters.base.BaseAdapter.partial" href="base.html#transformnd.adapters.base.BaseAdapter.partial">partial</a></code></li>
 </ul>
 </li>
@@ -512,10 +618,14 @@ by default -1 (last)</dd>
 <ul>
 <li>
 <h4><code><a title="transformnd.adapters.AttrAdapter" href="#transformnd.adapters.AttrAdapter">AttrAdapter</a></code></h4>
+<ul class="">
+<li><code><a title="transformnd.adapters.AttrAdapter.apply" href="#transformnd.adapters.AttrAdapter.apply">apply</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="transformnd.adapters.BaseAdapter" href="#transformnd.adapters.BaseAdapter">BaseAdapter</a></code></h4>
 <ul class="">
+<li><code><a title="transformnd.adapters.BaseAdapter.apply" href="#transformnd.adapters.BaseAdapter.apply">apply</a></code></li>
 <li><code><a title="transformnd.adapters.BaseAdapter.partial" href="#transformnd.adapters.BaseAdapter.partial">partial</a></code></li>
 </ul>
 </li>

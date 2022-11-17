@@ -66,7 +66,7 @@ class MovingLeastSquares(Transform):
         )
         self.ndim = {self._transformer.control_points.shape[1]}
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         coords = self._validate_coords(coords)
         return self._transformer.transform(coords)
 
@@ -136,7 +136,7 @@ in the target (deformed) space.</dd>
         )
         self.ndim = {self._transformer.control_points.shape[1]}
 
-    def __call__(self, coords: np.ndarray) -&gt; np.ndarray:
+    def apply(self, coords: np.ndarray) -&gt; np.ndarray:
         coords = self._validate_coords(coords)
         return self._transformer.transform(coords)
 
@@ -151,6 +151,14 @@ in the target (deformed) space.</dd>
 <ul class="hlist">
 <li><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></li>
 <li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="transformnd.base.Transform" href="../base.html#transformnd.base.Transform">Transform</a></b></code>:
+<ul class="hlist">
+<li><code><a title="transformnd.base.Transform.apply" href="../base.html#transformnd.base.Transform.apply">apply</a></code></li>
+</ul>
+</li>
 </ul>
 </dd>
 </dl>
