@@ -10,7 +10,8 @@ Classes which compose over transformable objects can be adapted with the
 See the `SimpleAdapter` or `FnAdapter` for wrapping simple adapting functions.
 Implement your own adapter by inheriting from `BaseAdapter`.
 
-See `pd.DataFrameAdapter` for an example of creating an adapter for an external type.
+See `.pandas.DataFrameAdapter` for an example of creating an adapter
+for an external type.
 
 """
 from .base import (
