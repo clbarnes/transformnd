@@ -60,9 +60,11 @@ Contributions of additional transforms and adapters are welcome!
 Even if they're only thin wrappers around an external library,
 the downstream ecosystem benefits from a consistent API.
 
-Such external libraries should be specified as "extras",
+Such external transformation libraries should be specified as "extras",
 and be contained in a submodule so that they are not immediately imported
 with `transformnd`.
+Dependencies for new adapters do not need to be included in `transformnd`'s dependencies,
+but should be specified in the `requirements.txt` for tests.
 
 Alternatively, consider adopting `transformnd`'s base classes in your own library,
 and have your transformation instantly compatible for downstream users.
