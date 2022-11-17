@@ -1,5 +1,5 @@
 """
-.. include:: ../README.md
+.. include:: ../../README.md
 """
 from .base import Transform, TransformSequence, TransformWrapper
 from .util import SpaceRef, TransformSignature, check_ndim

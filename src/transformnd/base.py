@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import Iterator, List, Optional, Set, Tuple, Union
+from typing import Iterator, List, Optional, Sequence, Set, Tuple, Union
 
 import numpy as np
 
@@ -185,7 +185,7 @@ def _with_spaces(t: Transform, source_space=None, target_space=None):
 
 
 def infer_spaces(
-    transforms: List[Transform], source_space=None, target_space=None
+    transforms: Sequence[Transform], source_space=None, target_space=None
 ) -> List[Transform]:
     prev_tgts = [source_space]
     next_srcs = []
@@ -208,10 +208,10 @@ def get_transform_list(t: Transform) -> List[Transform]:
         return [t]
 
 
-class TransformSequence(Transform):
+class TransformSequence(Transform, Sequence[Transform]):
     def __init__(
         self,
-        transforms: List[Transform],
+        transforms: Sequence[Transform],
         *,
         spaces: SpaceTuple = (None, None),
     ) -> None:

@@ -70,7 +70,7 @@ NULL = NullAdapter()
 
 class AttrAdapter(BaseAdapter[T]):
     def __init__(self, **kwargs: Optional[BaseAdapter]) -> None:
-        """Adapter which transforms an object by applying transforms to its member variables.
+        """Adapter which transforms an object by applying transforms to its attributes.
 
         Parameters
         ----------

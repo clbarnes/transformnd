@@ -8,7 +8,7 @@ lint:
 	isort --check .
 	black --check .
 	flake8 .
-	mypy transformnd
+	mypy src/transformnd tests
 
 .PHONY: test
 test:
