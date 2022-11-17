@@ -80,9 +80,11 @@ A graph of transforms between defined spaces can be traversed using the <code>Tr
 <p>Contributions of additional transforms and adapters are welcome!
 Even if they're only thin wrappers around an external library,
 the downstream ecosystem benefits from a consistent API.</p>
-<p>Such external libraries should be specified as "extras",
+<p>Such external transformation libraries should be specified as "extras",
 and be contained in a submodule so that they are not immediately imported
-with <code><a title="transformnd" href="#transformnd">transformnd</a></code>.</p>
+with <code><a title="transformnd" href="#transformnd">transformnd</a></code>.
+Dependencies for new adapters do not need to be included in <code><a title="transformnd" href="#transformnd">transformnd</a></code>'s dependencies,
+but should be specified in the <code>requirements.txt</code> for tests.</p>
 <p>Alternatively, consider adopting <code><a title="transformnd" href="#transformnd">transformnd</a></code>'s base classes in your own library,
 and have your transformation instantly compatible for downstream users.</p>
 <details class="source">

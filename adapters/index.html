@@ -31,7 +31,8 @@ and then create a new object with those transformed coordinates.</p>
 <code><a title="transformnd.adapters.AttrAdapter" href="#transformnd.adapters.AttrAdapter">AttrAdapter</a></code> class.
 See the <code><a title="transformnd.adapters.SimpleAdapter" href="#transformnd.adapters.SimpleAdapter">SimpleAdapter</a></code> or <code><a title="transformnd.adapters.FnAdapter" href="#transformnd.adapters.FnAdapter">FnAdapter</a></code> for wrapping simple adapting functions.
 Implement your own adapter by inheriting from <code><a title="transformnd.adapters.BaseAdapter" href="#transformnd.adapters.BaseAdapter">BaseAdapter</a></code>.</p>
-<p>See <code>pd.DataFrameAdapter</code> for an example of creating an adapter for an external type.</p>
+<p>See <code>.<a title="transformnd.adapters.pandas.DataFrameAdapter" href="pandas.html#transformnd.adapters.pandas.DataFrameAdapter">DataFrameAdapter</a></code> for an example of creating an adapter
+for an external type.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -48,7 +49,8 @@ Classes which compose over transformable objects can be adapted with the
 See the `SimpleAdapter` or `FnAdapter` for wrapping simple adapting functions.
 Implement your own adapter by inheriting from `BaseAdapter`.
 
-See `pd.DataFrameAdapter` for an example of creating an adapter for an external type.
+See `.pandas.DataFrameAdapter` for an example of creating an adapter
+for an external type.
 
 &#34;&#34;&#34;
 from .base import (
