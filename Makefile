@@ -30,7 +30,7 @@ clean-docs:
 .PHONY: docs
 docs: clean-docs
 	mkdir docs \
-	&& pdoc --html --output-dir docs transformnd
+	&& pdoc --html --output-dir docs src/transformnd
 
 .PHONY: clean-ipynb
 clean-ipynb:
