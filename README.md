@@ -36,14 +36,14 @@ See the [tutorial here](https://github.com/clbarnes/transformnd/blob/main/exampl
 - Scale (`transformnd.transforms.Scale`)
 - Reflection (`transformnd.transforms.Reflect`)
 - Affine (`transformnd.transforms.Affine`)
-    - Can be composed with `@` operator
+    - Can be composed efficiently with `@` operator
 - Moving Least Squares, affine (`transformnd.transforms.moving_least_squares.MovingLeastSquares`)
-  - uses `movingleastsquares` extra
+    - uses `movingleastsquares` extra
 -   Thin Plate Splines (`transformnd.transforms.thinplate.ThinPlateSplines`)
     - uses `thinplatesplines` extra
 
 Arbitrary transforms can be composed into a `TransformSequence` with `transform1 | transform2`.
-A graph of transforms between defined spaces can be traversed using the `TransformGraph` (uses the `graph` extra).
+A graph of transforms between defined spaces can be traversed using the `TransformGraph`.
 
 ## Implemented adapters
 
@@ -52,8 +52,7 @@ A graph of transforms between defined spaces can be traversed using the `Transfo
 - `pandas.DataFrame` (`transformnd.adapters.pandas.DataFrameAdapter`)
     - Takes a subset of columns as a coordinate array
 - Geometries from `shapely` (`transformnd.adapters.shapely.GeometryAdapter`)
-
-Objects which compose over transformable objects can easily be adapted with the `transformnd.adapters.AttrAdapter`.
+- Objects composed of transformable attributes (`transformnd.adapters.AttrAdapter`).
 
 ## Additional transforms and adapters
 
