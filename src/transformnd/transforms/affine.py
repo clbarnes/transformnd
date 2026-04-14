@@ -8,8 +8,8 @@ from typing import Container, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ..base import SpaceTuple, Transform
-from ..util import is_square, none_eq
+from ..base import Transform
+from ..util import is_square, none_eq, SpaceTuple
 
 
 def arg_as_array(arg: ArrayLike, ndim: Optional[int]):
@@ -74,7 +74,7 @@ class Affine(Transform):
     def __invert__(self) -> Transform:
         return type(self)(
             np.linalg.inv(self.matrix),
-            spaces=self.spaces[::-1],
+            spaces=(self.spaces[1], self.spaces[0]),
         )
 
     def __matmul__(self, rhs: Affine) -> Affine:
@@ -419,6 +419,9 @@ class Affine(Transform):
             if s.shape[0] != s.shape[1] + 1:
                 raise ValueError("Factor must be of shape (D, D-1)")
             ndim = s.shape[0]
+
+        # needed for type checking
+        assert ndim is not None
 
         m = np.eye(ndim, dtype=s.dtype)
         for col_idx in range(m.shape[1]):

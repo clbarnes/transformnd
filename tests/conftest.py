@@ -5,7 +5,7 @@ SEED = 1991
 
 
 def make_coords(shape):
-    return np.arange(np.product(shape)).reshape(shape)
+    return np.arange(np.prod(shape)).reshape(shape)
 
 
 @pytest.fixture

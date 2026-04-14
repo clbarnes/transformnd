@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import Iterator, List, Optional, Sequence, Set, Tuple, Union
+from typing import Iterator, List, Optional, Sequence, Set, Union
 
 import numpy as np
 
@@ -15,9 +15,9 @@ from .util import (
     same_or_none,
     space_str,
     window,
+    SpaceTuple,
 )
 
-SpaceTuple = Tuple[Optional[SpaceRef], Optional[SpaceRef]]
 
 
 class Transform(ABC):
@@ -277,7 +277,7 @@ class TransformSequence(Transform, Sequence[Transform]):
             return NotImplemented
         return type(self)(
             transforms,
-            spaces=self.spaces[::-1],
+            spaces=(self.spaces[1], self.spaces[0]),
         )
 
     def apply(self, coords: np.ndarray) -> np.ndarray:

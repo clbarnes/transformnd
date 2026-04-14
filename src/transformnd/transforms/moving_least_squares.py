@@ -7,6 +7,7 @@ import numpy as np
 from molesq.transform import Transformer as _Transformer
 
 from ..base import SpaceTuple, Transform
+from ..util import invert_spaces
 
 
 class MovingLeastSquares(Transform):
@@ -44,5 +45,5 @@ class MovingLeastSquares(Transform):
         return type(self)(
             self._transformer.deformed_control_points,
             self._transformer.control_points,
-            spaces=self.spaces[::-1],
+            spaces=invert_spaces(self.spaces),
         )

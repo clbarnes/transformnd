@@ -46,7 +46,7 @@ class TransformGraph:
         Populate with `my_transform_graph.add_transforms(my_transforms)`.
 
         """
-        self.graph = nx.OrderedDiGraph()
+        self.graph = nx.DiGraph()
         self.ndim: Optional[Set[int]] = None
 
     def add_transforms(self, transforms: Iterable[Transform]):

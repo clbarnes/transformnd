@@ -5,7 +5,7 @@ import morphops as mops
 import numpy as np
 
 from ..base import SpaceTuple, Transform
-from ..util import check_ndim
+from ..util import check_ndim, invert_spaces
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class ThinPlateSplines(Transform):
         return type(self)(
             self.target_control_points,
             self.source_control_points,
-            spaces=self.spaces[::-1],
+            spaces=invert_spaces(self.spaces),
         )
 
     def apply(self, coords: np.ndarray) -> np.ndarray:

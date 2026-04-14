@@ -22,6 +22,8 @@ TransformSignature = Callable[[np.ndarray], np.ndarray]
 SpaceRef = Hashable
 """Type annotation of things which can be used to refer to spaces"""
 
+SpaceTuple = Tuple[Optional[SpaceRef], Optional[SpaceRef]]
+
 
 def none_eq(a: Optional[Any], b: Optional[Any]) -> bool:
     """Check whether either is None or both are equal.
@@ -200,3 +202,7 @@ def dim_intersection(dims1: Optional[Set[int]], dims2: Optional[Set[int]]):
         return dims1
     else:
         return dims1.intersection(dims2)
+
+
+def invert_spaces(spaces: SpaceTuple) -> SpaceTuple:
+    return (spaces[1], spaces[0])

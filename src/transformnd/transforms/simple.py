@@ -4,8 +4,8 @@ Simple transformations like rigid translation and scaling.
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ..base import SpaceTuple, Transform
-from ..util import chain_or
+from ..base import Transform
+from ..util import chain_or, SpaceTuple, invert_spaces
 
 
 class Identity(Transform):
@@ -75,7 +75,7 @@ class Translate(Transform):
         return coords + self.translation
 
     def __invert__(self) -> Transform:
-        return type(self)(-self.translation, spaces=self.spaces[::-1])
+        return type(self)(-self.translation, spaces=(self.spaces[1], self.spaces[0]))
 
 
 class Scale(Transform):
@@ -117,5 +117,5 @@ class Scale(Transform):
     def __invert__(self) -> Transform:
         return type(self)(
             1 / self.scale,
-            spaces=self.spaces[::-1],
+            spaces=invert_spaces(self.spaces),
         )
