@@ -10,6 +10,7 @@ from ..util import chain_or, SpaceTuple, invert_spaces
 
 
 class Identity(Transform):
+    """No-op transformation."""
     def __init__(
         self,
         *,
@@ -42,6 +43,7 @@ class Identity(Transform):
 
 
 class Translate(Transform):
+    """Translate coordinates by addition."""
     def __init__(
         self,
         translation: ArrayLike,
@@ -80,6 +82,7 @@ class Translate(Transform):
 
 
 class Scale(Transform):
+    """Scale coordinates by multiplication."""
     def __init__(
         self,
         scale: ArrayLike,

@@ -1,7 +1,7 @@
-"""
+"""@public
 Implementation of Moving Least Squares transformation.
 
-Powered by molesq, an optional dependency.
+Requires the `movingleastsquares` extra.
 """
 
 import numpy as np
@@ -12,6 +12,10 @@ from ..util import invert_spaces
 
 
 class MovingLeastSquares(Transform):
+    """Moving least squares transformation.
+
+    Deform based on a matched pairs of source and target control points; see <https://dl.acm.org/doi/10.1145/1141911.1141920>
+    """
     def __init__(
         self,
         source_control_points: np.ndarray,

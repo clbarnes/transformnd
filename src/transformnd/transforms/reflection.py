@@ -79,6 +79,7 @@ def ensure_tuple(obj) -> Tuple:
 
 
 class Reflect(Transform):
+    """Reflect coordinates about arbitrary planes."""
     def __init__(
         self,
         normals: ArrayLike,
@@ -86,8 +87,7 @@ class Reflect(Transform):
         *,
         spaces: SpaceTuple = (None, None),
     ):
-        """Reflection about arbitrary planes.
-
+        """
         Parameters
         ----------
         normals : sequence of arrays

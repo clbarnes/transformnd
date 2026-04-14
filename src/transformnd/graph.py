@@ -38,15 +38,15 @@ def split_sequence(seq: TransformSequence) -> Iterator[Transform]:
 
 
 class TransformGraph:
+    """Transform between any number of arbitrary spaces/ coordinate systems.
+
+    Finds the shortest path for transforming one space
+    into another, via some intermediate spaces.
+
+    Populate with `my_transform_graph.add_transforms(my_transforms)`.
+    """
+
     def __init__(self):
-        """Transform between any number of arbitrary spaces.
-
-        Finds the shortest path for transforming one space
-        into another, via some intermediate spaces.
-
-        Populate with `my_transform_graph.add_transforms(my_transforms)`.
-
-        """
         self.graph = nx.DiGraph()
         self.ndim: Optional[Set[int]] = None
 

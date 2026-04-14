@@ -1,4 +1,8 @@
-"""Thin plate splines transformations."""
+"""@public
+Thin plate splines transformations.
+
+Requires the `thinplatesplines` extra.
+"""
 
 import logging
 
@@ -22,6 +26,10 @@ except ImportError:
 
 
 class ThinPlateSplines(Transform):
+    """Thin plate splines transforms.
+
+    Deform based on matched pairs of control points.
+    """
     ndim = {2, 3}
 
     def __init__(

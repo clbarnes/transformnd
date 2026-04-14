@@ -25,14 +25,14 @@ def arg_as_array(arg: ArrayLike, ndim: Optional[int]):
 
 
 class Affine(Transform):
+    """Affine transformation using an augmented matrix."""
     def __init__(
         self,
         matrix: ArrayLike,
         *,
         spaces: SpaceTuple = (None, None),
     ):
-        """Affine transformation using an augmented matrix.
-
+        """
         Matrix must have shape (D+1, D+1) or (D, D+1);
         the bottom row is assumed to be [0, 0, ..., 0, 1].
 
