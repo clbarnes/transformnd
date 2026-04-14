@@ -3,6 +3,7 @@ Implementation of Moving Least Squares transformation.
 
 Powered by molesq, an optional dependency.
 """
+
 import numpy as np
 from molesq.transform import Transformer as _Transformer
 

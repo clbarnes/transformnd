@@ -1,6 +1,7 @@
 """
 Simple transformations like rigid translation and scaling.
 """
+
 import numpy as np
 from numpy.typing import ArrayLike
 

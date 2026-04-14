@@ -1,4 +1,5 @@
 """Adapt pandas DataFrames for transformation."""
+
 from typing import Hashable, List
 
 import pandas as pd

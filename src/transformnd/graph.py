@@ -1,4 +1,5 @@
 """Bridging transforms between known spaces."""
+
 from functools import lru_cache
 from typing import Dict, Iterable, Iterator, Optional, Set, Tuple
 

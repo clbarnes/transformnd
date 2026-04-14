@@ -1,4 +1,5 @@
 """Base classes and wrappers for transforms."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -17,7 +18,6 @@ from .util import (
     window,
     SpaceTuple,
 )
-
 
 
 class Transform(ABC):

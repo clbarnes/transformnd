@@ -1,71 +1,67 @@
-on: [push, pull_request]
-name: ci
-
-defaults:
-  run:
-    shell: bash
+name: CI
+on: push
 
 jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync
+      - run: uv run ruff format --check
 
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: '3.x'
-      - run: pip install $(grep -E '^(black|flake8|mypy|isort)' requirements.txt)
-      - run: make lint
+          enable-cache: true
+      - uses: extractions/setup-just@v3
+      - run: just lint
 
-  docs:
+  doc:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-    - run: pip install -r requirements.txt
-    - run: pip install .
-    - run: make docs
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: extractions/setup-just@v3
+      - run: just doc
 
   test:
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version:
-          - '3.7'
-          - '3.8'
-          - '3.9'
-          - '3.10'
-          - '3.11'
-    runs-on: ubuntu-latest
+          - "3.12"
+          - "3.13"
+          - "3.14"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
         with:
+          enable-cache: true
           python-version: ${{ matrix.python-version }}
-      - run: |
-          pip install -U pip wheel setuptools
-          pip install -r requirements.txt
-        name: Install dependencies
-      - run: |
-          # todo: allow non-editable install
-          pip install -e '.[all]'
-        name: Install package
-      - run: pytest --verbose
+      - uses: extractions/setup-just@v3
+      - run: just test
 
-  deploy-package:
-    runs-on: ubuntu-18.04
-    needs: [lint, test, docs]
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+  publish:
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.ref, 'refs/tags/v')
+    needs: [format, lint, test, doc]
+    environment:
+      name: pypi
+    permissions:
+      id-token: write
+      contents: read
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-      - run: ./setup.py sdist
-      - name: Publish package
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.pypi_password }}
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.12
+      - run: uv build
+      - run: uv publish

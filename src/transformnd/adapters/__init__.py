@@ -14,6 +14,7 @@ See `.pandas.DataFrameAdapter` for an example of creating an adapter
 for an external type.
 
 """
+
 from .base import (
     AttrAdapter,
     BaseAdapter,
