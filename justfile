@@ -10,7 +10,7 @@ doc:
         --no-include-undocumented \
         --docformat markdown \
         --search \
-        zarr_n5
+        transformnd
 
 # Run linters and type checkers.
 lint:

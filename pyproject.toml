@@ -32,9 +32,13 @@ shapely = [
 dev = [
     {include-group = "test"},
     {include-group = "lint"},
+    {include-group = "doc"},
 ]
 test = ["pytest"]
 lint = ["ruff", "mypy"]
+doc = [
+    "pdoc>=16.0.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.9.8,<0.10.0"]
