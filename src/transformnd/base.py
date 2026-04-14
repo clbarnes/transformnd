@@ -22,6 +22,7 @@ from .util import (
 
 class Transform(ABC):
     """Base class for transforms."""
+
     ndim: Optional[Set[int]] = None
 
     def __init__(
@@ -144,6 +145,7 @@ class Transform(ABC):
 
 class TransformWrapper(Transform):
     """Wrapper around an arbitrary function which transforms coordinates."""
+
     def __init__(
         self,
         fn: TransformSignature,
@@ -212,6 +214,7 @@ def get_transform_list(t: Transform) -> List[Transform]:
 
 class TransformSequence(Transform, Sequence[Transform]):
     """Chain transforms, applying one after another."""
+
     def __init__(
         self,
         transforms: Sequence[Transform],

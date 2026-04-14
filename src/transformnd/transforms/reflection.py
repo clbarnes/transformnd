@@ -80,6 +80,7 @@ def ensure_tuple(obj) -> Tuple:
 
 class Reflect(Transform):
     """Reflect coordinates about arbitrary planes."""
+
     def __init__(
         self,
         normals: ArrayLike,

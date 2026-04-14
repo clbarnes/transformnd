@@ -26,6 +26,7 @@ def arg_as_array(arg: ArrayLike, ndim: Optional[int]):
 
 class Affine(Transform):
     """Affine transformation using an augmented matrix."""
+
     def __init__(
         self,
         matrix: ArrayLike,

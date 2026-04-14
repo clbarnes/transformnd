@@ -30,6 +30,7 @@ class ThinPlateSplines(Transform):
 
     Deform based on matched pairs of control points.
     """
+
     ndim = {2, 3}
 
     def __init__(

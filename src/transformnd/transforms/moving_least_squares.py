@@ -16,6 +16,7 @@ class MovingLeastSquares(Transform):
 
     Deform based on a matched pairs of source and target control points; see <https://dl.acm.org/doi/10.1145/1141911.1141920>
     """
+
     def __init__(
         self,
         source_control_points: np.ndarray,
