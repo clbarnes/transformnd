@@ -28,7 +28,7 @@ Additionally, `transformnd` provides an interface for transforming types other t
 and implements these adapters for a few common types.
 
 See the [tutorial here](https://github.com/clbarnes/transformnd/blob/main/examples/tutorial.py).
-It is a [marimo](https://marimo.io) notebook; open it with `uv run --group tutorial marimo edit examples/tutorial.py`, or run it as a plain script with `uv run --group tutorial python examples/tutorial.py`.
+It is a [marimo](https://marimo.io) notebook. Open it with `uv run --group tutorial marimo edit examples/tutorial.py`.
 
 ## Implemented transforms
 
