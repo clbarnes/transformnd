@@ -3,7 +3,8 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
-from typing import Callable, Generic, Optional, TypeVar
+from collections.abc import Callable
+from typing import Generic, TypeVar
 
 import numpy as np
 
@@ -70,7 +71,7 @@ NULL = NullAdapter()
 
 
 class AttrAdapter(BaseAdapter[T]):
-    def __init__(self, **kwargs: Optional[BaseAdapter]) -> None:
+    def __init__(self, **kwargs: BaseAdapter | None) -> None:
         """Adapter which transforms an object by applying transforms to its attributes.
 
         Parameters

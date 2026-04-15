@@ -1,5 +1,5 @@
+from collections.abc import Sequence
 from copy import copy
-from typing import List, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -8,18 +8,18 @@ from ..base import SpaceTuple, Transform
 from ..util import is_square
 
 
-def proj(u, v):
+def proj(u: np.ndarray, v: np.ndarray) -> np.ndarray:
     return (np.inner(u, v) / np.inner(u, u)) * u
 
 
-def gram_schmidt(vecs: np.ndarray):
+def gram_schmidt(vecs: np.ndarray) -> np.ndarray:
     """
     https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
     if not is_square(vecs):
         raise ValueError("Wrong number of dimensions")
 
-    out: List[np.ndarray] = []
+    out: list[np.ndarray] = []
     for v in vecs:
         b = v.copy()
 
@@ -30,7 +30,9 @@ def gram_schmidt(vecs: np.ndarray):
     return np.array(out)
 
 
-def get_hyperplanes(points: np.ndarray, unitise=True, seed=None):
+def get_hyperplanes(
+    points: np.ndarray, unitise: bool = True, seed: int | None = None
+) -> tuple[np.ndarray, list[np.ndarray]]:
     """
     Reflective: point/line/.../hyperplane to be reflected around
 
@@ -67,15 +69,14 @@ def get_hyperplanes(points: np.ndarray, unitise=True, seed=None):
     return point, list(extras)
 
 
-def unitise(v):
+def unitise(v: np.ndarray) -> np.ndarray:
     return v / np.linalg.norm(v)
 
 
-def ensure_tuple(obj) -> Tuple:
-    try:
-        return tuple(obj)
-    except TypeError:
+def ensure_tuple(obj: int | Sequence[int]) -> tuple[int, ...]:
+    if isinstance(obj, int):
         return (obj,)
+    return tuple(obj)
 
 
 class Reflect(Transform[np.ndarray]):
@@ -154,7 +155,7 @@ class Reflect(Transform[np.ndarray]):
     @classmethod
     def from_axis(
         cls,
-        axis: Union[int, Sequence[int]],
+        axis: int | Sequence[int],
         origin: ArrayLike,
         *,
         spaces: SpaceTuple = (None, None),

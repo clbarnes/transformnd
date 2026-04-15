@@ -3,6 +3,7 @@ Simple transformations like rigid translation and scaling.
 """
 
 from copy import copy
+from typing import Self
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -10,7 +11,7 @@ from numpy.typing import ArrayLike
 from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
 from ..base import Transform
-from ..util import chain_or, SpaceTuple, invert_spaces
+from ..util import ArrayT, chain_or, SpaceTuple, invert_spaces
 
 
 class Identity(Transform):
@@ -43,7 +44,7 @@ class Identity(Transform):
     def __invert__(self) -> Transform:
         return self
 
-    def apply(self, coords):
+    def apply(self, coords: ArrayT) -> ArrayT:
         xp = array_namespace(coords)
         return xp.asarray(coords, copy=True)
 
@@ -80,7 +81,7 @@ class Translate(Transform):
             self.ndim = {self.translation.shape[0]}
         # otherwise, can be broadcast to anything
 
-    def apply(self, coords):
+    def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
         xp = array_namespace(coords)
         d = xp_device(coords)
@@ -89,7 +90,7 @@ class Translate(Transform):
     def __invert__(self) -> Transform:
         return type(self)(-self.translation, spaces=(self.spaces[1], self.spaces[0]))
 
-    def to_device(self, xp, device=None) -> "Translate":
+    def to_device(self, xp, device=None) -> Self:
         result = copy(self)
         result.translation = xp.asarray(self.translation, device=device)
         return result
@@ -129,7 +130,7 @@ class Scale(Transform):
             self.ndim = {self.scale.shape[0]}
         # otherwise, can be broadcast to anything
 
-    def apply(self, coords):
+    def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
         xp = array_namespace(coords)
         d = xp_device(coords)
@@ -141,7 +142,7 @@ class Scale(Transform):
             spaces=invert_spaces(self.spaces),
         )
 
-    def to_device(self, xp, device=None) -> "Scale":
+    def to_device(self, xp, device=None) -> Self:
         result = copy(self)
         result.scale = xp.asarray(self.scale, device=device)
         return result

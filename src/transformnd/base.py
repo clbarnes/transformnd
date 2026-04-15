@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator, Sequence
 from copy import copy
-from typing import Iterator, List, Optional, Sequence, Set, Union, Generic
+from typing import Generic, Self
 
 import numpy as np
 from array_api_compat import array_namespace
@@ -26,7 +27,7 @@ from .util import (
 class Transform(ABC, Generic[ArrayT]):
     """Base class for transforms."""
 
-    ndim: Optional[Set[int]] = None
+    ndim: set[int] | None = None
 
     def __init__(
         self,
@@ -97,7 +98,7 @@ class Transform(ABC, Generic[ArrayT]):
         """
         return NotImplemented
 
-    def to_device(self, xp, device=None) -> "Transform":  # noqa: ARG002
+    def to_device(self, xp, device=None) -> Self:  # noqa: ARG002
         """Return a copy of this transform with array parameters placed on the given device.
 
         Useful for pre-allocating parameters on GPU before a tight apply() loop,
@@ -174,7 +175,7 @@ class TransformWrapper(Transform):
     def __init__(
         self,
         fn: TransformSignature,
-        ndim: Optional[Union[Set[int], int]] = None,
+        ndim: set[int] | int | None = None,
         *,
         spaces: SpaceTuple = (None, None),
     ):
@@ -203,7 +204,11 @@ class TransformWrapper(Transform):
         return self.fn(coords)
 
 
-def _with_spaces(t: Transform, source_space=None, target_space=None):
+def _with_spaces(
+    t: Transform,
+    source_space: SpaceRef | None = None,
+    target_space: SpaceRef | None = None,
+) -> Transform:
     src_tgt = (t.source_space, t.target_space)
     src = same_or_none(src_tgt[0], source_space, default=None)
     tgt = same_or_none(src_tgt[1], target_space, default=None)
@@ -215,7 +220,7 @@ def _with_spaces(t: Transform, source_space=None, target_space=None):
 
 def infer_spaces(
     transforms: Sequence[Transform], source_space=None, target_space=None
-) -> List[Transform]:
+) -> list[Transform]:
     prev_tgts = [source_space]
     next_srcs = []
     for t1, t2 in window(transforms, 2):
@@ -230,7 +235,7 @@ def infer_spaces(
     return out
 
 
-def get_transform_list(t: Transform) -> List[Transform]:
+def get_transform_list(t: Transform) -> list[Transform]:
     if isinstance(t, TransformSequence):
         return t.transforms.copy()
     else:
@@ -274,7 +279,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             ),
         )
 
-        self.transforms: List[Transform] = ts
+        self.transforms: list[Transform] = ts
 
         self.ndim = None
         for t in self.transforms:
@@ -316,7 +321,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             coords = t.apply(coords)
         return coords
 
-    def list_spaces(self, skip_none=False) -> List[SpaceRef]:
+    def list_spaces(self, skip_none=False) -> list[SpaceRef]:
         """List spaces in this transform.
 
         Parameters
@@ -338,7 +343,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         spaces_str = "->".join(space_str(s) for s in self.list_spaces())
         return f"{cls_name}[{spaces_str}]"
 
-    def __getitem__(self, idx: Union[slice, int]):
+    def __getitem__(self, idx: slice | int):
         if isinstance(idx, int):
             return self.transforms[idx]
         return type(self)(self.transforms[idx])

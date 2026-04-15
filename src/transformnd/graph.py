@@ -1,7 +1,7 @@
 """Bridging transforms between known spaces."""
 
 from functools import lru_cache
-from typing import Dict, Iterable, Iterator, Optional, Set, Tuple
+from collections.abc import Iterable, Iterator
 
 import networkx as nx
 
@@ -47,7 +47,7 @@ class TransformGraph:
 
     def __init__(self):
         self.graph = nx.DiGraph()
-        self.ndim: Optional[Set[int]] = None
+        self.ndim: set[int] | None = None
 
     def add_transforms(self, transforms: Iterable[Transform]):
         """
@@ -64,7 +64,7 @@ class TransformGraph:
             Undefined source and target spaces.
         """
         # TODO: weighting of split-out sequences could be problematic
-        edges: Dict[Tuple[SpaceRef, SpaceRef], Transform] = dict()
+        edges: dict[tuple[SpaceRef, SpaceRef], Transform] = dict()
         self.get_sequence.cache_clear()
 
         ndim = self.ndim
@@ -80,7 +80,7 @@ class TransformGraph:
                 ts = [t]
 
             for t2 in ts:
-                if chain_or(t.source_space, t.target_space, default=None) is None:
+                if chain_or(t2.source_space, t2.target_space, default=None) is None:
                     raise ValueError(
                         "All transforms in a graph "
                         "need explicit source and target spaces"
