@@ -4,9 +4,9 @@ from ..base import Transform
 from ..util import SpaceTuple
 
 
-class SubsequenceTransform(Transform):
+class SubTransform(Transform):
     def __init__(
-        self, input_axis: list[int], output_axis: list[int] | None, transform: list[Transform]
+        self, input_axis: list[int], output_axis: list[int] | None, transform: Transform
     ):
         self.input_axis = input_axis
         if output_axis is None:
@@ -14,6 +14,7 @@ class SubsequenceTransform(Transform):
             self.output_axis = input_axis
         else:
             self.output_axis = output_axis
+        assert len(self.input_axis) == len(self.output_axis), "Input and output axes must have the same length"
         self.transform = transform
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
@@ -33,7 +34,7 @@ class ByDimension(Transform):
 
     def __init__(
         self,
-        sub_seq_transform: list[SubsequenceTransform],
+        sub_seq_transform: list[SubTransform],
         *,
         spaces: SpaceTuple = (None, None),
     ):
@@ -66,7 +67,7 @@ class ByDimension(Transform):
             Inverted transformation.
         """
         inverted_transforms = [
-            SubsequenceTransform(
+            SubTransform(
                 input_axis=t.output_axis,
                 output_axis=t.input_axis,
                 transform=[step.__invert__() for step in reversed(t.transform)],
