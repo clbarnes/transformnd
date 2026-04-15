@@ -20,7 +20,7 @@ class DataFrameAdapter(BaseAdapter[pd.DataFrame]):
         self.columns = columns
 
     def apply(
-        self, transform: Transform, df: pd.DataFrame, in_place=False
+        self, transform: Transform, df: pd.DataFrame, in_place: bool = False
     ) -> pd.DataFrame:
         """Transform the dataframe, optionally in-place.
 

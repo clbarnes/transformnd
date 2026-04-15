@@ -29,7 +29,7 @@ class BaseAdapter(Generic[T], ABC):
         """
         pass
 
-    def partial(self, *args, **kwargs) -> Callable:
+    def partial(self, *args, **kwargs) -> Callable[..., T]:
         """Create a partial function with frozen arguments.
 
         Useful for applying the same transform to many objects,
@@ -85,7 +85,7 @@ class AttrAdapter(BaseAdapter[T]):
         """
         self.adapters = {k: NULL if v is None else v for k, v in kwargs.items()}
 
-    def apply(self, transform: Transform, obj: T, in_place=False) -> T:
+    def apply(self, transform: Transform, obj: T, in_place: bool = False) -> T:
         """Apply the given transformation to the object, via its attributes.
 
         Parameters
@@ -117,7 +117,7 @@ class AttrAdapter(BaseAdapter[T]):
         return obj
 
 
-class SimpleAdapter(BaseAdapter, Generic[T], ABC):
+class SimpleAdapter(BaseAdapter[T], ABC):
     """
     Helper class for cases with simple conversion methods.
     """
@@ -141,7 +141,7 @@ class SimpleAdapter(BaseAdapter, Generic[T], ABC):
 class ReshapeAdapter(BaseAdapter[np.ndarray]):
     """Adapter which reshapes a numpy.ndarray"""
 
-    def __init__(self, dim_axis=-1) -> None:
+    def __init__(self, dim_axis: int = -1) -> None:
         """Adapt numpy arrays which are not of the correct shape.
 
         Parameters
