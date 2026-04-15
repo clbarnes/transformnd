@@ -36,7 +36,7 @@ def test_3d_map_axis_and_scale(s):
         input_axes=[2], output_axes=[2], transform=scale
     )
 
-    # Apply both transformations
+    # Apply both transformations (different order)
     by_dim_0 = ByDimension(sub_seq_transform=[map_axis_subseq, scale_subseq])
     by_dim_1 = ByDimension(sub_seq_transform=[scale_subseq, map_axis_subseq])
 
@@ -88,3 +88,6 @@ def test_3d_transform_sequence(s):
     inverted = ~by_dim
     assert np.array_equal(inverted.apply(coords_transformed), coords)
 
+
+# TODO
+# add test for non-unique axes (within sub-transforms and across sub-transforms)
