@@ -47,4 +47,7 @@ class MapAxis(Transform):
         Transform
             Inverted transformation.
         """
-        return np.argsort(self.permutation)
+        return type(self)(
+            list(np.argsort(self.permutation)),
+            spaces=(self.spaces[1], self.spaces[0]),
+        )
