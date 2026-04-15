@@ -25,7 +25,7 @@ except ImportError:
     )
 
 
-class ThinPlateSplines(Transform):
+class ThinPlateSplines(Transform[np.ndarray]):
     """Thin plate splines transforms.
 
     Deform based on matched pairs of control points.
@@ -78,7 +78,7 @@ class ThinPlateSplines(Transform):
             self.target_control_points,
         )
 
-    def __invert__(self) -> Transform:
+    def __invert__(self) -> Transform[np.ndarray]:
         return type(self)(
             self.target_control_points,
             self.source_control_points,

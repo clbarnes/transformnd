@@ -1,5 +1,6 @@
 """Bridging transforms between known spaces."""
 
+from typing import Generic
 from functools import lru_cache
 from collections.abc import Iterable, Iterator
 
@@ -36,7 +37,7 @@ def split_sequence(seq: TransformSequence) -> Iterator[Transform]:
             this_seq = []
 
 
-class TransformGraph:
+class TransformGraph(Generic[ArrayT]):
     """Transform between any number of arbitrary spaces/ coordinate systems.
 
     Finds the shortest path for transforming one space
@@ -49,11 +50,11 @@ class TransformGraph:
         self.graph = nx.DiGraph()
         self.ndim: set[int] | None = None
 
-    def add_transforms(self, transforms: Iterable[Transform]):
+    def add_transforms(self, transforms: Iterable[Transform[ArrayT]]) -> int:
         """
         Parameters
         ----------
-        transforms : Iterable[Transform]
+        transforms : Iterable[Transform[ArrayT]]
             Transforms which must have a source and target space defined.
             TransformSequences are split out if their inner transforms'
             spaces are defined.
@@ -64,7 +65,7 @@ class TransformGraph:
             Undefined source and target spaces.
         """
         # TODO: weighting of split-out sequences could be problematic
-        edges: dict[tuple[SpaceRef, SpaceRef], Transform] = dict()
+        edges: dict[tuple[SpaceRef, SpaceRef], Transform[ArrayT]] = dict()
         self.get_sequence.cache_clear()
 
         ndim = self.ndim
@@ -106,7 +107,7 @@ class TransformGraph:
     @lru_cache()
     def get_sequence(
         self, source_space: SpaceRef, target_space: SpaceRef
-    ) -> TransformSequence:
+    ) -> TransformSequence[ArrayT]:
         """Get the shortest TransformSequence for transforming between two spaces.
 
         Parameters
@@ -116,7 +117,7 @@ class TransformGraph:
 
         Returns
         -------
-        TransformSequence
+        TransformSequence[ArrayT]
         """
         path = nx.shortest_path(self.graph, source_space, target_space)
         if len(path) <= 1:
@@ -149,7 +150,7 @@ class TransformGraph:
         t = self.get_sequence(source_space, target_space)
         return t.apply(coords)
 
-    def __iter__(self) -> Iterator[Transform]:
+    def __iter__(self) -> Iterator[Transform[ArrayT]]:
         """Iterate through the transforms present in the graph.
 
         Includes inferred reverse transforms.
@@ -159,7 +160,7 @@ class TransformGraph:
 
         Yields
         -------
-        Transform
+        Transform[ArrayT]
 
         Examples
         --------

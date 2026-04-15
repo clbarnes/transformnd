@@ -14,7 +14,7 @@ from ..base import Transform
 from ..util import ArrayT, chain_or, SpaceTuple, invert_spaces
 
 
-class Identity(Transform):
+class Identity(Transform[ArrayT]):
     """No-op transformation."""
 
     def __init__(
@@ -41,15 +41,15 @@ class Identity(Transform):
             raise ValueError("Source and target spaces are different")
         super().__init__(spaces=(src, src))
 
-    def __invert__(self) -> Transform:
+    def __invert__(self) -> Transform[ArrayT]:
         return self
 
     def apply(self, coords: ArrayT) -> ArrayT:
         xp = array_namespace(coords)
-        return xp.asarray(coords, copy=True)
+        return xp.asarray(coords)
 
 
-class Translate(Transform):
+class Translate(Transform[ArrayT]):
     """Translate coordinates by addition."""
 
     def __init__(
@@ -96,7 +96,7 @@ class Translate(Transform):
         return result
 
 
-class Scale(Transform):
+class Scale(Transform[ArrayT]):
     """Scale coordinates by multiplication."""
 
     def __init__(
