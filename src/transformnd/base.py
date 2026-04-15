@@ -97,6 +97,28 @@ class Transform(ABC, Generic[ArrayT]):
         """
         return NotImplemented
 
+    def to_device(self, xp, device=None) -> "Transform":  # noqa: ARG002
+        """Return a copy of this transform with array parameters placed on the given device.
+
+        Useful for pre-allocating parameters on GPU before a tight apply() loop,
+        avoiding per-call host-to-device transfers.
+
+        Parameters
+        ----------
+        xp : array namespace
+            The target array namespace (e.g. jax.numpy, torch).
+        device : device object, optional
+            Target device (e.g. from array_api_compat.device(array)).
+            If None, uses xp's default device.
+
+        Returns
+        -------
+        Transform
+            A new transform instance with parameters on the target device,
+            or NotImplemented if the subclass does not support device placement.
+        """
+        return NotImplemented
+
     def __or__(self, other) -> TransformSequence:
         """Compose transformations into a sequence.
 

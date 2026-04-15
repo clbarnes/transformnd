@@ -78,7 +78,7 @@ def ensure_tuple(obj) -> Tuple:
         return (obj,)
 
 
-class Reflect(Transform):
+class Reflect(Transform[np.ndarray]):
     """Reflect coordinates about arbitrary planes."""
 
     def __init__(
