@@ -10,7 +10,7 @@ def test_2d_scale(s):
     coords = np.array([[1, 2], [3, 4]])
     scale = Scale(s)
     print(s)
-    subseq = SubTransform(input_axis=[0], output_axis=[0], transform=[scale])
+    subseq = SubTransform(input_axes=[0], output_axes=[0], transform=scale)
     by_dim = ByDimension(sub_seq_transform=[subseq])
     coords_transformed = by_dim.apply(coords.copy())
     print(coords_transformed)
@@ -27,13 +27,13 @@ def test_3d_map_axis_and_scale(s):
     # MapAxis: swap columns 0 and 1, keep column 2
     map_axis = MapAxis(permutation=[1, 0])
     map_axis_subseq = SubTransform(
-        input_axis=[0, 1], output_axis=[0, 1], transform=[map_axis]
+        input_axes=[0, 1], output_axes=[0, 1], transform=map_axis
     )
 
     # Scale: apply scale to column 2
     scale = Scale(s)
     scale_subseq = SubTransform(
-        input_axis=[2], output_axis=[2], transform=[scale]
+        input_axes=[2], output_axes=[2], transform=scale
     )
 
     # Apply both transformations
@@ -56,16 +56,16 @@ def test_3d_transform_sequence(s):
 
     # MapAxis: swap columns 0 and 1, keep column 2
     map_axis = MapAxis(permutation=[1, 0])
-    scale = Scale(s + 2)
-    transform_sequence = TransformSequence(map_axis, scale)
+    scale_seq = Scale(s + 2)
+    transform_sequence = TransformSequence([map_axis, scale_seq])
     map_axis_subseq = SubTransform(
-        input_axis=[0, 1], output_axis=[0, 1], transform=transform_sequence
+        input_axes=[0, 1], output_axes=[0, 1], transform=transform_sequence
     )
 
     # Scale: apply scale to column 2
     scale = Scale(s)
     scale_subseq = SubTransform(
-        input_axis=[2], output_axis=[2], transform=[scale]
+        input_axes=[2], output_axes=[2], transform=scale
     )
 
     # Apply both transformations

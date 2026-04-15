@@ -19,9 +19,9 @@ class SubTransform(Transform):
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
         """Apply transformation to subset of coordinates."""
-        for transform_step in self.transform:
-            coords = transform_step.apply(coords)
+        coords[:, self.output_axes] = self.transform.apply(coords[:, self.input_axes])
         return coords
+        #return self.transform.apply(coords)
 
 
 class ByDimension(Transform):
@@ -53,9 +53,7 @@ class ByDimension(Transform):
     def apply(self, coords: np.ndarray) -> np.ndarray:
         """Apply transformation to subset of coordinates."""
         for sub_seq_transform in self.sub_seq_transform:
-            coords[:, sub_seq_transform.output_axis] = sub_seq_transform.apply(
-                (coords[:, sub_seq_transform.input_axis])
-            )
+            coords = sub_seq_transform.apply(coords)
         return coords
 
     def __invert__(self) -> Transform:
@@ -68,9 +66,9 @@ class ByDimension(Transform):
         """
         inverted_transforms = [
             SubTransform(
-                input_axis=t.output_axis,
-                output_axis=t.input_axis,
-                transform=[step.__invert__() for step in reversed(t.transform)],
+                input_axes=t.output_axes,
+                output_axes=t.input_axes,
+                transform=t.transform.__invert__(),
             )
             for t in reversed(self.sub_seq_transform)
         ]
