@@ -94,9 +94,9 @@ class Affine(Transform[ArrayT]):
         coords = xp.asarray(coords)
         m = xp.asarray(self.matrix, device=d)
         coords = xp.concatenate(
-            [coords, xp.ones((coords.shape[0], 1), dtype=coords.dtype)], axis=1
+            [coords, xp.ones((coords.shape[0], 1), dtype=coords.dtype)], axis=1  # type: ignore[attr-defined]
         )
-        out: ArrayT = (m @ coords.T).T[:, :-1]
+        out: ArrayT = (m @ coords.T).T[:, :-1]  # type: ignore[attr-defined]
         return out
 
     def __invert__(self) -> Transform:

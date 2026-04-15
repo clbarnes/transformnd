@@ -118,7 +118,7 @@ class Reflect(Transform[np.ndarray]):
             and len(n1) != len(point)
         ):
             raise ValueError("Point and normals are not of the same dimensionality")
-        self.point = point
+        self.point: np.ndarray = np.asarray(point, dtype=float)
         self.ndim = {len(n1)}
         self.normals = [unitise(n) for n in normals]
         # todo: matmul is associative, so turn this into an affine in 2/3D?
