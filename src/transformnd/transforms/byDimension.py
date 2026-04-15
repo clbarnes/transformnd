@@ -5,11 +5,9 @@ from ..util import SpaceTuple
 
 
 class SubsequenceTransform(Transform):
-
-    def __init__(self, 
-                 input_axis: list[int], 
-                 output_axis: list[int],
-                 transform: list[Transform]):
+    def __init__(
+        self, input_axis: list[int], output_axis: list[int], transform: list[Transform]
+    ):
         self.input_axis = input_axis
         if output_axis is None:
             # this needs to be adjusted if we want to support drop and add axis
@@ -19,11 +17,11 @@ class SubsequenceTransform(Transform):
         self.transform = transform
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
-        """Apply transformation to subset of coordinates.
-        """
+        """Apply transformation to subset of coordinates."""
         for transform_step in self.transform:
-            coords =transform_step.apply(coords)
+            coords = transform_step.apply(coords)
         return coords
+
 
 class ByDimension(Transform):
     """Map coordinates from one axis to another.
@@ -52,10 +50,11 @@ class ByDimension(Transform):
         self.spaces = spaces
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
-        """Apply transformation to subset of coordinates.
-        """
+        """Apply transformation to subset of coordinates."""
         for sub_seq_transform in self.sub_seq_transform:
-            coords[:, sub_seq_transform.output_axis] = sub_seq_transform.apply((coords[:, sub_seq_transform.input_axis]))
+            coords[:, sub_seq_transform.output_axis] = sub_seq_transform.apply(
+                (coords[:, sub_seq_transform.input_axis])
+            )
         return coords
 
     def __invert__(self) -> Transform:
@@ -67,6 +66,5 @@ class ByDimension(Transform):
             Inverted transformation.
         """
         return type(self)(
-            
             spaces=(self.spaces[1], self.spaces[0]),
         )

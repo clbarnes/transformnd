@@ -4,9 +4,10 @@ import pytest
 from transformnd.transforms.byDimension import SubsequenceTransform
 from transformnd.transforms import ByDimension, Scale, MapAxis
 
+
 @pytest.mark.parametrize(["s"], [[s] for s in range(2, 6)])
 def test_2d_scale(s):
-    coords = np.array([[1, 2], [3,4]])
+    coords = np.array([[1, 2], [3, 4]])
     scale = Scale(s)
     print(s)
     subseq = SubsequenceTransform(input_axis=[0], output_axis=[0], transform=[scale])
@@ -22,43 +23,52 @@ def test_2d_scale(s):
 def test_3d_map_axis_and_scale(s):
     """Test 3D transformation with map_axis on columns 0,1 and scale on column 2."""
     coords = np.array([[1, 2, 3], [4, 5, 6]])
-    
+
     # MapAxis: swap columns 0 and 1, keep column 2
     map_axis = MapAxis(permutation=[1, 0])
-    map_axis_subseq = SubsequenceTransform(input_axis=[0, 1], output_axis=[0, 1], transform=[map_axis])
-    
+    map_axis_subseq = SubsequenceTransform(
+        input_axis=[0, 1], output_axis=[0, 1], transform=[map_axis]
+    )
+
     # Scale: apply scale to column 2
     scale = Scale(s)
-    scale_subseq = SubsequenceTransform(input_axis=[2], output_axis=[2], transform=[scale])
-    
+    scale_subseq = SubsequenceTransform(
+        input_axis=[2], output_axis=[2], transform=[scale]
+    )
+
     # Apply both transformations
     by_dim = ByDimension(sub_seq_transform=[map_axis_subseq, scale_subseq])
     coords_transformed = by_dim.apply(coords)
-    
-    # Expected: columns 0 and 1 swapped, column 2 scaled by s
-    expected = np.array([[2, 1, 3 * s], [5, 4, 6 * s]])    
-    assert np.allclose(coords_transformed, expected)
 
+    # Expected: columns 0 and 1 swapped, column 2 scaled by s
+    expected = np.array([[2, 1, 3 * s], [5, 4, 6 * s]])
+    assert np.allclose(coords_transformed, expected)
 
 
 @pytest.mark.parametrize(["s"], [[s] for s in range(2, 4)])
 def test_3d_map_axis_and_scale_multiple(s):
     """Test multiple transformations for one subset of columns."""
     coords = np.array([[1, 2, 3], [4, 5, 6]])
-    
+
     # MapAxis: swap columns 0 and 1, keep column 2
     map_axis = MapAxis(permutation=[1, 0])
-    scale = Scale(s+2)
-    map_axis_subseq = SubsequenceTransform(input_axis=[0, 1], output_axis=[0, 1], transform=[map_axis, scale])
-    
+    scale = Scale(s + 2)
+    map_axis_subseq = SubsequenceTransform(
+        input_axis=[0, 1], output_axis=[0, 1], transform=[map_axis, scale]
+    )
+
     # Scale: apply scale to column 2
     scale = Scale(s)
-    scale_subseq = SubsequenceTransform(input_axis=[2], output_axis=[2], transform=[scale])
-    
+    scale_subseq = SubsequenceTransform(
+        input_axis=[2], output_axis=[2], transform=[scale]
+    )
+
     # Apply both transformations
     by_dim = ByDimension(sub_seq_transform=[map_axis_subseq, scale_subseq])
     coords_transformed = by_dim.apply(coords)
-    
+
     # Expected: columns 0 and 1 swapped, column 2 scaled by s
-    expected = np.array([[2 * (s + 2), 1 * (s + 2), 3 * s], [5 * (s + 2), 4 * (s + 2), 6 * s]])    
+    expected = np.array(
+        [[2 * (s + 2), 1 * (s + 2), 3 * s], [5 * (s + 2), 4 * (s + 2), 6 * s]]
+    )
     assert np.allclose(coords_transformed, expected)
