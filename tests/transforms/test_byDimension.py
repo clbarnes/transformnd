@@ -37,16 +37,22 @@ def test_3d_map_axis_and_scale(s):
     )
 
     # Apply both transformations
-    by_dim = ByDimension(sub_seq_transform=[map_axis_subseq, scale_subseq])
-    coords_transformed = by_dim.apply(coords)
+    by_dim_0 = ByDimension(sub_seq_transform=[map_axis_subseq, scale_subseq])
+    by_dim_1 = ByDimension(sub_seq_transform=[scale_subseq, map_axis_subseq])
+
+    coords_0 = by_dim_0.apply(coords)
+    coords_1 = by_dim_1.apply(coords)
+
+    # check that order of transformations does not matter
+    assert np.array_equal(coords_0, coords_1)
 
     # Expected: columns 0 and 1 swapped, column 2 scaled by s
     expected = np.array([[2, 1, 3 * s], [5, 4, 6 * s]])
-    assert np.allclose(coords_transformed, expected)
+    assert np.allclose(coords_0, expected)
 
     ### test invert
-    inverted = ~by_dim
-    assert np.array_equal(inverted.apply(coords_transformed), coords)
+    inverted = ~by_dim_0
+    assert np.array_equal(inverted.apply(coords_0), coords)
 
 
 @pytest.mark.parametrize(["s"], [[s] for s in range(2, 4)])
@@ -81,3 +87,4 @@ def test_3d_transform_sequence(s):
     ### test invert
     inverted = ~by_dim
     assert np.array_equal(inverted.apply(coords_transformed), coords)
+
