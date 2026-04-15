@@ -320,6 +320,11 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             coords = t.apply(coords)
         return coords
 
+    def to_device(self, xp, device=None) -> Self:
+        result = copy(self)
+        result.transforms = [t.to_device(xp, device) for t in self.transforms]
+        return result
+
     def list_spaces(self, skip_none=False) -> list[SpaceRef]:
         """List spaces in this transform.
 

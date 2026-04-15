@@ -171,3 +171,10 @@ class TransformGraph(Generic[ArrayT]):
         """
         for _, _, t in self.graph.edges.data("transform"):
             yield t
+
+    def to_device(self, xp, device=None) -> "TransformGraph[ArrayT]":
+        result = TransformGraph()
+        result.ndim = self.ndim
+        for src, tgt, t in self.graph.edges.data("transform"):
+            result.graph.add_edge(src, tgt, transform=t.to_device(xp, device))
+        return result
