@@ -45,6 +45,7 @@ class Affine(Transform[ArrayT]):
     At apply()-time it is converted to the input coords' backend and device,
     so the transform works transparently with NumPy, JAX, PyTorch, CuPy, etc.
     """
+
     matrix: np.ndarray
 
     def __init__(

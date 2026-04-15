@@ -18,7 +18,7 @@ try:
     from scipy.spatial.distance import cdist
 
     # Replace morphops's original slow distance_matrix function
-    mops.lmk_util.distance_matrix = cdist # type: ignore
+    mops.lmk_util.distance_matrix = cdist  # type: ignore
 except ImportError:
     logger.warning(
         "scipy not present; morphops-based transformations may be slower than necessary"

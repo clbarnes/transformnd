@@ -85,7 +85,7 @@ class Reflect(Transform[np.ndarray]):
     def __init__(
         self,
         normals: ArrayLike,
-        point: float | ArrayLike = 0.,
+        point: float | ArrayLike = 0.0,
         *,
         spaces: SpaceTuple = (None, None),
     ):
@@ -112,7 +112,11 @@ class Reflect(Transform[np.ndarray]):
             normals = [normals]
 
         n1 = normals[0]
-        if not np.isscalar(point) and isinstance(point, Sequence) and len(n1) != len(point):
+        if (
+            not np.isscalar(point)
+            and isinstance(point, Sequence)
+            and len(n1) != len(point)
+        ):
             raise ValueError("Point and normals are not of the same dimensionality")
         self.point = point
         self.ndim = {len(n1)}
