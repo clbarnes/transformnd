@@ -44,6 +44,10 @@ def test_3d_map_axis_and_scale(s):
     expected = np.array([[2, 1, 3 * s], [5, 4, 6 * s]])
     assert np.allclose(coords_transformed, expected)
 
+    ### test invert
+    inverted = ~by_dim
+    assert np.array_equal(inverted.apply(coords_transformed), coords)
+
 
 @pytest.mark.parametrize(["s"], [[s] for s in range(2, 4)])
 def test_3d_map_axis_and_scale_multiple(s):
@@ -72,3 +76,7 @@ def test_3d_map_axis_and_scale_multiple(s):
         [[2 * (s + 2), 1 * (s + 2), 3 * s], [5 * (s + 2), 4 * (s + 2), 6 * s]]
     )
     assert np.allclose(coords_transformed, expected)
+
+    ### test invert
+    inverted = ~by_dim
+    assert np.array_equal(inverted.apply(coords_transformed), coords)

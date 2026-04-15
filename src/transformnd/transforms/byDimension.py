@@ -6,7 +6,7 @@ from ..util import SpaceTuple
 
 class SubsequenceTransform(Transform):
     def __init__(
-        self, input_axis: list[int], output_axis: list[int], transform: list[Transform]
+        self, input_axis: list[int], output_axis: list[int] | None, transform: list[Transform]
     ):
         self.input_axis = input_axis
         if output_axis is None:
@@ -65,6 +65,15 @@ class ByDimension(Transform):
         Transform
             Inverted transformation.
         """
+        inverted_transforms = [
+            SubsequenceTransform(
+                input_axis=t.output_axis,
+                output_axis=t.input_axis,
+                transform=[step.__invert__() for step in reversed(t.transform)],
+            )
+            for t in reversed(self.sub_seq_transform)
+        ]
         return type(self)(
+            sub_seq_transform=inverted_transforms,
             spaces=(self.spaces[1], self.spaces[0]),
         )
