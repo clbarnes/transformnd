@@ -20,7 +20,6 @@ from .util import (
     window,
     SpaceTuple,
     ArrayT,
-    Namespace
 )
 
 

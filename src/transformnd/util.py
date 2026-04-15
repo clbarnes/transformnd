@@ -5,7 +5,6 @@ from collections.abc import Callable, Hashable, Iterable, Iterator
 from typing import Any, TypeVar
 
 from array_api_compat import array_namespace
-from array_api_compat.common._typing import Namespace
 
 UNSPECIFIED_SPACE_NAME = "???"
 
