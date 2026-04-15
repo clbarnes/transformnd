@@ -6,15 +6,15 @@ from ..util import SpaceTuple
 
 class SubTransform(Transform):
     def __init__(
-        self, input_axis: list[int], output_axis: list[int] | None, transform: Transform
+        self, input_axes: list[int], output_axes: list[int] | None, transform: Transform
     ):
-        self.input_axis = input_axis
-        if output_axis is None:
+        self.input_axes = input_axes
+        if output_axes is None:
             # this needs to be adjusted if we want to support drop and add axis
-            self.output_axis = input_axis
+            self.output_axes = input_axes
         else:
-            self.output_axis = output_axis
-        assert len(self.input_axis) == len(self.output_axis), "Input and output axes must have the same length"
+            self.output_axes = output_axes
+        assert len(self.input_axes) == len(self.output_axes), "Input and output axes must have the same length"
         self.transform = transform
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
