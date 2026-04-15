@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import Iterator, List, Optional, Sequence, Set, Union
+from typing import Iterator, List, Optional, Sequence, Set, Union, Generic
 
 import numpy as np
+from array_api_compat import array_namespace
 
 from .util import (
     SpaceRef,
@@ -17,10 +18,12 @@ from .util import (
     space_str,
     window,
     SpaceTuple,
+    ArrayT,
+    Namespace
 )
 
 
-class Transform(ABC):
+class Transform(ABC, Generic[ArrayT]):
     """Base class for transforms."""
 
     ndim: Optional[Set[int]] = None
@@ -47,14 +50,14 @@ class Transform(ABC):
     def target_space(self):
         return self.spaces[1]
 
-    def _validate_coords(self, coords) -> np.ndarray:
+    def _validate_coords(self, coords: ArrayT) -> ArrayT:
         """Check that dimension of coords are supported.
 
-        Also ensure that coords is a 2D numpy array.
+        Also ensure that coords is a 2D array.
 
         Parameters
         ----------
-        coords : np.ndarray
+        coords : ArrayT
             NxD array of N D-dimensional coordinates.
 
         Raises
@@ -62,19 +65,19 @@ class Transform(ABC):
         ValueError
             If dimensions are not supported.
         """
-        coords = np.asarray(coords)
-        if coords.ndim != 2:
+        xp = array_namespace(coords)
+        if xp.ndim(coords) != 2:
             raise ValueError("Coords must be a 2D array")
-        check_ndim(coords.shape[1], self.ndim)
+        check_ndim(xp.shape(coords)[1], self.ndim)
         return coords
 
     @abstractmethod
-    def apply(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: ArrayT) -> ArrayT:
         """Apply transformation.
 
         Parameters
         ----------
-        coords : np.ndarray
+        coords : ArrayT
             NxD array of N D-dimensional coordinates.
 
         Returns
@@ -212,12 +215,12 @@ def get_transform_list(t: Transform) -> List[Transform]:
         return [t]
 
 
-class TransformSequence(Transform, Sequence[Transform]):
+class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
     """Chain transforms, applying one after another."""
 
     def __init__(
         self,
-        transforms: Sequence[Transform],
+        transforms: Sequence[Transform[ArrayT]],
         *,
         spaces: SpaceTuple = (None, None),
     ) -> None:
@@ -228,7 +231,7 @@ class TransformSequence(Transform, Sequence[Transform]):
 
         Parameters
         ----------
-        transforms : List[Transform]
+        transforms : List[Transform[ArrayT]]
             Items which are a TransformSequences
             will each still be treated as a single transform.
         spaces : tuple[SpaceRef, SpaceRef]
@@ -286,7 +289,7 @@ class TransformSequence(Transform, Sequence[Transform]):
             spaces=(self.spaces[1], self.spaces[0]),
         )
 
-    def apply(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: ArrayT) -> ArrayT:
         for t in self.transforms:
             coords = t.apply(coords)
         return coords

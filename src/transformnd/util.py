@@ -11,13 +11,17 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    TypeVar,
 )
 
-import numpy as np
+from array_api_compat import array_namespace
+from array_api_compat.common._typing import Namespace
 
 UNSPECIFIED_SPACE_NAME = "???"
 
-TransformSignature = Callable[[np.ndarray], np.ndarray]
+ArrayT = TypeVar("ArrayT")
+
+TransformSignature = Callable[[ArrayT], ArrayT]
 """Type annotation of a function which can be used as a transform."""
 
 SpaceRef = Hashable
@@ -192,8 +196,10 @@ def space_str(space: Optional[SpaceRef]):
         return str(space)
 
 
-def is_square(arr: np.ndarray) -> bool:
-    return arr.ndim == 2 and arr.shape[0] == arr.shape[1]
+def is_square(arr: ArrayT) -> bool:
+    xp = array_namespace(arr)
+    ndim, shape = xp.ndim(arr), xp.shape(arr)
+    return ndim == 2 and shape[0] == shape[1]
 
 
 def dim_intersection(dims1: Optional[Set[int]], dims2: Optional[Set[int]]):

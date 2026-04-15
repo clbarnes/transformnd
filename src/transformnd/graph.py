@@ -4,10 +4,9 @@ from functools import lru_cache
 from typing import Dict, Iterable, Iterator, Optional, Set, Tuple
 
 import networkx as nx
-import numpy as np
 
 from .base import Transform, TransformSequence
-from .util import SpaceRef, chain_or, dim_intersection, window
+from .util import SpaceRef, chain_or, dim_intersection, window, ArrayT
 
 
 def split_sequence(seq: TransformSequence) -> Iterator[Transform]:
@@ -132,8 +131,8 @@ class TransformGraph:
         )
 
     def transform(
-        self, source_space: SpaceRef, target_space: SpaceRef, coords: np.ndarray
-    ) -> np.ndarray:
+        self, source_space: SpaceRef, target_space: SpaceRef, coords: ArrayT
+    ) -> ArrayT:
         """Transform coordinates from one space to another,
         possibly via intermediates.
 
@@ -141,11 +140,11 @@ class TransformGraph:
         ----------
         source_space : SpaceRef
         target_space : SpaceRef
-        coords : np.ndarray
+        coords : ArrayT
 
         Returns
         -------
-        np.ndarray
+        ArrayT
         """
         t = self.get_sequence(source_space, target_space)
         return t.apply(coords)
