@@ -25,7 +25,6 @@ class MapAxis(Transform):
             New order of column axis. For example, [1, 0] means x -> y and y -> x.
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
-
         """
         self.permutation = permutation
         self.spaces = spaces
