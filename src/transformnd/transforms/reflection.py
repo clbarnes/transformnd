@@ -85,7 +85,7 @@ class Reflect(Transform[np.ndarray]):
     def __init__(
         self,
         normals: ArrayLike,
-        point=0,
+        point: float | ArrayLike = 0.,
         *,
         spaces: SpaceTuple = (None, None),
     ):
@@ -95,7 +95,7 @@ class Reflect(Transform[np.ndarray]):
         normals : sequence of arrays
             Normal vectors to the planes of reflection.
             Unitised internally.
-        point : float or sequence of floats, optional
+        point : float or array-like, optional
             Intersection point of all reflection planes
             (can be broadcast from scalar), by default 0 (i.e. the origin)
         spaces : tuple[SpaceRef, SpaceRef]
@@ -112,7 +112,7 @@ class Reflect(Transform[np.ndarray]):
             normals = [normals]
 
         n1 = normals[0]
-        if not np.isscalar(point) and len(n1) != len(point):
+        if not np.isscalar(point) and isinstance(point, Sequence) and len(n1) != len(point):
             raise ValueError("Point and normals are not of the same dimensionality")
         self.point = point
         self.ndim = {len(n1)}
@@ -140,7 +140,7 @@ class Reflect(Transform[np.ndarray]):
 
         Parameters
         ----------
-        points :
+        points : array-like
             NxD array of N points in D dimensions. N == D
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
