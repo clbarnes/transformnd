@@ -1434,7 +1434,10 @@ thinplatesplines = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "marimo" },
+    { name = "matplotlib" },
     { name = "mypy" },
+    { name = "pandas" },
     { name = "pdoc" },
     { name = "prek" },
     { name = "pytest" },
@@ -1471,7 +1474,10 @@ provides-extras = ["thinplatesplines", "movingleastsquares", "pandas", "shapely"
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "marimo", specifier = ">=0.9" },
+    { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "mypy" },
+    { name = "pandas", specifier = ">=3.0.2" },
     { name = "pdoc", specifier = ">=16.0.0" },
     { name = "prek", specifier = ">=0.3.9" },
     { name = "pytest" },

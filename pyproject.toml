@@ -33,6 +33,7 @@ dev = [
     {include-group = "test"},
     {include-group = "lint"},
     {include-group = "doc"},
+    {include-group = "tutorial"},
 ]
 test = ["pytest"]
 lint = [
