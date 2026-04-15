@@ -69,3 +69,12 @@ but should be specified in the `requirements.txt` for tests.
 
 Alternatively, consider adopting `transformnd`'s base classes in your own library,
 and have your transformation instantly compatible for downstream users.
+
+## Contributing
+
+- Use [`uv`](https://docs.astral.sh/uv/) for environment and dependency management.
+  - `uv sync` to set up the environment.
+- Use [`prek`](https://prek.j178.dev/) for running pre-commit hooks.
+  - `prek install-hooks && prek run --all-files` to get started.
+- Use [`just`](https://github.com/casey/just) for common development tasks (format, lint, test, generate docs).
+  - `just` to list commands.

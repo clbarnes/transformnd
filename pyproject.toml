@@ -35,7 +35,11 @@ dev = [
     {include-group = "doc"},
 ]
 test = ["pytest"]
-lint = ["ruff", "mypy"]
+lint = [
+    "ruff",
+    "mypy",
+    "prek>=0.3.9",
+]
 doc = [
     "pdoc>=16.0.0",
 ]
