@@ -4,7 +4,7 @@ from ..base import Transform
 from ..util import SpaceTuple
 
 
-class SubTransform(Transform):
+class SubTransform():
     def __init__(
         self, input_axes: list[int], output_axes: list[int] | None, transform: Transform
     ):
@@ -15,17 +15,10 @@ class SubTransform(Transform):
             self.output_axes = input_axes
         else:
             self.output_axes = output_axes
-        assert len(set(input_axes)) == len(input_axes), "Input axes must be unique and non-empty"
-        assert len(set(output_axes)) == len(output_axes), "Output axes must be unique and non-empty"
+        assert len(set(self.input_axes)) == len(self.input_axes), "Input axes must be unique and non-empty"
+        assert len(set(self.output_axes)) == len(self.output_axes), "Output axes must be unique and non-empty"
         assert len(self.input_axes) == len(self.output_axes), "Input and output axes must have the same length"
         self.transform = transform
-
-    def apply(self, coords: np.ndarray) -> np.ndarray:
-        """Apply transformation to subset of coordinates."""
-        coords[:, self.output_axes] = self.transform.apply(coords[:, self.input_axes])
-        return coords
-        #return self.transform.apply(coords)
-
 
 class ByDimension(Transform):
     """Map coordinates from one axis to another.
@@ -61,8 +54,9 @@ class ByDimension(Transform):
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
         """Apply transformation to subset of coordinates."""
+        coords_original = coords.copy()
         for sub_seq_transform in self.sub_seq_transform:
-            coords = sub_seq_transform.apply(coords)
+            coords[:, sub_seq_transform.output_axes] = sub_seq_transform.transform.apply(coords_original[:, sub_seq_transform.input_axes])
         return coords
 
     def __invert__(self) -> Transform:
