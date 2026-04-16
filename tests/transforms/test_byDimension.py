@@ -5,6 +5,7 @@ from transformnd.transforms.by_dimension import SubTransform
 from transformnd.transforms import ByDimension, Scale, MapAxis
 from transformnd.base import TransformSequence
 
+
 @pytest.mark.parametrize(["s"], [[s] for s in range(2, 6)])
 def test_2d_scale(s):
     coords = np.array([[1, 2], [3, 4]])
@@ -32,9 +33,7 @@ def test_3d_map_axis_and_scale(s):
 
     # Scale: apply scale to column 2
     scale = Scale(s)
-    scale_subseq = SubTransform(
-        input_axes=[2], output_axes=[2], transform=scale
-    )
+    scale_subseq = SubTransform(input_axes=[2], output_axes=[2], transform=scale)
 
     # Apply both transformations (different order)
     by_dim_0 = ByDimension(sub_seq_transform=[map_axis_subseq, scale_subseq])
@@ -44,12 +43,16 @@ def test_3d_map_axis_and_scale(s):
     coords_1 = by_dim_1.apply(coords.copy())
 
     # check that order of transformations does not matter
-    assert np.array_equal(coords_0, coords_1), "Order of transformations should not matter"
+    assert np.array_equal(coords_0, coords_1), (
+        "Order of transformations should not matter"
+    )
 
     # Expected: columns 0 and 1 swapped, column 2 scaled by s
     expected = np.array([[2, 1, 3 * s], [5, 4, 6 * s]])
     print(coords_0, expected)
-    assert np.allclose(coords_0, expected), "Transformed coordinates do not match expected values"
+    assert np.allclose(coords_0, expected), (
+        "Transformed coordinates do not match expected values"
+    )
 
     ### test invert
     inverted = ~by_dim_0
@@ -71,9 +74,7 @@ def test_3d_transform_sequence(s):
 
     # Scale: apply scale to column 2
     scale = Scale(s)
-    scale_subseq = SubTransform(
-        input_axes=[2], output_axes=[2], transform=scale
-    )
+    scale_subseq = SubTransform(input_axes=[2], output_axes=[2], transform=scale)
 
     # Apply both transformations
     by_dim = ByDimension(sub_seq_transform=[map_axis_subseq, scale_subseq])
@@ -89,6 +90,7 @@ def test_3d_transform_sequence(s):
     inverted = ~by_dim
     assert np.array_equal(inverted.apply(coords_transformed), coords)
 
+
 def test_non_unique_axes():
     """Test that non-unique axes raise an error."""
     scale = Scale(2)
@@ -101,6 +103,7 @@ def test_non_unique_axes():
         t_2 = SubTransform(input_axes=[1, 2], output_axes=[1, 2], transform=scale)
         ByDimension(sub_seq_transform=[t_1, t_2])
 
+
 def test_cross_axes_transform():
     """Test for two subtransforms, where input axes of one subtransform overlap with output axes of the other subtransform.
     This should take apply both transformations on the original axis."""
@@ -112,4 +115,3 @@ def test_cross_axes_transform():
     by_dim = ByDimension(sub_seq_transform=[t_1, t_2])
     coords_byDim = by_dim.apply(coords.copy())
     assert np.array_equal(coords_byDim, coords_transformed)
-
