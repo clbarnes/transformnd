@@ -4,6 +4,7 @@ Rigid transformations implemented as affine multiplications.
 
 from __future__ import annotations
 
+from functools import lru_cache
 import math
 from typing import Container, Optional, Tuple, Union
 
@@ -87,12 +88,15 @@ class Affine(Transform[ArrayT]):
         self.matrix = m
         self.ndim = {len(self.matrix) - 1}
 
+    @lru_cache()
+    def cast_matrix(self, namespace, device) -> ArrayT:
+        return namespace.asarray(self.matrix, device=device)
+
     def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
         xp = array_namespace(coords)
         d = xp_device(coords)
-        coords = xp.asarray(coords)
-        m = xp.asarray(self.matrix, device=d)
+        m = self.cast_matrix(xp, d)
         coords = xp.concatenate(
             [coords, xp.ones((coords.shape[0], 1), dtype=coords.dtype)],  # type: ignore[attr-defined]
             axis=1,
