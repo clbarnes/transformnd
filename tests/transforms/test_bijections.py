@@ -7,8 +7,8 @@ import pytest
 @pytest.mark.parametrize("scale", [1, 2, 3])
 def test_bijection_apply_scale(scale):
     coords5x3 = np.random.rand(5, 3)
-    forward = Scale(scale)
-    inverse = Scale(1 / scale)
+    forward = Scale[np.ndarray](np.array(scale))
+    inverse = Scale[np.ndarray](np.array(1 / scale))
     bij = Bijection(forward, inverse)
     assert np.allclose(bij.apply(coords5x3), coords5x3 * scale)
 
@@ -26,8 +26,8 @@ def test_bijection_apply_map_axis():
 
 def test_bijection_invert_scale():
     coords5x3 = np.random.rand(5, 3)
-    forward = Scale(2)
-    inverse = Scale(0.5)
+    forward = Scale[np.ndarray](2)
+    inverse = Scale[np.ndarray](0.5)
     bij = Bijection(forward, inverse)
     bij_inv = ~bij
     assert np.allclose(bij_inv.apply(coords5x3), coords5x3 * 0.5)
@@ -45,7 +45,23 @@ def test_bijection_invert_map_axis():
 
 
 def test_bijection_roundtrip(coords5x3):
-    forward = Scale(3)
-    inverse = Scale(1 / 3)
+    forward = Scale[np.ndarray](3)
+    inverse = Scale[np.ndarray](1 / 3)
     bij = Bijection(forward, inverse)
     assert np.allclose((~bij).apply(bij.apply(coords5x3)), coords5x3)
+
+
+def test_bijection_dim_mismatch():
+    forward = Scale[np.ndarray](2)
+    inverse = Scale[np.ndarray](0.5)
+    bij = Bijection(forward, inverse)
+    assert bij.ndim is None  # both support all dimensions
+
+    forward_2d = MapAxis(permutation=[1, 0])
+    inverse_2d = MapAxis(permutation=[1, 0])
+    bij_2d = Bijection(forward_2d, inverse_2d)
+    assert bij_2d.ndim == {2}
+
+    # no support if ndimensions don't overlap
+    with pytest.raises(ValueError):
+        Bijection(forward_2d, inverse)
