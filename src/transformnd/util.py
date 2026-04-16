@@ -202,3 +202,11 @@ def dim_intersection(dims1: set[int] | None, dims2: set[int] | None) -> set[int]
 
 def invert_spaces(spaces: SpaceTuple) -> SpaceTuple:
     return (spaces[1], spaces[0])
+
+
+def are_coords(coords: ArrayT, ndim: set[int] | None = None):
+    xp = array_namespace(coords)
+    if xp.ndim(coords) != 2:
+        raise ValueError("Coords must be a 2D array")
+    check_ndim(xp.shape(coords)[1], ndim)
+    return coords
