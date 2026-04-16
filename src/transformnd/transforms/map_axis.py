@@ -4,7 +4,7 @@ from ..base import Transform
 from ..util import SpaceTuple
 
 
-class MapAxis(Transform):
+class MapAxis(Transform[np.ndarray]):
     """Map coordinates from one axis to another.
 
     For example, x -> y and y -> x"""
@@ -38,12 +38,12 @@ class MapAxis(Transform):
         """
         return coords[:, self.permutation]
 
-    def __invert__(self) -> Transform:
+    def __invert__(self) -> Transform[np.ndarray]:
         """Invert transformation if possible.
 
         Returns
         -------
-        Transform
+        Transform[np.ndarray]
             Inverted transformation.
         """
         return type(self)(

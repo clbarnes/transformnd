@@ -314,7 +314,7 @@ def _(np, rng, translate):
     translated_town = town_adapter.apply(translate, my_town)
 
     town_translator = town_adapter.partial(translate)
-    translated_town_2 = town_translator(translated_town)
+    translated_town_2 = town_translator(translated_town)  # noqa: F841
     return
 
 

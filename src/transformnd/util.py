@@ -1,32 +1,25 @@
 """Utilities used elsewhere in the package."""
 
 from collections import deque
-from typing import (
-    Any,
-    Callable,
-    Deque,
-    Hashable,
-    Iterable,
-    Iterator,
-    Optional,
-    Set,
-    Tuple,
-)
+from collections.abc import Callable, Hashable, Iterable, Iterator
+from typing import Any, TypeVar
 
-import numpy as np
+from array_api_compat import array_namespace
 
 UNSPECIFIED_SPACE_NAME = "???"
 
-TransformSignature = Callable[[np.ndarray], np.ndarray]
+ArrayT = TypeVar("ArrayT")
+
+TransformSignature = Callable[[ArrayT], ArrayT]
 """Type annotation of a function which can be used as a transform."""
 
 SpaceRef = Hashable
 """Type annotation of things which can be used to refer to spaces"""
 
-SpaceTuple = Tuple[Optional[SpaceRef], Optional[SpaceRef]]
+SpaceTuple = tuple[SpaceRef | None, SpaceRef | None]
 
 
-def none_eq(a: Optional[Any], b: Optional[Any]) -> bool:
+def none_eq(a: Any | None, b: Any | None) -> bool:
     """Check whether either is None or both are equal.
 
     Parameters
@@ -44,7 +37,7 @@ def none_eq(a: Optional[Any], b: Optional[Any]) -> bool:
 NO_DEFAULT = object()
 
 
-def chain_or(*args: Optional[Any], default=NO_DEFAULT):
+def chain_or(*args: Any | None, default=NO_DEFAULT) -> Any:
     """Return the first of *args which is not None.
 
     Can either error or return a default if there are no non-None args.
@@ -73,7 +66,7 @@ def chain_or(*args: Optional[Any], default=NO_DEFAULT):
     return default
 
 
-def same_or_none(*args, default=NO_DEFAULT):
+def same_or_none(*args: Any, default=NO_DEFAULT) -> Any:
     """Check args are the same or None.
 
     If so, return the non-None value.
@@ -114,7 +107,7 @@ def same_or_none(*args, default=NO_DEFAULT):
     return prev
 
 
-def window(iterable: Iterable, length: int) -> Iterator[Tuple[Any, ...]]:
+def window(iterable: Iterable, length: int) -> Iterator[tuple[Any, ...]]:
     """Sliding window over iterable.
 
     e.g. `(it[0], it[1]), (it[1], it[2]), (it[2], it[3]), ...`
@@ -130,7 +123,7 @@ def window(iterable: Iterable, length: int) -> Iterator[Tuple[Any, ...]]:
     Tuple[Any, ...]
     """
     it = iter(iterable)
-    q: Deque[Any] = deque(maxlen=length)
+    q: deque[Any] = deque(maxlen=length)
     for _ in range(length):
         try:
             item = next(it)
@@ -143,7 +136,7 @@ def window(iterable: Iterable, length: int) -> Iterator[Tuple[Any, ...]]:
         yield tuple(q)
 
 
-def check_ndim(given_ndim: int, supported_ndim: Optional[Set[int]]):
+def check_ndim(given_ndim: int, supported_ndim: set[int] | None) -> None:
     """Raise a ValueError if dimensionality is unsupported.
 
     Parameters
@@ -165,7 +158,7 @@ def check_ndim(given_ndim: int, supported_ndim: Optional[Set[int]]):
         )
 
 
-def format_dims(supported):
+def format_dims(supported: set[int] | None) -> str:
     """Format supported dimensions for e.g. error messages.
 
     Parameters
@@ -185,18 +178,20 @@ def format_dims(supported):
     return "/".join(f"{d}D" for d in sorted(supported))
 
 
-def space_str(space: Optional[SpaceRef]):
+def space_str(space: SpaceRef | None) -> str:
     if space is None:
         return UNSPECIFIED_SPACE_NAME
     else:
         return str(space)
 
 
-def is_square(arr: np.ndarray) -> bool:
-    return arr.ndim == 2 and arr.shape[0] == arr.shape[1]
+def is_square(arr: ArrayT) -> bool:
+    xp = array_namespace(arr)
+    ndim, shape = xp.ndim(arr), xp.shape(arr)
+    return ndim == 2 and shape[0] == shape[1]
 
 
-def dim_intersection(dims1: Optional[Set[int]], dims2: Optional[Set[int]]):
+def dim_intersection(dims1: set[int] | None, dims2: set[int] | None) -> set[int] | None:
     if dims1 is None:
         return dims2
     elif dims2 is None:

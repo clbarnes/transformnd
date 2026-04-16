@@ -43,7 +43,9 @@ class GeometryAdapter(BaseAdapter[BaseGeometry]):
             [self.transform_linear_ring(transform, i) for i in polygon.interiors],
         )
 
-    def transform_multi(self, transform: Transform, multi_geom):
+    def transform_multi(
+        self, transform: Transform, multi_geom: BaseMultipartGeometry
+    ) -> BaseMultipartGeometry:
         cls = type(multi_geom)
         method = {
             MultiPoint: self.transform_point,

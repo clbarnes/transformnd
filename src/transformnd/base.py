@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator, Sequence
 from copy import copy
-from typing import Iterator, List, Optional, Sequence, Set, Union
+from typing import Self
 
-import numpy as np
+from array_api_compat import array_namespace
 
 from .util import (
     SpaceRef,
@@ -17,13 +18,14 @@ from .util import (
     space_str,
     window,
     SpaceTuple,
+    ArrayT,
 )
 
 
-class Transform(ABC):
+class Transform[ArrayT](ABC):
     """Base class for transforms."""
 
-    ndim: Optional[Set[int]] = None
+    ndim: set[int] | None = None
 
     def __init__(
         self,
@@ -47,14 +49,14 @@ class Transform(ABC):
     def target_space(self):
         return self.spaces[1]
 
-    def _validate_coords(self, coords) -> np.ndarray:
+    def _validate_coords(self, coords: ArrayT) -> ArrayT:
         """Check that dimension of coords are supported.
 
-        Also ensure that coords is a 2D numpy array.
+        Also ensure that coords is a 2D array.
 
         Parameters
         ----------
-        coords : np.ndarray
+        coords : ArrayT
             NxD array of N D-dimensional coordinates.
 
         Raises
@@ -62,19 +64,19 @@ class Transform(ABC):
         ValueError
             If dimensions are not supported.
         """
-        coords = np.asarray(coords)
-        if coords.ndim != 2:
+        xp = array_namespace(coords)
+        if xp.ndim(coords) != 2:
             raise ValueError("Coords must be a 2D array")
-        check_ndim(coords.shape[1], self.ndim)
+        check_ndim(xp.shape(coords)[1], self.ndim)
         return coords
 
     @abstractmethod
-    def apply(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: ArrayT) -> ArrayT:
         """Apply transformation.
 
         Parameters
         ----------
-        coords : np.ndarray
+        coords : ArrayT
             NxD array of N D-dimensional coordinates.
 
         Returns
@@ -91,6 +93,28 @@ class Transform(ABC):
         -------
         Transform
             Inverted transformation.
+        """
+        return NotImplemented
+
+    def to_device(self, xp, device=None) -> Self:  # noqa: ARG002
+        """Return a copy of this transform with array parameters placed on the given device.
+
+        Useful for pre-allocating parameters on GPU before a tight apply() loop,
+        avoiding per-call host-to-device transfers.
+
+        Parameters
+        ----------
+        xp : array namespace
+            The target array namespace (e.g. jax.numpy, torch).
+        device : device object, optional
+            Target device (e.g. from array_api_compat.device(array)).
+            If None, uses xp's default device.
+
+        Returns
+        -------
+        Transform
+            A new transform instance with parameters on the target device,
+            or NotImplemented if the subclass does not support device placement.
         """
         return NotImplemented
 
@@ -143,13 +167,13 @@ class Transform(ABC):
         return f"{cls_name}[{src}->{tgt}]"
 
 
-class TransformWrapper(Transform):
+class TransformWrapper(Transform[ArrayT]):
     """Wrapper around an arbitrary function which transforms coordinates."""
 
     def __init__(
         self,
-        fn: TransformSignature,
-        ndim: Optional[Union[Set[int], int]] = None,
+        fn: TransformSignature[ArrayT],
+        ndim: set[int] | int | None = None,
         *,
         spaces: SpaceTuple = (None, None),
     ):
@@ -173,12 +197,16 @@ class TransformWrapper(Transform):
             else:
                 self.ndim = set(ndim)
 
-    def apply(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: ArrayT) -> ArrayT:
         self._validate_coords(coords)
         return self.fn(coords)
 
 
-def _with_spaces(t: Transform, source_space=None, target_space=None):
+def _with_spaces(
+    t: Transform[ArrayT],
+    source_space: SpaceRef | None = None,
+    target_space: SpaceRef | None = None,
+) -> Transform[ArrayT]:
     src_tgt = (t.source_space, t.target_space)
     src = same_or_none(src_tgt[0], source_space, default=None)
     tgt = same_or_none(src_tgt[1], target_space, default=None)
@@ -189,8 +217,8 @@ def _with_spaces(t: Transform, source_space=None, target_space=None):
 
 
 def infer_spaces(
-    transforms: Sequence[Transform], source_space=None, target_space=None
-) -> List[Transform]:
+    transforms: Sequence[Transform[ArrayT]], source_space=None, target_space=None
+) -> list[Transform[ArrayT]]:
     prev_tgts = [source_space]
     next_srcs = []
     for t1, t2 in window(transforms, 2):
@@ -205,19 +233,19 @@ def infer_spaces(
     return out
 
 
-def get_transform_list(t: Transform) -> List[Transform]:
+def get_transform_list(t: Transform[ArrayT]) -> list[Transform[ArrayT]]:
     if isinstance(t, TransformSequence):
         return t.transforms.copy()
     else:
         return [t]
 
 
-class TransformSequence(Transform, Sequence[Transform]):
+class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
     """Chain transforms, applying one after another."""
 
     def __init__(
         self,
-        transforms: Sequence[Transform],
+        transforms: Sequence[Transform[ArrayT]],
         *,
         spaces: SpaceTuple = (None, None),
     ) -> None:
@@ -228,7 +256,7 @@ class TransformSequence(Transform, Sequence[Transform]):
 
         Parameters
         ----------
-        transforms : List[Transform]
+        transforms : List[Transform[ArrayT]]
             Items which are a TransformSequences
             will each still be treated as a single transform.
         spaces : tuple[SpaceRef, SpaceRef]
@@ -249,7 +277,7 @@ class TransformSequence(Transform, Sequence[Transform]):
             ),
         )
 
-        self.transforms: List[Transform] = ts
+        self.transforms: list[Transform] = ts
 
         self.ndim = None
         for t in self.transforms:
@@ -286,12 +314,17 @@ class TransformSequence(Transform, Sequence[Transform]):
             spaces=(self.spaces[1], self.spaces[0]),
         )
 
-    def apply(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: ArrayT) -> ArrayT:
         for t in self.transforms:
             coords = t.apply(coords)
         return coords
 
-    def list_spaces(self, skip_none=False) -> List[SpaceRef]:
+    def to_device(self, xp, device=None) -> Self:
+        result = copy(self)
+        result.transforms = [t.to_device(xp, device) for t in self.transforms]
+        return result
+
+    def list_spaces(self, skip_none=False) -> list[SpaceRef]:
         """List spaces in this transform.
 
         Parameters
@@ -313,7 +346,7 @@ class TransformSequence(Transform, Sequence[Transform]):
         spaces_str = "->".join(space_str(s) for s in self.list_spaces())
         return f"{cls_name}[{spaces_str}]"
 
-    def __getitem__(self, idx: Union[slice, int]):
+    def __getitem__(self, idx: slice | int):
         if isinstance(idx, int):
             return self.transforms[idx]
         return type(self)(self.transforms[idx])

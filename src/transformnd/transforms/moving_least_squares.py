@@ -11,7 +11,7 @@ from ..base import SpaceTuple, Transform
 from ..util import invert_spaces
 
 
-class MovingLeastSquares(Transform):
+class MovingLeastSquares(Transform[np.ndarray]):
     """Moving least squares transformation.
 
     Deform based on a matched pairs of source and target control points; see <https://dl.acm.org/doi/10.1145/1141911.1141920>
