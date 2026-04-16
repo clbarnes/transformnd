@@ -1,10 +1,11 @@
+from array_api_compat import array_namespace
 import numpy as np
 
 from ..base import Transform
-from ..util import SpaceTuple
+from ..util import ArrayT, SpaceTuple
 
 
-class MapAxis(Transform[np.ndarray]):
+class MapAxis(Transform[ArrayT]):
     """Map coordinates from one axis to another.
 
     For example, x -> y and y -> x"""
@@ -29,21 +30,24 @@ class MapAxis(Transform[np.ndarray]):
         self.permutation = permutation
         self.spaces = spaces
 
-    def apply(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: ArrayT) -> ArrayT:
         """Apply transformation to coordinates.
 
         For example:
         2-D with permutation [1, 0] will give you
         [[x1, y1], [x2, y2]] -> [[y1, x1], [y2, x2]]
         """
-        return coords[:, self.permutation]
 
-    def __invert__(self) -> Transform[np.ndarray]:
+        coords = self._validate_coords(coords)
+        xp = array_namespace(coords)
+        return xp.take(coords, self.permutation, 1)
+
+    def __invert__(self) -> Transform[ArrayT]:
         """Invert transformation if possible.
 
         Returns
         -------
-        Transform[np.ndarray]
+        Transform[ArrayT]
             Inverted transformation.
         """
         return type(self)(

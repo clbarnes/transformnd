@@ -41,10 +41,6 @@ class Transform[ArrayT](ABC):
         """
         self.spaces = spaces
 
-    def supports_ndim(self, ndim: int) -> bool:
-        """Check whether the given dimensionality is supported by this transformation."""
-        return self.ndim is None or ndim in self.ndim
-
     @property
     def source_space(self):
         return self.spaces[0]

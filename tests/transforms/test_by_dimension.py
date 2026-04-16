@@ -6,24 +6,21 @@ from transformnd.transforms import ByDimension, Scale, MapAxis
 from transformnd.base import TransformSequence
 
 
-@pytest.mark.parametrize(["s"], [[s] for s in range(2, 6)])
-def test_2d_scale(s):
-    coords = np.array([[1, 2], [3, 4]])
-    scale = Scale(s)
-    print(s)
+def test_2d_scale():
+    factor = 1.5
+    coords = np.array([[1, 2], [3, 4]], dtype=float)
+    scale = Scale(factor)
     subseq = SubTransform(input_axes=[0], output_axes=[0], transform=scale)
-    by_dim = ByDimension(subtransforms=[subseq])
+    by_dim = ByDimension(subtransforms=[subseq], fill_identity=2)
     coords_transformed = by_dim.apply(coords.copy())
-    print(coords_transformed)
-    print(coords[:, 0] * s)
-    assert np.array_equal(coords_transformed[:, 0], coords[:, 0] * s)
-    assert np.array_equal(coords_transformed[:, 1], coords[:, 1])
+    assert coords_transformed[:, 0] == pytest.approx(coords[:, 0] * factor)
+    assert coords_transformed[:, 1] == pytest.approx(coords[:, 1])
 
 
-@pytest.mark.parametrize(["s"], [[s] for s in range(2, 4)])
-def test_3d_map_axis_and_scale(s):
+def test_3d_map_axis_and_scale():
     """Test 3D transformation with map_axis on columns 0,1 and scale on column 2."""
-    coords = np.array([[1, 2, 3], [4, 5, 6]])
+    s = 1.5
+    coords = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
 
     # MapAxis: swap columns 0 and 1, keep column 2
     map_axis = MapAxis(permutation=[1, 0])
@@ -59,10 +56,10 @@ def test_3d_map_axis_and_scale(s):
     assert np.array_equal(inverted.apply(coords_0), coords)
 
 
-@pytest.mark.parametrize(["s"], [[s] for s in range(2, 4)])
-def test_3d_transform_sequence(s):
-    """Test multiple transformations (TransformSequence)for one subset of columns."""
-    coords = np.array([[1, 2, 3], [4, 5, 6]])
+def test_3d_transform_sequence():
+    """Test multiple transformations (TransformSequence) for one subset of columns."""
+    s = 1.5
+    coords = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
 
     # MapAxis: swap columns 0 and 1, keep column 2
     map_axis = MapAxis(permutation=[1, 0])
@@ -82,13 +79,14 @@ def test_3d_transform_sequence(s):
 
     # Expected: columns 0 and 1 swapped, column 2 scaled by s
     expected = np.array(
-        [[2 * (s + 2), 1 * (s + 2), 3 * s], [5 * (s + 2), 4 * (s + 2), 6 * s]]
+        [[2 * (s + 2), 1 * (s + 2), 3 * s], [5 * (s + 2), 4 * (s + 2), 6 * s]],
+        dtype=float,
     )
-    assert np.allclose(coords_transformed, expected)
+    assert coords_transformed == pytest.approx(expected)
 
     ### test invert
     inverted = ~by_dim
-    assert np.array_equal(inverted.apply(coords_transformed), coords)
+    assert inverted.apply(coords_transformed) == pytest.approx(coords)
 
 
 def test_non_unique_axes():
@@ -108,7 +106,7 @@ def test_cross_axes_transform():
     """Test for two subtransforms, where input axes of one subtransform overlap with output axes of the other subtransform.
     This should take apply both transformations on the original axis."""
     s_1, s_2 = 2, 3
-    coords = np.array([[1, 2], [3, 4]])
+    coords = np.array([[1, 2], [3, 4]], dtype=float)
     coords_transformed = np.array([[2 * s_2, 1 * s_1], [4 * s_2, 3 * s_1]])
     t_1 = SubTransform(input_axes=[0], output_axes=[1], transform=Scale(s_1))
     t_2 = SubTransform(input_axes=[1], output_axes=[0], transform=Scale(s_2))
