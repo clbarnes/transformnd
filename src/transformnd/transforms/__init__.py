@@ -4,5 +4,6 @@ from .affine import Affine
 from .reflection import Reflect
 from .simple import Identity, Scale, Translate
 from .map_axis import MapAxis
+from .bijection import Bijection
 
-__all__ = ["Affine", "Identity", "Reflect", "Scale", "Translate", "MapAxis"]
+__all__ = ["Affine", "Identity", "Reflect", "Scale", "Translate", "MapAxis", "Bijection"]

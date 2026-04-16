@@ -1,0 +1,37 @@
+import numpy as np
+
+from ..base import Transform
+from ..util import SpaceTuple
+
+
+class Bijection(Transform):
+    """Map coordinates from one axis to another.
+
+    For example, x -> y and y -> x"""
+
+    # ndim: Optional[Set[int]] = set(2)
+
+    def __init__(
+        self,
+        forward: Transform,
+        inverse: Transform,
+        *,
+        spaces: SpaceTuple = (None, None),
+    ):
+        """Base class for transformations.
+
+        Parameters
+        ----------
+        spaces : tuple[SpaceRef, SpaceRef]
+            Optional source and target spaces
+        """
+        self.forward = forward
+        self.inverse = inverse
+        self.spaces = spaces
+
+    def apply(self, coords: np.ndarray) -> np.ndarray:
+        return self.forward.apply(coords)
+
+    def __invert__(self) -> Transform:
+
+        return type(self)(self.inverse, self.forward)
