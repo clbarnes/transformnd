@@ -1,6 +1,6 @@
 """Adapt pandas DataFrames for transformation."""
 
-from typing import Hashable, List
+from collections.abc import Hashable
 
 import pandas as pd
 
@@ -9,7 +9,7 @@ from .base import BaseAdapter
 
 
 class DataFrameAdapter(BaseAdapter[pd.DataFrame]):
-    def __init__(self, columns: List[Hashable]):
+    def __init__(self, columns: list[Hashable]):
         """Adapt transformation for coordinates stored in a pandas DataFrame.
 
         Parameters
@@ -20,7 +20,7 @@ class DataFrameAdapter(BaseAdapter[pd.DataFrame]):
         self.columns = columns
 
     def apply(
-        self, transform: Transform, df: pd.DataFrame, in_place=False
+        self, transform: Transform, df: pd.DataFrame, in_place: bool = False
     ) -> pd.DataFrame:
         """Transform the dataframe, optionally in-place.
 

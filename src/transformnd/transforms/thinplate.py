@@ -18,14 +18,14 @@ try:
     from scipy.spatial.distance import cdist
 
     # Replace morphops's original slow distance_matrix function
-    mops.lmk_util.distance_matrix = cdist
+    mops.lmk_util.distance_matrix = cdist  # type: ignore
 except ImportError:
     logger.warning(
         "scipy not present; morphops-based transformations may be slower than necessary"
     )
 
 
-class ThinPlateSplines(Transform):
+class ThinPlateSplines(Transform[np.ndarray]):
     """Thin plate splines transforms.
 
     Deform based on matched pairs of control points.
@@ -78,7 +78,7 @@ class ThinPlateSplines(Transform):
             self.target_control_points,
         )
 
-    def __invert__(self) -> Transform:
+    def __invert__(self) -> Transform[np.ndarray]:
         return type(self)(
             self.target_control_points,
             self.source_control_points,

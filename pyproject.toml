@@ -3,38 +3,25 @@ name = "transformnd"
 version = "0.1.0"
 description = "ND coordinate transformations"
 readme = "README.md"
-authors = [
-    { name = "Chris Barnes", email = "chris.barnes@gerbi-gmb.de" }
-]
+authors = [{ name = "Chris Barnes", email = "chris.barnes@gerbi-gmb.de" }]
 requires-python = ">=3.12, <4.0"
-dependencies = [
-    "numpy>=2",
-    "networkx>=3"
-]
+dependencies = ["numpy>=2", "networkx>=3", "array_api_compat>=1.14"]
 license = "MIT"
 
 [project.optional-dependencies]
-thinplatesplines = [
-    "morphops>=0.1.13",
-    "scipy>=1.17.1",
-]
-movingleastsquares = [
-    "molesq>=0.4.0",
-]
-pandas = [
-    "pandas>=3.0.2",
-]
-shapely = [
-    "shapely>=2.1.2",
-]
+thinplatesplines = ["morphops>=0.1.13", "scipy>=1.17.1"]
+movingleastsquares = ["molesq>=0.4.0"]
+pandas = ["pandas>=3.0.2"]
+shapely = ["shapely>=2.1.2"]
 
 [dependency-groups]
 dev = [
     {include-group = "test"},
     {include-group = "lint"},
     {include-group = "doc"},
+    {include-group = "tutorial"},
 ]
-test = ["pytest"]
+test = ["pytest", "jax"]
 lint = [
     "ruff",
     "mypy",
@@ -44,9 +31,8 @@ doc = [
     "pdoc>=16.0.0",
 ]
 tutorial = [
-    "jupyter>=1.1.1",
+    "marimo>=0.9",
     "matplotlib>=3.10.8",
-    "notebook>=7.5.5",
     "pandas>=3.0.2",
 ]
 

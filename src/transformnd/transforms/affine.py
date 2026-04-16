@@ -4,17 +4,31 @@ Rigid transformations implemented as affine multiplications.
 
 from __future__ import annotations
 
+import math
 from typing import Container, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ..base import Transform
+from copy import copy
+
+from array_api_compat import array_namespace
+from array_api_compat import device as xp_device
+from ..base import Transform, ArrayT
 from ..util import is_square, none_eq, SpaceTuple
 
 
-def arg_as_array(arg: ArrayLike, ndim: Optional[int]):
-    if np.isscalar(arg):
+def arg_as_array(arg, ndim: Optional[int]) -> np.ndarray:
+    """Convert a scalar or array-like argument to a 1-D NumPy array.
+
+    Parameters
+    ----------
+    arg :
+        Scalar (broadcast to ndim) or array-like.
+    ndim : int, optional
+        Required length. If arg is scalar, used to broadcast.
+    """
+    if isinstance(arg, (int, float, complex)):
         if ndim is None:
             raise ValueError("Argument must be array-like or ndim must be given")
         return np.full(ndim, arg)
@@ -24,8 +38,15 @@ def arg_as_array(arg: ArrayLike, ndim: Optional[int]):
     return arr
 
 
-class Affine(Transform):
-    """Affine transformation using an augmented matrix."""
+class Affine(Transform[ArrayT]):
+    """Affine transformation using an augmented matrix.
+
+    The transformation matrix is stored as a NumPy array (backend-neutral).
+    At apply()-time it is converted to the input coords' backend and device,
+    so the transform works transparently with NumPy, JAX, PyTorch, CuPy, etc.
+    """
+
+    matrix: np.ndarray
 
     def __init__(
         self,
@@ -40,7 +61,8 @@ class Affine(Transform):
         Parameters
         ----------
         matrix : ArrayLike
-            Affine transformation matrix.
+            Affine transformation matrix. Any array-like (including JAX/PyTorch
+            arrays) is accepted and converted to NumPy for storage.
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
 
@@ -56,7 +78,7 @@ class Affine(Transform):
             raise ValueError("Transformation matrix must be 2D")
 
         if m.shape[1] == m.shape[0] + 1:
-            base = np.eye(m.shape[1])
+            base = np.eye(m.shape[1], dtype=m.dtype)
             base[:-1, :] = m
             m = base
         elif not is_square(m):
@@ -65,13 +87,18 @@ class Affine(Transform):
         self.matrix = m
         self.ndim = {len(self.matrix) - 1}
 
-    def apply(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
-        # todo: replace with writing into full ones?
-        coords = np.concatenate(
-            [coords, np.ones((coords.shape[0], 1), dtype=coords.dtype)], axis=1
+        xp = array_namespace(coords)
+        d = xp_device(coords)
+        coords = xp.asarray(coords)
+        m = xp.asarray(self.matrix, device=d)
+        coords = xp.concatenate(
+            [coords, xp.ones((coords.shape[0], 1), dtype=coords.dtype)],  # type: ignore[attr-defined]
+            axis=1,
         )
-        return (self.matrix @ coords.T).T[:, :-1]
+        out: ArrayT = (m @ coords.T).T[:, :-1]  # type: ignore[attr-defined]
+        return out
 
     def __invert__(self) -> Transform:
         return type(self)(
@@ -79,7 +106,7 @@ class Affine(Transform):
             spaces=(self.spaces[1], self.spaces[0]),
         )
 
-    def __matmul__(self, rhs: Affine) -> Affine:
+    def __matmul__(self, rhs: Affine[ArrayT]) -> Affine[ArrayT]:
         """Compose two affine transforms by matrix multiplication.
 
         Parameters
@@ -108,6 +135,28 @@ class Affine(Transform):
             spaces=(self.source_space, rhs.target_space),
         )
 
+    def to_device(self, xp, device=None) -> "Affine[ArrayT]":
+        """Return a copy with the matrix placed on the given device/backend.
+
+        Use this before a tight apply() loop to avoid per-call host-to-device
+        transfers when coords live on GPU.
+
+        Parameters
+        ----------
+        xp : array namespace
+            Target array namespace (e.g. jax.numpy, torch).
+        device : device object, optional
+            Target device (e.g. from array_api_compat.device(array)).
+
+        Returns
+        -------
+        Affine
+            New instance with matrix on the target device.
+        """
+        result = copy(self)
+        result.matrix = xp.asarray(self.matrix, device=device)
+        return result
+
     @classmethod
     def from_linear_map(
         cls,
@@ -115,7 +164,7 @@ class Affine(Transform):
         translation=0,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> Affine:
+    ) -> Affine[ArrayT]:
         """Create an augmented affine matrix from a linear map,
         with an optional translation.
 
@@ -124,7 +173,7 @@ class Affine(Transform):
         linear_map : ArrayLike
             Shape (D, D)
         translation : ArrayLike, optional
-            Translation to add to the matrix, by default None
+            Translation to add to the matrix, by default 0
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
 
@@ -133,12 +182,10 @@ class Affine(Transform):
         AffineTransform
         """
         lin_map = np.asarray(linear_map)
-
         side = len(lin_map) + 1
         matrix = np.eye(side, dtype=lin_map.dtype)
-        matrix[:-1, :] = lin_map
+        matrix[:-1, :-1] = lin_map
         matrix[:-1, -1] = translation
-
         return cls(matrix, spaces=spaces)
 
     @classmethod
@@ -147,7 +194,7 @@ class Affine(Transform):
         ndim: int,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> Affine:
+    ) -> Affine[ArrayT]:
         """Create an identity affine transformation.
 
         Parameters
@@ -160,10 +207,7 @@ class Affine(Transform):
         -------
         AffineTransform
         """
-        return cls(
-            np.eye(ndim + 1),
-            spaces=spaces,
-        )
+        return cls(np.eye(ndim + 1), spaces=spaces)
 
     @classmethod
     def translation(
@@ -172,7 +216,7 @@ class Affine(Transform):
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> Affine:
+    ) -> Affine[ArrayT]:
         """Create an affine translation.
 
         Parameters
@@ -191,7 +235,6 @@ class Affine(Transform):
         t = arg_as_array(translation, ndim)
         m = np.eye(len(t) + 1, dtype=t.dtype)
         m[:-1, -1] = t
-
         return cls(m, spaces=spaces)
 
     @classmethod
@@ -201,7 +244,7 @@ class Affine(Transform):
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> Affine:
+    ) -> Affine[ArrayT]:
         """Create an affine scaling.
 
         Parameters
@@ -216,12 +259,10 @@ class Affine(Transform):
         Returns
         -------
         AffineTransform
-            [description]
         """
         s = arg_as_array(scale, ndim)
         m = np.eye(len(s) + 1, dtype=s.dtype)
         m[:-1, :-1] *= s
-
         return cls(m, spaces=spaces)
 
     @classmethod
@@ -231,7 +272,7 @@ class Affine(Transform):
         ndim: int,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> Affine:
+    ) -> Affine[ArrayT]:
         """Create an affine reflection.
 
         Parameters
@@ -247,13 +288,10 @@ class Affine(Transform):
         -------
         AffineTransform
         """
-        if np.isscalar(axis):
-            axis = [axis]  # type: ignore
-        values = [-1 if idx in axis else 1 for idx in range(ndim)]  # type:ignore
-        m = np.eye(ndim + 1)
-        m[:-1, :-1] *= values
-
-        return cls(m, spaces=spaces)
+        if isinstance(axis, (int, np.integer)):
+            axis = [axis]
+        values = np.asarray([-1 if idx in axis else 1 for idx in range(ndim)])
+        return cls.from_linear_map(np.diag(values.astype(float)), spaces=spaces)
 
     @classmethod
     def rotation2(
@@ -263,7 +301,7 @@ class Affine(Transform):
         clockwise=False,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> Affine:
+    ) -> Affine[ArrayT]:
         """Create a 2D affine rotation.
 
         Parameters
@@ -282,18 +320,11 @@ class Affine(Transform):
         AffineTransform
         """
         if degrees:
-            rotation = np.deg2rad(rotation)
+            rotation = math.radians(rotation)
         if clockwise:
             rotation *= -1
-
-        vals = [
-            [np.cos(rotation), -np.sin(rotation)],
-            [np.sin(rotation), np.cos(rotation)],
-        ]
-        m = np.eye(3)
-        m[:-1, :-1] = vals
-
-        return cls(m, spaces=spaces)
+        c, s = math.cos(rotation), math.sin(rotation)
+        return cls.from_linear_map(np.array([[c, -s], [s, c]]), spaces=spaces)
 
     @classmethod
     def rotation3(
@@ -304,7 +335,7 @@ class Affine(Transform):
         order=(0, 1, 2),
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> Affine:
+    ) -> Affine[ArrayT]:
         """Create a 3D affine rotation.
 
         Parameters
@@ -329,53 +360,31 @@ class Affine(Transform):
         ValueError
             Incompatible order.
         """
-        if np.isscalar(rotation):
-            r = np.array([rotation] * 3)
+        if isinstance(rotation, (int, float)):
+            r = [rotation] * 3
         else:
-            r = np.asarray(rotation)
+            r = list(rotation)
 
         if degrees:
-            r = np.deg2rad(r)
+            r = [math.radians(x) for x in r]
         if clockwise:
-            r *= -1
+            r = [-x for x in r]
 
         if len(order) != 3 or set(order) != {0, 1, 2}:
             raise ValueError("Order must contain only 0, 1, 2 in any order.")
 
         order = list(order)
+        c0, s0 = math.cos(r[0]), math.sin(r[0])
+        c1, s1 = math.cos(r[1]), math.sin(r[1])
+        c2, s2 = math.cos(r[2]), math.sin(r[2])
 
         rots = [
-            np.array(
-                [
-                    [1, 0, 0],
-                    [0, np.cos(r[0]), -np.sin(r[0])],
-                    [0, np.sin(r[0]), np.cos(r[0])],
-                ]
-            ),
-            np.array(
-                [
-                    [np.cos(r[1]), 0, np.sin(r[1])],
-                    [0, 1, 0],
-                    [-np.sin(r[1]), 0, np.cos(r[1])],
-                ]
-            ),
-            np.array(
-                [
-                    [np.cos(r[2]), -np.sin(r[2]), 0],
-                    [np.sin(r[2]), np.cos(r[2]), 0],
-                    [0, 0, 1],
-                ]
-            ),
+            np.array([[1, 0, 0], [0, c0, -s0], [0, s0, c0]]),
+            np.array([[c1, 0, s1], [0, 1, 0], [-s1, 0, c1]]),
+            np.array([[c2, -s2, 0], [s2, c2, 0], [0, 0, 1]]),
         ]
-
-        rot = rots[order.pop(0)]
-        rot @= rots[order.pop(0)]
-        rot @= rots[order.pop(0)]
-
-        m = np.eye(4)
-        m[:-1, :-1] = rot
-
-        return cls(m, spaces=spaces)
+        rot = rots[order[0]] @ rots[order[1]] @ rots[order[2]]
+        return cls.from_linear_map(rot, spaces=spaces)
 
     @classmethod
     def shearing(
@@ -384,7 +393,7 @@ class Affine(Transform):
         ndim: Optional[int] = None,
         *,
         spaces: SpaceTuple = (None, None),
-    ) -> Affine:
+    ) -> Affine[ArrayT]:
         """Create an affine shear.
 
         `factor` can be a scalar to broadcast to all dimensions,
@@ -412,24 +421,22 @@ class Affine(Transform):
         ValueError
             Incompatible factor.
         """
-        if np.isscalar(factor):
+        if isinstance(factor, (int, float, complex)):
             if ndim is None:
                 raise ValueError("If factor is scalar, ndim must be defined")
             s = np.full((ndim, ndim - 1), factor)
         else:
             s = np.asarray(factor)
-            if s.shape[0] != s.shape[1] + 1:
+            if s.ndim != 2 or s.shape[0] != s.shape[1] + 1:
                 raise ValueError("Factor must be of shape (D, D-1)")
             ndim = s.shape[0]
 
-        # needed for type checking
         assert ndim is not None
 
         m = np.eye(ndim, dtype=s.dtype)
         for col_idx in range(m.shape[1]):
-            it = iter(factor[col_idx])  # type: ignore
+            it = iter(s[col_idx])
             for row_idx in range(m.shape[0] - 1):
                 if m[row_idx, col_idx] == 0:
                     m[row_idx, col_idx] = next(it)
-
-        return cls(m, spaces=spaces)
+        return cls.from_linear_map(m, spaces=spaces)
