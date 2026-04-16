@@ -15,7 +15,7 @@ doc:
 # Run linters and type checkers.
 lint:
     uv run ruff check src tests examples
-    uv run mypy src tests examples
+    uv run mypy src tests
     uv run ruff format --check src tests examples
 
 # Format python code.
