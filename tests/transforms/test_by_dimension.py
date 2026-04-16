@@ -12,7 +12,7 @@ def test_2d_scale(s):
     scale = Scale(s)
     print(s)
     subseq = SubTransform(input_axes=[0], output_axes=[0], transform=scale)
-    by_dim = ByDimension(sub_seq_transform=[subseq])
+    by_dim = ByDimension(subtransforms=[subseq])
     coords_transformed = by_dim.apply(coords.copy())
     print(coords_transformed)
     print(coords[:, 0] * s)
@@ -36,8 +36,8 @@ def test_3d_map_axis_and_scale(s):
     scale_subseq = SubTransform(input_axes=[2], output_axes=[2], transform=scale)
 
     # Apply both transformations (different order)
-    by_dim_0 = ByDimension(sub_seq_transform=[map_axis_subseq, scale_subseq])
-    by_dim_1 = ByDimension(sub_seq_transform=[scale_subseq, map_axis_subseq])
+    by_dim_0 = ByDimension(subtransforms=[map_axis_subseq, scale_subseq])
+    by_dim_1 = ByDimension(subtransforms=[scale_subseq, map_axis_subseq])
 
     coords_0 = by_dim_0.apply(coords.copy())
     coords_1 = by_dim_1.apply(coords.copy())
@@ -77,7 +77,7 @@ def test_3d_transform_sequence(s):
     scale_subseq = SubTransform(input_axes=[2], output_axes=[2], transform=scale)
 
     # Apply both transformations
-    by_dim = ByDimension(sub_seq_transform=[map_axis_subseq, scale_subseq])
+    by_dim = ByDimension(subtransforms=[map_axis_subseq, scale_subseq])
     coords_transformed = by_dim.apply(coords)
 
     # Expected: columns 0 and 1 swapped, column 2 scaled by s
@@ -95,13 +95,13 @@ def test_non_unique_axes():
     """Test that non-unique axes raise an error."""
     scale = Scale(2)
     # non-unique input axes
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         SubTransform(input_axes=[0, 0], output_axes=[0, 1], transform=scale)
     # non-unique output axes
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         t_1 = SubTransform(input_axes=[0, 1], output_axes=[0, 1], transform=scale)
         t_2 = SubTransform(input_axes=[1, 2], output_axes=[1, 2], transform=scale)
-        ByDimension(sub_seq_transform=[t_1, t_2])
+        ByDimension(subtransforms=[t_1, t_2])
 
 
 def test_cross_axes_transform():
@@ -112,6 +112,6 @@ def test_cross_axes_transform():
     coords_transformed = np.array([[2 * s_2, 1 * s_1], [4 * s_2, 3 * s_1]])
     t_1 = SubTransform(input_axes=[0], output_axes=[1], transform=Scale(s_1))
     t_2 = SubTransform(input_axes=[1], output_axes=[0], transform=Scale(s_2))
-    by_dim = ByDimension(sub_seq_transform=[t_1, t_2])
+    by_dim = ByDimension(subtransforms=[t_1, t_2])
     coords_byDim = by_dim.apply(coords.copy())
     assert np.array_equal(coords_byDim, coords_transformed)
