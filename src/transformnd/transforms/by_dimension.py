@@ -8,6 +8,7 @@ from ..util import SpaceTuple, ArrayT, check_ndim
 
 class SubTransform[ArrayT]:
     """Transformation to apply to subsets of the input dimensions and which output dimensions they calculate."""
+
     def __init__(
         self,
         transform: Transform[ArrayT],
