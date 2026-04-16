@@ -3,6 +3,7 @@ from transformnd.transforms import Bijection, Scale, MapAxis
 
 import pytest
 
+
 @pytest.mark.parametrize("scale", [1, 2, 3])
 def test_bijection_apply_scale(scale):
     coords5x3 = np.random.rand(5, 3)
@@ -30,6 +31,7 @@ def test_bijection_invert_scale():
     bij = Bijection(forward, inverse)
     bij_inv = ~bij
     assert np.allclose(bij_inv.apply(coords5x3), coords5x3 * 0.5)
+
 
 def test_bijection_invert_map_axis():
     # [2, 0, 1] is the inverse of [1, 2, 0], not its own inverse
