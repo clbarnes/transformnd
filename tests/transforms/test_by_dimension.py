@@ -9,7 +9,7 @@ from transformnd.base import TransformSequence
 def test_2d_scale():
     factor = 1.5
     coords = np.array([[1, 2], [3, 4]], dtype=float)
-    scale = Scale(factor)
+    scale = Scale[np.ndarray](factor)
     subseq = SubTransform(input_axes=[0], output_axes=[0], transform=scale)
     by_dim = ByDimension(subtransforms=[subseq], fill_identity=2)
     coords_transformed = by_dim.apply(coords.copy())
@@ -23,18 +23,20 @@ def test_3d_map_axis_and_scale():
     coords = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
 
     # MapAxis: swap columns 0 and 1, keep column 2
-    map_axis = MapAxis(permutation=[1, 0])
+    map_axis = MapAxis[np.ndarray](permutation=[1, 0])
     map_axis_subseq = SubTransform(
         input_axes=[0, 1], output_axes=[0, 1], transform=map_axis
     )
 
     # Scale: apply scale to column 2
-    scale = Scale(s)
-    scale_subseq = SubTransform(input_axes=[2], output_axes=[2], transform=scale)
+    scale = Scale[np.ndarray](s)
+    scale_subseq = SubTransform[np.ndarray](
+        input_axes=[2], output_axes=[2], transform=scale
+    )
 
     # Apply both transformations (different order)
-    by_dim_0 = ByDimension(subtransforms=[map_axis_subseq, scale_subseq])
-    by_dim_1 = ByDimension(subtransforms=[scale_subseq, map_axis_subseq])
+    by_dim_0 = ByDimension[np.ndarray](subtransforms=[map_axis_subseq, scale_subseq])
+    by_dim_1 = ByDimension[np.ndarray](subtransforms=[scale_subseq, map_axis_subseq])
 
     coords_0 = by_dim_0.apply(coords.copy())
     coords_1 = by_dim_1.apply(coords.copy())
@@ -62,15 +64,15 @@ def test_3d_transform_sequence():
     coords = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
 
     # MapAxis: swap columns 0 and 1, keep column 2
-    map_axis = MapAxis(permutation=[1, 0])
-    scale_seq = Scale(s + 2)
-    transform_sequence = TransformSequence([map_axis, scale_seq])
+    map_axis = MapAxis[np.ndarray](permutation=[1, 0])
+    scale_seq = Scale[np.ndarray](s + 2)
+    transform_sequence = TransformSequence[np.ndarray]([map_axis, scale_seq])
     map_axis_subseq = SubTransform(
         input_axes=[0, 1], output_axes=[0, 1], transform=transform_sequence
     )
 
     # Scale: apply scale to column 2
-    scale = Scale(s)
+    scale = Scale[np.ndarray](s)
     scale_subseq = SubTransform(input_axes=[2], output_axes=[2], transform=scale)
 
     # Apply both transformations
@@ -91,7 +93,7 @@ def test_3d_transform_sequence():
 
 def test_non_unique_axes():
     """Test that non-unique axes raise an error."""
-    scale = Scale(2)
+    scale = Scale[np.ndarray](2)
     # non-unique input axes
     with pytest.raises(ValueError):
         SubTransform(input_axes=[0, 0], output_axes=[0, 1], transform=scale)
@@ -108,8 +110,12 @@ def test_cross_axes_transform():
     s_1, s_2 = 2, 3
     coords = np.array([[1, 2], [3, 4]], dtype=float)
     coords_transformed = np.array([[2 * s_2, 1 * s_1], [4 * s_2, 3 * s_1]])
-    t_1 = SubTransform(input_axes=[0], output_axes=[1], transform=Scale(s_1))
-    t_2 = SubTransform(input_axes=[1], output_axes=[0], transform=Scale(s_2))
+    t_1 = SubTransform(
+        input_axes=[0], output_axes=[1], transform=Scale[np.ndarray](s_1)
+    )
+    t_2 = SubTransform(
+        input_axes=[1], output_axes=[0], transform=Scale[np.ndarray](s_2)
+    )
     by_dim = ByDimension(subtransforms=[t_1, t_2])
     coords_byDim = by_dim.apply(coords.copy())
     assert np.array_equal(coords_byDim, coords_transformed)
