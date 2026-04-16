@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
 from collections.abc import Callable
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 import numpy as np
 
@@ -13,7 +13,7 @@ from ..base import Transform
 T = TypeVar("T")
 
 
-class BaseAdapter(Generic[T], ABC):
+class BaseAdapter[T](ABC):
     @abstractmethod
     def apply(self, transform: Transform, obj: T) -> T:
         """Apply the given transformation to a non-array object.

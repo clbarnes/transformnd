@@ -1,6 +1,5 @@
 """Bridging transforms between known spaces."""
 
-from typing import Generic
 from functools import lru_cache
 from collections.abc import Iterable, Iterator
 
@@ -37,7 +36,7 @@ def split_sequence(seq: TransformSequence) -> Iterator[Transform]:
             this_seq = []
 
 
-class TransformGraph(Generic[ArrayT]):
+class TransformGraph[ArrayT]:
     """Transform between any number of arbitrary spaces/ coordinate systems.
 
     Finds the shortest path for transforming one space

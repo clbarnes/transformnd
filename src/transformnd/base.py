@@ -5,9 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from copy import copy
-from typing import Generic, Self
+from typing import Self
 
-import numpy as np
 from array_api_compat import array_namespace
 
 from .util import (
@@ -23,7 +22,7 @@ from .util import (
 )
 
 
-class Transform(ABC, Generic[ArrayT]):
+class Transform[ArrayT](ABC):
     """Base class for transforms."""
 
     ndim: set[int] | None = None
@@ -168,12 +167,12 @@ class Transform(ABC, Generic[ArrayT]):
         return f"{cls_name}[{src}->{tgt}]"
 
 
-class TransformWrapper(Transform):
+class TransformWrapper(Transform[ArrayT]):
     """Wrapper around an arbitrary function which transforms coordinates."""
 
     def __init__(
         self,
-        fn: TransformSignature,
+        fn: TransformSignature[ArrayT],
         ndim: set[int] | int | None = None,
         *,
         spaces: SpaceTuple = (None, None),
@@ -198,16 +197,16 @@ class TransformWrapper(Transform):
             else:
                 self.ndim = set(ndim)
 
-    def apply(self, coords: np.ndarray) -> np.ndarray:
+    def apply(self, coords: ArrayT) -> ArrayT:
         self._validate_coords(coords)
         return self.fn(coords)
 
 
 def _with_spaces(
-    t: Transform,
+    t: Transform[ArrayT],
     source_space: SpaceRef | None = None,
     target_space: SpaceRef | None = None,
-) -> Transform:
+) -> Transform[ArrayT]:
     src_tgt = (t.source_space, t.target_space)
     src = same_or_none(src_tgt[0], source_space, default=None)
     tgt = same_or_none(src_tgt[1], target_space, default=None)
@@ -218,8 +217,8 @@ def _with_spaces(
 
 
 def infer_spaces(
-    transforms: Sequence[Transform], source_space=None, target_space=None
-) -> list[Transform]:
+    transforms: Sequence[Transform[ArrayT]], source_space=None, target_space=None
+) -> list[Transform[ArrayT]]:
     prev_tgts = [source_space]
     next_srcs = []
     for t1, t2 in window(transforms, 2):
@@ -234,7 +233,7 @@ def infer_spaces(
     return out
 
 
-def get_transform_list(t: Transform) -> list[Transform]:
+def get_transform_list(t: Transform[ArrayT]) -> list[Transform[ArrayT]]:
     if isinstance(t, TransformSequence):
         return t.transforms.copy()
     else:
