@@ -152,12 +152,12 @@ class ReshapeAdapter(BaseAdapter[np.ndarray]):
         """
         self.dim_axis: int = dim_axis
 
-    def apply(self, transform: Transform, arr: np.ndarray) -> np.ndarray:
+    def apply(self, transform: Transform, obj: np.ndarray) -> np.ndarray:
         dim_axis = self.dim_axis
         if self.dim_axis < 0:
-            dim_axis += arr.ndim
+            dim_axis += obj.ndim
 
-        moved = np.moveaxis(arr, dim_axis, -1)
+        moved = np.moveaxis(obj, dim_axis, -1)
         m_shape = moved.shape
 
         flattened = np.reshape(moved, (-1, m_shape[-1]))
