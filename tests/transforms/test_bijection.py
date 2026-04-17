@@ -64,6 +64,8 @@ def test_bijection_dim_mismatch():
     bij_2d = Bijection(forward_2d, inverse_2d)
     assert bij_2d.ndim == {2}
 
+    forward_3d = MapAxis([2, 1, 0])
+
     # no support if ndimensions don't overlap
     with pytest.raises(ValueError):
-        Bijection(forward_2d, inverse)
+        Bijection(forward_2d, forward_3d)
