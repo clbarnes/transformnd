@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..base import Transform
-from ..util import SpaceTuple
+from ..util import SpaceTuple, dim_intersection, invert_spaces
 
 
 class Bijection(Transform):
@@ -27,11 +27,16 @@ class Bijection(Transform):
         """
         self.forward = forward
         self.inverse = inverse
+        ndim = dim_intersection(forward.ndim, inverse.ndim)
+        if ndim is not None and len(ndim) == 0:
+            raise ValueError(
+                "forward and inverse transforms do not share a dimensionality"
+            )
+        self.ndim = ndim
         self.spaces = spaces
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
         return self.forward.apply(coords)
 
     def __invert__(self) -> Transform:
-
-        return type(self)(self.inverse, self.forward)
+        return type(self)(self.inverse, self.forward, spaces=invert_spaces(self.spaces))
