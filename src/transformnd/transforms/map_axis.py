@@ -28,6 +28,7 @@ class MapAxis(Transform[ArrayT]):
             Optional source and target spaces
         """
         self.permutation = permutation
+        self.ndim = {len(permutation)}
         self.spaces = spaces
 
     def apply(self, coords: ArrayT) -> ArrayT:

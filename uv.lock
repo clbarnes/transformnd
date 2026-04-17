@@ -1519,6 +1519,7 @@ dependencies = [
     { name = "array-api-compat" },
     { name = "networkx" },
     { name = "numpy" },
+    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -1576,6 +1577,7 @@ requires-dist = [
     { name = "pandas", marker = "extra == 'pandas'", specifier = ">=3.0.2" },
     { name = "scipy", marker = "extra == 'thinplatesplines'", specifier = ">=1.17.1" },
     { name = "shapely", marker = "extra == 'shapely'", specifier = ">=2.1.2" },
+    { name = "typing-extensions", specifier = ">=4.15.0" },
 ]
 provides-extras = ["thinplatesplines", "movingleastsquares", "pandas", "shapely"]
 
