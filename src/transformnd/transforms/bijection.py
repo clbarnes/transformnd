@@ -1,5 +1,3 @@
-import numpy as np
-
 from ..base import Transform, ArrayT
 from ..util import SpaceTuple, dim_intersection, invert_spaces
 
