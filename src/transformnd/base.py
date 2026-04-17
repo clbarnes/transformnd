@@ -118,7 +118,7 @@ class Transform[ArrayT](ABC):
         """
         return NotImplemented
 
-    def __or__(self, other) -> TransformSequence:
+    def __or__(self, other: Transform[ArrayT]) -> TransformSequence[ArrayT]:
         """Compose transformations into a sequence.
 
         If other is a TransformSequence, prepend this transform to the others.
@@ -134,12 +134,12 @@ class Transform[ArrayT](ABC):
         if not isinstance(other, Transform):
             return NotImplemented
         transforms = get_transform_list(self) + get_transform_list(other)
-        return TransformSequence(
+        return TransformSequence[ArrayT](
             transforms,
             spaces=(self.source_space, other.target_space),
         )
 
-    def __ror__(self, other) -> TransformSequence:
+    def __ror__(self, other: Transform[ArrayT]) -> TransformSequence[ArrayT]:
         """Compose transformations into a sequence.
 
         If other is a TransformSequence, append this transform to the others.

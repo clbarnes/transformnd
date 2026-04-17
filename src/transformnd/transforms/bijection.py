@@ -23,6 +23,7 @@ class Bijection(Transform[ArrayT]):
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
         """
+
         self.forward = forward
         self.inverse = inverse
         ndim = dim_intersection(forward.ndim, inverse.ndim)
