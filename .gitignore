@@ -141,3 +141,6 @@ transformnd/version.py
 
 env/
 docs/
+
+# marimo
+__marimo__/

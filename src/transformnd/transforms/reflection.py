@@ -1,5 +1,5 @@
+from collections.abc import Sequence
 from copy import copy
-from typing import List, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -8,18 +8,18 @@ from ..base import SpaceTuple, Transform
 from ..util import is_square
 
 
-def proj(u, v):
+def proj(u: np.ndarray, v: np.ndarray) -> np.ndarray:
     return (np.inner(u, v) / np.inner(u, u)) * u
 
 
-def gram_schmidt(vecs: np.ndarray):
+def gram_schmidt(vecs: np.ndarray) -> np.ndarray:
     """
     https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
     if not is_square(vecs):
         raise ValueError("Wrong number of dimensions")
 
-    out: List[np.ndarray] = []
+    out: list[np.ndarray] = []
     for v in vecs:
         b = v.copy()
 
@@ -30,7 +30,9 @@ def gram_schmidt(vecs: np.ndarray):
     return np.array(out)
 
 
-def get_hyperplanes(points: np.ndarray, unitise=True, seed=None):
+def get_hyperplanes(
+    points: np.ndarray, unitise: bool = True, seed: int | None = None
+) -> tuple[np.ndarray, list[np.ndarray]]:
     """
     Reflective: point/line/.../hyperplane to be reflected around
 
@@ -67,24 +69,23 @@ def get_hyperplanes(points: np.ndarray, unitise=True, seed=None):
     return point, list(extras)
 
 
-def unitise(v):
+def unitise(v: np.ndarray) -> np.ndarray:
     return v / np.linalg.norm(v)
 
 
-def ensure_tuple(obj) -> Tuple:
-    try:
-        return tuple(obj)
-    except TypeError:
+def ensure_tuple(obj: int | Sequence[int]) -> tuple[int, ...]:
+    if isinstance(obj, int):
         return (obj,)
+    return tuple(obj)
 
 
-class Reflect(Transform):
+class Reflect(Transform[np.ndarray]):
     """Reflect coordinates about arbitrary planes."""
 
     def __init__(
         self,
         normals: ArrayLike,
-        point=0,
+        point: float | ArrayLike = 0.0,
         *,
         spaces: SpaceTuple = (None, None),
     ):
@@ -94,7 +95,7 @@ class Reflect(Transform):
         normals : sequence of arrays
             Normal vectors to the planes of reflection.
             Unitised internally.
-        point : float or sequence of floats, optional
+        point : float or array-like, optional
             Intersection point of all reflection planes
             (can be broadcast from scalar), by default 0 (i.e. the origin)
         spaces : tuple[SpaceRef, SpaceRef]
@@ -111,9 +112,13 @@ class Reflect(Transform):
             normals = [normals]
 
         n1 = normals[0]
-        if not np.isscalar(point) and len(n1) != len(point):
+        if (
+            not np.isscalar(point)
+            and isinstance(point, Sequence)
+            and len(n1) != len(point)
+        ):
             raise ValueError("Point and normals are not of the same dimensionality")
-        self.point = point
+        self.point: np.ndarray = np.asarray(point, dtype=float)
         self.ndim = {len(n1)}
         self.normals = [unitise(n) for n in normals]
         # todo: matmul is associative, so turn this into an affine in 2/3D?
@@ -139,7 +144,7 @@ class Reflect(Transform):
 
         Parameters
         ----------
-        points :
+        points : array-like
             NxD array of N points in D dimensions. N == D
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
@@ -154,7 +159,7 @@ class Reflect(Transform):
     @classmethod
     def from_axis(
         cls,
-        axis: Union[int, Sequence[int]],
+        axis: int | Sequence[int],
         origin: ArrayLike,
         *,
         spaces: SpaceTuple = (None, None),

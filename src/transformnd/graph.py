@@ -1,13 +1,12 @@
 """Bridging transforms between known spaces."""
 
 from functools import lru_cache
-from typing import Dict, Iterable, Iterator, Optional, Set, Tuple
+from collections.abc import Iterable, Iterator
 
 import networkx as nx
-import numpy as np
 
 from .base import Transform, TransformSequence
-from .util import SpaceRef, chain_or, dim_intersection, window
+from .util import SpaceRef, chain_or, dim_intersection, window, ArrayT
 
 
 def split_sequence(seq: TransformSequence) -> Iterator[Transform]:
@@ -37,7 +36,7 @@ def split_sequence(seq: TransformSequence) -> Iterator[Transform]:
             this_seq = []
 
 
-class TransformGraph:
+class TransformGraph[ArrayT]:
     """Transform between any number of arbitrary spaces/ coordinate systems.
 
     Finds the shortest path for transforming one space
@@ -48,13 +47,13 @@ class TransformGraph:
 
     def __init__(self):
         self.graph = nx.DiGraph()
-        self.ndim: Optional[Set[int]] = None
+        self.ndim: set[int] | None = None
 
-    def add_transforms(self, transforms: Iterable[Transform]):
+    def add_transforms(self, transforms: Iterable[Transform[ArrayT]]) -> int:
         """
         Parameters
         ----------
-        transforms : Iterable[Transform]
+        transforms : Iterable[Transform[ArrayT]]
             Transforms which must have a source and target space defined.
             TransformSequences are split out if their inner transforms'
             spaces are defined.
@@ -65,7 +64,7 @@ class TransformGraph:
             Undefined source and target spaces.
         """
         # TODO: weighting of split-out sequences could be problematic
-        edges: Dict[Tuple[SpaceRef, SpaceRef], Transform] = dict()
+        edges: dict[tuple[SpaceRef, SpaceRef], Transform[ArrayT]] = dict()
         self.get_sequence.cache_clear()
 
         ndim = self.ndim
@@ -81,7 +80,7 @@ class TransformGraph:
                 ts = [t]
 
             for t2 in ts:
-                if chain_or(t.source_space, t.target_space, default=None) is None:
+                if chain_or(t2.source_space, t2.target_space, default=None) is None:
                     raise ValueError(
                         "All transforms in a graph "
                         "need explicit source and target spaces"
@@ -107,7 +106,7 @@ class TransformGraph:
     @lru_cache()
     def get_sequence(
         self, source_space: SpaceRef, target_space: SpaceRef
-    ) -> TransformSequence:
+    ) -> TransformSequence[ArrayT]:
         """Get the shortest TransformSequence for transforming between two spaces.
 
         Parameters
@@ -117,7 +116,7 @@ class TransformGraph:
 
         Returns
         -------
-        TransformSequence
+        TransformSequence[ArrayT]
         """
         path = nx.shortest_path(self.graph, source_space, target_space)
         if len(path) <= 1:
@@ -132,8 +131,8 @@ class TransformGraph:
         )
 
     def transform(
-        self, source_space: SpaceRef, target_space: SpaceRef, coords: np.ndarray
-    ) -> np.ndarray:
+        self, source_space: SpaceRef, target_space: SpaceRef, coords: ArrayT
+    ) -> ArrayT:
         """Transform coordinates from one space to another,
         possibly via intermediates.
 
@@ -141,16 +140,16 @@ class TransformGraph:
         ----------
         source_space : SpaceRef
         target_space : SpaceRef
-        coords : np.ndarray
+        coords : ArrayT
 
         Returns
         -------
-        np.ndarray
+        ArrayT
         """
         t = self.get_sequence(source_space, target_space)
         return t.apply(coords)
 
-    def __iter__(self) -> Iterator[Transform]:
+    def __iter__(self) -> Iterator[Transform[ArrayT]]:
         """Iterate through the transforms present in the graph.
 
         Includes inferred reverse transforms.
@@ -160,7 +159,7 @@ class TransformGraph:
 
         Yields
         -------
-        Transform
+        Transform[ArrayT]
 
         Examples
         --------
@@ -171,3 +170,10 @@ class TransformGraph:
         """
         for _, _, t in self.graph.edges.data("transform"):
             yield t
+
+    def to_device(self, xp, device=None) -> "TransformGraph[ArrayT]":
+        result: TransformGraph[ArrayT] = TransformGraph()
+        result.ndim = self.ndim
+        for src, tgt, t in self.graph.edges.data("transform"):
+            result.graph.add_edge(src, tgt, transform=t.to_device(xp, device))
+        return result
