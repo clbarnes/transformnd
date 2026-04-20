@@ -331,7 +331,7 @@ def _(mo):
 def _(Scale, np):
     import pandas as pd
 
-    from transformnd.adapters.pandas import DataFrameAdapter
+    from transformnd.adapters.pandas import PandasAdapter
 
     df = pd.DataFrame(
         np.random.random((3, 5)),
@@ -342,7 +342,7 @@ def _(Scale, np):
     print(df)
 
     print("\nscaled")
-    xyz_adapter = DataFrameAdapter(["x", "y", "z"])
+    xyz_adapter = PandasAdapter(["x", "y", "z"])
     scale3d = Scale([1, 10, 100])
     print(xyz_adapter.apply(scale3d, df))
     return

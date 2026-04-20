@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Callable
 from shapely.geometry import (
     LinearRing,
     LineString,
@@ -7,52 +8,86 @@ from shapely.geometry import (
     MultiPolygon,
     Point,
     Polygon,
+    GeometryCollection,
 )
 from shapely.geometry.base import BaseGeometry, BaseMultipartGeometry
+from shapely.coords import CoordinateSequence
 
-from ..base import Transform
+from ..base import Transform, ArrayT
 from .base import BaseAdapter
 
 
-class GeometryAdapter(BaseAdapter[BaseGeometry]):
+def as_numpy(coords: CoordinateSequence) -> np.ndarray:
+    return np.asarray(coords)
+
+
+class GeometryAdapter(BaseAdapter[BaseGeometry, ArrayT]):
     """Transform shapely geometries.
 
-    As well as the generic `__call__()`,
-    there are methods for transforming different geometry subclasses.
+    As well as the generic `apply()`,
+    there are `apply_*()` methods for transforming different geometry subclasses.
 
     N.B. some transforms may create invalid topologies
     (incorrect winding, self-intersections etc.)
     """
 
-    def transform_point(self, transform: Transform, point: Point) -> Point:
-        return Point(*transform.apply(np.array(point.coords))[0])
+    def __init__(
+        self,
+        array_fn: Callable[[CoordinateSequence], ArrayT] = as_numpy,  # type:ignore
+    ) -> None:
+        self.array_fn = array_fn
 
-    def transform_linestring(
+    def apply_point(self, transform: Transform, point: Point) -> Point:
+        return Point(*transform.apply(self.array_fn(point.coords))[0])
+
+    def apply_linestring(
         self, transform: Transform, linestring: LineString
     ) -> LineString:
-        return LineString(transform.apply(np.array(linestring.coords)))
+        return LineString(transform.apply(self.array_fn(linestring.coords)))
 
-    def transform_linear_ring(
+    def apply_linear_ring(
         self, transform: Transform, linear_ring: LinearRing
     ) -> LinearRing:
-        return LinearRing(transform.apply(np.array(linear_ring.coords)))
+        return LinearRing(transform.apply(self.array_fn(linear_ring.coords)))
 
-    def transform_polygon(self, transform: Transform, polygon: Polygon) -> Polygon:
+    def apply_polygon(self, transform: Transform, polygon: Polygon) -> Polygon:
         return Polygon(
-            self.transform_linear_ring(transform, polygon.exterior),
-            [self.transform_linear_ring(transform, i) for i in polygon.interiors],
+            self.apply_linear_ring(transform, polygon.exterior),
+            [self.apply_linear_ring(transform, i) for i in polygon.interiors],
         )
 
-    def transform_multi(
-        self, transform: Transform, multi_geom: BaseMultipartGeometry
+    def apply_multipoint(self, transform: Transform, obj: MultiPoint) -> MultiPoint:
+        return MultiPoint([self.apply_point(transform, o) for o in obj.geoms])
+
+    def apply_multilinestring(
+        self, transform: Transform, obj: MultiLineString
+    ) -> MultiLineString:
+        return MultiLineString([self.apply_linestring(transform, o) for o in obj.geoms])
+
+    def apply_multipolygon(
+        self, transform: Transform, obj: MultiPolygon
+    ) -> MultiPolygon:
+        return MultiPolygon([self.apply_polygon(transform, o) for o in obj.geoms])
+
+    def apply_multipart(
+        self, transform: Transform, obj: BaseMultipartGeometry
     ) -> BaseMultipartGeometry:
-        cls = type(multi_geom)
-        method = {
-            MultiPoint: self.transform_point,
-            MultiLineString: self.transform_linestring,
-            MultiPolygon: self.transform_polygon,
-        }[cls]
-        return cls([method(transform, obj) for obj in multi_geom])
+        """Apply the transform to any shapely multipart geometry."""
+        if isinstance(obj, MultiPoint):
+            return self.apply_multipoint(transform, obj)
+        elif isinstance(obj, MultiLineString):
+            return self.apply_multilinestring(transform, obj)
+        elif isinstance(obj, MultiPolygon):
+            return self.apply_multipolygon(transform, obj)
+        elif isinstance(obj, GeometryCollection):
+            return self.apply_collection(transform, obj)
+        else:
+            raise ValueError(f"Unknown multipart geometry type {type(obj)}")
+
+    def apply_collection(
+        self, transform: Transform, obj: GeometryCollection
+    ) -> GeometryCollection:
+        return GeometryCollection([self.apply(transform, o) for o in obj.geoms])
 
     def apply(
         self,
@@ -60,6 +95,9 @@ class GeometryAdapter(BaseAdapter[BaseGeometry]):
         obj: BaseGeometry,
     ) -> BaseGeometry:
         """Transform the shapely geometry.
+
+        See the other `apply_*` methods if you already know what type of geometry you're working with;
+        this may be a bit faster.
 
         Parameters
         ----------
@@ -73,12 +111,14 @@ class GeometryAdapter(BaseAdapter[BaseGeometry]):
             An object of the same type as the input.
         """
         if isinstance(obj, BaseMultipartGeometry):
-            return self.transform_multi(transform, obj)
-
-        method = {
-            Point: self.transform_point,
-            LineString: self.transform_linestring,
-            LinearRing: self.transform_linear_ring,
-            Polygon: self.transform_polygon,
-        }[type(obj)]
-        return method(transform, obj)
+            return self.apply_multipart(transform, obj)
+        elif isinstance(obj, Point):
+            return self.apply_point(transform, obj)
+        elif isinstance(obj, LineString):
+            return self.apply_linestring(transform, obj)
+        elif isinstance(obj, LinearRing):
+            return self.apply_linear_ring(transform, obj)
+        elif isinstance(obj, Polygon):
+            return self.apply_polygon(transform, obj)
+        else:
+            raise ValueError(f"Unknown geometry type {type(obj)}")

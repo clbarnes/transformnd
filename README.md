@@ -28,7 +28,8 @@ Additionally, `transformnd` provides an interface for transforming types other t
 and implements these adapters for a few common types.
 
 See the [tutorial here](https://github.com/clbarnes/transformnd/blob/main/examples/tutorial.py).
-It is a [marimo](https://marimo.io) notebook. Open it with `uv run --group tutorial marimo edit examples/tutorial.py`.
+It is a [marimo](https://marimo.io) notebook.
+Open it with `uv run --group tutorial marimo edit examples/tutorial.py`.
 
 ## Implemented transforms
 
@@ -38,6 +39,8 @@ It is a [marimo](https://marimo.io) notebook. Open it with `uv run --group tutor
 - Reflection (`transformnd.transforms.Reflect`)
 - Affine (`transformnd.transforms.Affine`)
     - Can be composed efficiently with `@` operator
+- MapAxis (`transformnd.transforms.MapAxis`): permute coordinate axes
+- ByDimension (`transformnd.transforms.ByDimension`): apply transformations to subsets of coordinate axes
 - Moving Least Squares, affine (`transformnd.transforms.moving_least_squares.MovingLeastSquares`)
     - uses `movingleastsquares` extra
 -   Thin Plate Splines (`transformnd.transforms.thinplate.ThinPlateSplines`)
@@ -69,6 +72,20 @@ but should be specified in the `requirements.txt` for tests.
 
 Alternatively, consider adopting `transformnd`'s base classes in your own library,
 and have your transformation instantly compatible for downstream users.
+
+Methods which MUST be implemented:
+
+- `apply`: should call `_validate_coords` method early to check that the given coordinates are the correct shape
+
+Methods which SHOULD be implemented if applicable:
+
+- `to_device`: if any of the transformation's parameters need to be placed on a specific device (e.g. affine matrices on the GPU)
+- `is_identity`: if you can cheaply check whether your transformation is an identity transformation. The base class implementation returns `False`.
+- `into_affine`: if your transformation can be represented as an affine matrix. The base class implementation returns `None`.
+- `__invert__`: if your transformation can be inverted. The base class implementation returns `NotImplemented`.
+
+If the transformation's dimensionality is constrained by its parameters,
+`self.ndim` should be set in the `__init__` method.
 
 ## Contributing
 
