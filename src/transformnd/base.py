@@ -49,8 +49,7 @@ class Transform[ArrayT](ABC):
     def target_space(self):
         return self.spaces[1]
 
-    @abstractmethod
-    def to_affine(self, dim: int | None = None) -> Optional[Transform]:
+    def to_affine(self, dim: int | None = None) -> Transform | None:
         """Convert the transform into affine, if conversion is possible.
 
         Parameters
@@ -64,7 +63,7 @@ class Transform[ArrayT](ABC):
             The affine transformation, if conversion is possible.
             None otherwise.
         """
-        pass
+        return None
 
     def _validate_coords(self, coords: ArrayT) -> ArrayT:
         """Check that dimension of coords are supported.
@@ -217,9 +216,6 @@ class TransformWrapper(Transform[ArrayT]):
     def apply(self, coords: ArrayT) -> ArrayT:
         self._validate_coords(coords)
         return self.fn(coords)
-
-    def to_affine(self, dim=None) -> None:
-        return None
 
 
 def _with_spaces(

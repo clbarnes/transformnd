@@ -5,7 +5,7 @@ Rigid transformations implemented as affine multiplications.
 from __future__ import annotations
 
 import math
-from typing import Container, Optional, Tuple, Union
+from typing import Container, Union, Self
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -18,7 +18,7 @@ from ..base import Transform, ArrayT
 from ..util import is_square, none_eq, SpaceTuple
 
 
-def arg_as_array(arg, ndim: Optional[int]) -> np.ndarray:
+def arg_as_array(arg, ndim: int | None) -> np.ndarray:
     """Convert a scalar or array-like argument to a 1-D NumPy array.
 
     Parameters
@@ -87,7 +87,7 @@ class Affine(Transform[ArrayT]):
         self.matrix = m
         self.ndim = {len(self.matrix) - 1}
 
-    def to_affine(self, dim=None) -> Transform:
+    def to_affine(self, dim: int | None = None) -> Self:
         return self
 
     def apply(self, coords: ArrayT) -> ArrayT:
@@ -332,7 +332,7 @@ class Affine(Transform[ArrayT]):
     @classmethod
     def rotation3(
         cls,
-        rotation: Union[float, Tuple[float, float, float]],
+        rotation: Union[float, tuple[float, float, float]],
         degrees=True,
         clockwise=False,
         order=(0, 1, 2),
@@ -393,7 +393,7 @@ class Affine(Transform[ArrayT]):
     def shearing(
         cls,
         factor: Union[float, np.ndarray],
-        ndim: Optional[int] = None,
+        ndim: int | None = None,
         *,
         spaces: SpaceTuple = (None, None),
     ) -> Affine[ArrayT]:
