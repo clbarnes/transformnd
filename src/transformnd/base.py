@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from copy import copy
-from typing import Self
+from typing import Self, Optional
 
 from array_api_compat import array_namespace
 
@@ -48,6 +48,23 @@ class Transform[ArrayT](ABC):
     @property
     def target_space(self):
         return self.spaces[1]
+
+    @abstractmethod
+    def to_affine(self, dim: int | None = None) -> Optional[Transform]:
+        """Convert the transform into affine, if conversion is possible.
+
+        Parameters
+        ----------
+        dim: int, optional
+            Total number of dimensions; If None, dim is set equal to self.ndim.
+
+        Returns
+        -------
+        Transform | None:
+            The affine transformation, if conversion is possible.
+            None otherwise.
+        """
+        pass
 
     def _validate_coords(self, coords: ArrayT) -> ArrayT:
         """Check that dimension of coords are supported.
@@ -201,6 +218,9 @@ class TransformWrapper(Transform[ArrayT]):
         self._validate_coords(coords)
         return self.fn(coords)
 
+    def to_affine(self, dim=None) -> None:
+        return None
+
 
 def _with_spaces(
     t: Transform[ArrayT],
@@ -350,3 +370,37 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         if isinstance(idx, int):
             return self.transforms[idx]
         return type(self)(self.transforms[idx])
+
+    def to_affine(self, dim=None) -> None:
+        return None
+
+    def simplify_affine(self, seq_dim: int | None = None):
+
+        if seq_dim is None:
+            for t in self.transforms:
+                if t.ndim:
+                    seq_dim = next(iter(t.ndim))
+                    break
+        out = []
+        affine = None
+        for t in self.transforms:
+            new_affine = t.to_affine(seq_dim)
+
+            if new_affine is None:
+                if affine is not None:
+                    out.append(affine)
+                affine = None
+                out.append(t)
+                continue
+
+            if affine is None:
+                affine = new_affine
+                continue
+            affine = affine @ new_affine  # type: ignore[operator]
+
+        if affine is not None:
+            out.append(affine)
+
+        self.transforms = out
+
+        return self

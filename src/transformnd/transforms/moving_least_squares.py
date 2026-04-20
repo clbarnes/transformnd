@@ -53,3 +53,6 @@ class MovingLeastSquares(Transform[np.ndarray]):
             self._transformer.control_points,
             spaces=invert_spaces(self.spaces),
         )
+
+    def to_affine(self, dim=None) -> None:
+        return None

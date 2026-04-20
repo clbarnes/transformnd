@@ -128,3 +128,6 @@ class ByDimension(Transform[ArrayT]):
             subtransforms=inverted_transforms,
             spaces=(self.spaces[1], self.spaces[0]),
         )
+
+    def to_affine(self, dim=None) -> None:
+        return None

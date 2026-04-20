@@ -3,6 +3,7 @@ import numpy as np
 
 from ..base import Transform
 from ..util import ArrayT, SpaceTuple
+from ..transforms.affine import Affine
 
 
 class MapAxis(Transform[ArrayT]):
@@ -30,6 +31,17 @@ class MapAxis(Transform[ArrayT]):
         self.permutation = permutation
         self.ndim = {len(permutation)}
         self.spaces = spaces
+
+    def to_affine(self, dim: int | None = None) -> Affine:
+
+        if dim is None:
+            assert self.ndim is not None
+            dim = next(iter(self.ndim))
+        if len(self.permutation) != dim:
+            raise ValueError("Permutation vector does not match dimensions.")
+        m = np.eye(dim + 1)
+        m[:-1, :-1] = np.eye(dim)[self.permutation]
+        return Affine(m, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         """Apply transformation to coordinates.

@@ -39,3 +39,6 @@ class Bijection(Transform[ArrayT]):
 
     def __invert__(self) -> Transform[ArrayT]:
         return type(self)(self.inverse, self.forward, spaces=invert_spaces(self.spaces))
+
+    def to_affine(self, dim=None) -> None:
+        return None

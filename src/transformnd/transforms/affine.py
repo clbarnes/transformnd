@@ -87,6 +87,9 @@ class Affine(Transform[ArrayT]):
         self.matrix = m
         self.ndim = {len(self.matrix) - 1}
 
+    def to_affine(self, dim=None) -> Transform:
+        return self
+
     def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
         xp = array_namespace(coords)
@@ -440,3 +443,8 @@ class Affine(Transform[ArrayT]):
                 if m[row_idx, col_idx] == 0:
                     m[row_idx, col_idx] = next(it)
         return cls.from_linear_map(m, spaces=spaces)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Affine):
+            return NotImplemented
+        return np.array_equal(self.matrix, other.matrix) and self.spaces == other.spaces

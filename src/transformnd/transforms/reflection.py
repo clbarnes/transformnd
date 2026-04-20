@@ -204,3 +204,6 @@ class Reflect(Transform[np.ndarray]):
 
     def __invert__(self):
         return copy(self)
+
+    def to_affine(self, dim=None) -> None:
+        return None

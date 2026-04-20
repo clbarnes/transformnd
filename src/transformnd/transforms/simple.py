@@ -3,7 +3,7 @@ Simple transformations like rigid translation and scaling.
 """
 
 from copy import copy
-from typing import Self
+from typing import Self, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -12,6 +12,7 @@ from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
 from ..base import Transform
 from ..util import ArrayT, chain_or, SpaceTuple, invert_spaces
+from ..transforms.affine import Affine
 
 
 class Identity(Transform[ArrayT]):
@@ -43,6 +44,13 @@ class Identity(Transform[ArrayT]):
 
     def __invert__(self) -> Transform[ArrayT]:
         return self
+
+    def to_affine(self, dim: int | None = None) -> Optional[Transform]:
+        if dim is None:
+            assert self.ndim is not None
+            dim = next(iter(self.ndim))
+        m = np.eye(dim + 1)
+        return Affine(m, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         xp = array_namespace(coords)
@@ -80,6 +88,18 @@ class Translate(Transform[ArrayT]):
         if self.translation.shape not in [(), (1,)]:
             self.ndim = {self.translation.shape[0]}
         # otherwise, can be broadcast to anything
+
+    def to_affine(self, dim: int | None = None) -> Optional[Transform]:
+
+        if dim is None:
+            assert self.ndim is not None
+            dim = next(iter(self.ndim))
+        m = np.eye(dim + 1)
+        if self.translation.size == 1:
+            m[:-1, -1] = self.translation.item()
+        else:
+            m[:-1, -1] = self.translation.reshape(dim)
+        return Affine(m, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
@@ -129,6 +149,25 @@ class Scale(Transform[ArrayT]):
         if self.scale.shape not in [(), (1,)]:
             self.ndim = {self.scale.shape[0]}
         # otherwise, can be broadcast to anything
+
+    def to_affine(self, dim: int | None = None) -> Optional[Transform]:
+
+        if dim is None:
+            if not self.ndim:
+                return None
+            else:
+                assert self.ndim is not None
+                dim = next(iter(self.ndim))
+
+        if self.scale.size == 1:
+            scale_vec = np.full(dim, self.scale.item())
+        else:
+            scale_vec = self.scale
+            if len(scale_vec) != dim:
+                raise ValueError("Scale vector does not match dimensions.")
+        m = np.eye(dim + 1)
+        m[:-1, :-1] = np.diag(scale_vec)
+        return Affine(m, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
