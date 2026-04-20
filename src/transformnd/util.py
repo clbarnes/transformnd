@@ -2,13 +2,17 @@
 
 from collections import deque
 from collections.abc import Callable, Hashable, Iterable, Iterator
-from typing import Any, TypeVar
+from typing import Any
 
+# required for TypeVar(default=) argument
+from typing_extensions import TypeVar
+
+import numpy as np
 from array_api_compat import array_namespace
 
 UNSPECIFIED_SPACE_NAME = "???"
 
-ArrayT = TypeVar("ArrayT")
+ArrayT = TypeVar("ArrayT", default=np.ndarray)
 
 TransformSignature = Callable[[ArrayT], ArrayT]
 """Type annotation of a function which can be used as a transform."""

@@ -4,18 +4,18 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
 from collections.abc import Callable
-from typing import TypeVar
+from typing import TypeVar, Any
 
-import numpy as np
+from array_api_compat import array_namespace
 
-from ..base import Transform
+from ..base import Transform, ArrayT
 
-T = TypeVar("T")
+ObjectT = TypeVar("ObjectT")
 
 
-class BaseAdapter[T](ABC):
+class BaseAdapter[ObjectT, ArrayT](ABC):
     @abstractmethod
-    def apply(self, transform: Transform, obj: T) -> T:
+    def apply(self, transform: Transform[ArrayT], obj: ObjectT) -> ObjectT:
         """Apply the given transformation to a non-array object.
 
         Parameters
@@ -29,7 +29,7 @@ class BaseAdapter[T](ABC):
         """
         pass
 
-    def partial(self, *args, **kwargs) -> Callable[..., T]:
+    def partial(self, *args, **kwargs) -> Callable[..., ObjectT]:
         """Create a partial function with frozen arguments.
 
         Useful for applying the same transform to many objects,
@@ -44,15 +44,15 @@ class BaseAdapter[T](ABC):
         return partial(self.apply, *args, **kwargs)
 
 
-class NullAdapter(BaseAdapter[np.ndarray]):
+class NullAdapter(BaseAdapter[ArrayT, ArrayT]):
     """Adapter which simply applies the transform."""
 
-    def apply(self, transform: Transform, obj: np.ndarray) -> np.ndarray:
+    def apply(self, transform: Transform[ArrayT], obj: ArrayT) -> ArrayT:
         return transform.apply(obj)
 
 
-class FnAdapter(BaseAdapter[T]):
-    def __init__(self, fn: Callable[[Transform, T], T]):
+class FnAdapter(BaseAdapter[ObjectT, ArrayT]):
+    def __init__(self, fn: Callable[[Transform[ArrayT], ObjectT], ObjectT]):
         """Adapter which simply wraps a function, for typing purposes.
 
         Parameters
@@ -63,15 +63,12 @@ class FnAdapter(BaseAdapter[T]):
         """
         self.fn = fn
 
-    def apply(self, transform: Transform, obj: T) -> T:
+    def apply(self, transform: Transform[ArrayT], obj: ObjectT) -> ObjectT:
         return self.fn(transform, obj)
 
 
-NULL = NullAdapter()
-
-
-class AttrAdapter(BaseAdapter[T]):
-    def __init__(self, **kwargs: BaseAdapter | None) -> None:
+class AttrAdapter(BaseAdapter[ObjectT, ArrayT]):
+    def __init__(self, **kwargs: BaseAdapter[Any, ArrayT] | None) -> None:
         """Adapter which transforms an object by applying transforms to its attributes.
 
         Parameters
@@ -80,12 +77,16 @@ class AttrAdapter(BaseAdapter[T]):
             Keys are attribute names, values are adapters with which
             to apply the transform to those attributes.
             `None` is shorthand for `NullAdapter()`;
-            i.e. the attribute is a numpy.ndarray and can be transformed
+            i.e. the attribute is an array and can be transformed
             without being adapted.
         """
-        self.adapters = {k: NULL if v is None else v for k, v in kwargs.items()}
+        self.adapters = {
+            k: NullAdapter[ArrayT]() if v is None else v for k, v in kwargs.items()
+        }
 
-    def apply(self, transform: Transform, obj: T, in_place: bool = False) -> T:
+    def apply(
+        self, transform: Transform[ArrayT], obj: ObjectT, in_place: bool = False
+    ) -> ObjectT:
         """Apply the given transformation to the object, via its attributes.
 
         Parameters
@@ -117,28 +118,28 @@ class AttrAdapter(BaseAdapter[T]):
         return obj
 
 
-class SimpleAdapter(BaseAdapter[T], ABC):
+class SimpleAdapter(BaseAdapter[ObjectT, ArrayT], ABC):
     """
     Helper class for cases with simple conversion methods.
     """
 
     @abstractmethod
-    def _to_array(self, obj: T) -> np.ndarray:
+    def _to_array(self, obj: ObjectT) -> ArrayT:
         """Convert the object into an array of coordinates."""
         pass
 
     @abstractmethod
-    def _from_array(self, coords: np.ndarray) -> T:
+    def _from_array(self, coords: ArrayT) -> ObjectT:
         """Convert an array of coordinates into the correct type."""
         pass
 
-    def apply(self, transform: Transform, obj: T) -> T:
-        coords = self._to_array(obj)
+    def apply(self, transform: Transform[ArrayT], obj: ObjectT) -> ObjectT:
+        coords: ArrayT = self._to_array(obj)
         transformed = transform.apply(coords)
         return self._from_array(transformed)
 
 
-class ReshapeAdapter(BaseAdapter[np.ndarray]):
+class ReshapeAdapter(BaseAdapter[ArrayT, ArrayT]):
     """Adapter which reshapes a numpy.ndarray"""
 
     def __init__(self, dim_axis: int = -1) -> None:
@@ -152,14 +153,15 @@ class ReshapeAdapter(BaseAdapter[np.ndarray]):
         """
         self.dim_axis: int = dim_axis
 
-    def apply(self, transform: Transform, obj: np.ndarray) -> np.ndarray:
+    def apply(self, transform: Transform[ArrayT], obj: ArrayT) -> ArrayT:
+        xp = array_namespace(obj)
         dim_axis = self.dim_axis
         if self.dim_axis < 0:
-            dim_axis += obj.ndim
+            dim_axis += xp.ndim(obj)
 
-        moved = np.moveaxis(obj, dim_axis, -1)
+        moved = xp.moveaxis(obj, dim_axis, -1)
         m_shape = moved.shape
 
-        flattened = np.reshape(moved, (-1, m_shape[-1]))
+        flattened = xp.reshape(moved, (-1, m_shape[-1]))
         transformed = transform.apply(flattened)
-        return np.moveaxis(np.reshape(transformed, m_shape), -1, dim_axis)
+        return xp.moveaxis(xp.reshape(transformed, m_shape), -1, dim_axis)
