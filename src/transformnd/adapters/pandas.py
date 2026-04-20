@@ -3,12 +3,13 @@
 from collections.abc import Hashable
 
 import pandas as pd
+import numpy as np
 
 from ..base import Transform
 from .base import BaseAdapter
 
 
-class DataFrameAdapter(BaseAdapter[pd.DataFrame]):
+class DataFrameAdapter(BaseAdapter[pd.DataFrame, np.ndarray]):
     def __init__(self, columns: list[Hashable]):
         """Adapt transformation for coordinates stored in a pandas DataFrame.
 

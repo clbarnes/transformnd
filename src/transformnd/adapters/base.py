@@ -4,18 +4,18 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import partial
 from collections.abc import Callable
-from typing import TypeVar
+from typing import TypeVar, Any
 
 from array_api_compat import array_namespace
 
 from ..base import Transform, ArrayT
 
-T = TypeVar("T")
+ObjectT = TypeVar("ObjectT")
 
 
-class BaseAdapter[ArrayT](ABC):
+class BaseAdapter[ObjectT, ArrayT](ABC):
     @abstractmethod
-    def apply(self, transform: Transform[ArrayT], obj: ArrayT) -> ArrayT:
+    def apply(self, transform: Transform[ArrayT], obj: ObjectT) -> ObjectT:
         """Apply the given transformation to a non-array object.
 
         Parameters
@@ -29,7 +29,7 @@ class BaseAdapter[ArrayT](ABC):
         """
         pass
 
-    def partial(self, *args, **kwargs) -> Callable[..., ArrayT]:
+    def partial(self, *args, **kwargs) -> Callable[..., ObjectT]:
         """Create a partial function with frozen arguments.
 
         Useful for applying the same transform to many objects,
@@ -44,15 +44,15 @@ class BaseAdapter[ArrayT](ABC):
         return partial(self.apply, *args, **kwargs)
 
 
-class NullAdapter(BaseAdapter[ArrayT]):
+class NullAdapter(BaseAdapter[ArrayT, ArrayT]):
     """Adapter which simply applies the transform."""
 
     def apply(self, transform: Transform[ArrayT], obj: ArrayT) -> ArrayT:
         return transform.apply(obj)
 
 
-class FnAdapter(BaseAdapter[ArrayT]):
-    def __init__(self, fn: Callable[[Transform[ArrayT], ArrayT], ArrayT]):
+class FnAdapter(BaseAdapter[ObjectT, ArrayT]):
+    def __init__(self, fn: Callable[[Transform[ArrayT], ObjectT], ObjectT]):
         """Adapter which simply wraps a function, for typing purposes.
 
         Parameters
@@ -63,12 +63,12 @@ class FnAdapter(BaseAdapter[ArrayT]):
         """
         self.fn = fn
 
-    def apply(self, transform: Transform[ArrayT], obj: ArrayT) -> ArrayT:
+    def apply(self, transform: Transform[ArrayT], obj: ObjectT) -> ObjectT:
         return self.fn(transform, obj)
 
 
-class AttrAdapter(BaseAdapter[ArrayT]):
-    def __init__(self, **kwargs: BaseAdapter[ArrayT] | None) -> None:
+class AttrAdapter(BaseAdapter[ObjectT, ArrayT]):
+    def __init__(self, **kwargs: BaseAdapter[Any, ArrayT] | None) -> None:
         """Adapter which transforms an object by applying transforms to its attributes.
 
         Parameters
@@ -77,7 +77,7 @@ class AttrAdapter(BaseAdapter[ArrayT]):
             Keys are attribute names, values are adapters with which
             to apply the transform to those attributes.
             `None` is shorthand for `NullAdapter()`;
-            i.e. the attribute is a numpy.ndarray and can be transformed
+            i.e. the attribute is an array and can be transformed
             without being adapted.
         """
         self.adapters = {
@@ -85,8 +85,8 @@ class AttrAdapter(BaseAdapter[ArrayT]):
         }
 
     def apply(
-        self, transform: Transform[ArrayT], obj: ArrayT, in_place: bool = False
-    ) -> ArrayT:
+        self, transform: Transform[ArrayT], obj: ObjectT, in_place: bool = False
+    ) -> ObjectT:
         """Apply the given transformation to the object, via its attributes.
 
         Parameters
@@ -118,7 +118,7 @@ class AttrAdapter(BaseAdapter[ArrayT]):
         return obj
 
 
-class SimpleAdapter[ObjectT, ArrayT](BaseAdapter[ArrayT], ABC):
+class SimpleAdapter(BaseAdapter[ObjectT, ArrayT], ABC):
     """
     Helper class for cases with simple conversion methods.
     """
@@ -134,12 +134,12 @@ class SimpleAdapter[ObjectT, ArrayT](BaseAdapter[ArrayT], ABC):
         pass
 
     def apply(self, transform: Transform[ArrayT], obj: ObjectT) -> ObjectT:
-        coords = self._to_array(obj)
+        coords: ArrayT = self._to_array(obj)
         transformed = transform.apply(coords)
         return self._from_array(transformed)
 
 
-class ReshapeAdapter(BaseAdapter[ArrayT]):
+class ReshapeAdapter(BaseAdapter[ArrayT, ArrayT]):
     """Adapter which reshapes a numpy.ndarray"""
 
     def __init__(self, dim_axis: int = -1) -> None:
@@ -153,7 +153,7 @@ class ReshapeAdapter(BaseAdapter[ArrayT]):
         """
         self.dim_axis: int = dim_axis
 
-    def apply(self, transform: Transform, obj: ArrayT) -> ArrayT:
+    def apply(self, transform: Transform[ArrayT], obj: ArrayT) -> ArrayT:
         xp = array_namespace(obj)
         dim_axis = self.dim_axis
         if self.dim_axis < 0:

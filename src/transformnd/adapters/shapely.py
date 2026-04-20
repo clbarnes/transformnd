@@ -14,7 +14,7 @@ from ..base import Transform
 from .base import BaseAdapter
 
 
-class GeometryAdapter(BaseAdapter[BaseGeometry]):
+class GeometryAdapter(BaseAdapter[BaseGeometry, np.ndarray]):
     """Transform shapely geometries.
 
     As well as the generic `__call__()`,
