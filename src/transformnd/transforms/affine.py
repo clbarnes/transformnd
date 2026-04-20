@@ -15,7 +15,7 @@ from copy import copy
 from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
 from ..base import Transform, ArrayT
-from ..util import is_square, none_eq, SpaceTuple
+from ..util import is_square, none_eq, SpaceTuple, to_single_ndim
 
 
 def arg_as_array(arg, ndim: Optional[int]) -> np.ndarray:
@@ -100,6 +100,21 @@ class Affine(Transform[ArrayT]):
         out: ArrayT = (m @ coords.T).T[:, :-1]  # type: ignore[attr-defined]
         return out
 
+    def into_affine(self, ndim: int | None = None) -> Affine[ArrayT]:
+        ndim = to_single_ndim(ndim, self.ndim)
+        if ndim is not None and {ndim} != self.ndim:
+            raise ValueError("mismatched ndim")
+        return self
+
+    def is_identity(self) -> bool:
+        xp = array_namespace(self.matrix)
+        assert self.ndim is not None
+        ndim = list(self.ndim).pop()
+        identity = xp.eye(
+            ndim, dtype=xp.dtype(self.matrix), device=xp.device(self.matrix)
+        )
+        return xp.equal(self.matrix, identity)
+
     def __invert__(self) -> Transform:
         return type(self)(
             np.linalg.inv(self.matrix),
@@ -130,7 +145,7 @@ class Affine(Transform[ArrayT]):
             )
         if not none_eq(self.target_space, rhs.source_space):
             raise ValueError("Affine transforms do not share a space")
-        return Affine(
+        return Affine[ArrayT](
             self.matrix @ rhs.matrix,
             spaces=(self.source_space, rhs.target_space),
         )

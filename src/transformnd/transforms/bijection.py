@@ -37,5 +37,8 @@ class Bijection(Transform[ArrayT]):
     def apply(self, coords: ArrayT) -> ArrayT:
         return self.forward.apply(coords)
 
+    def is_identity(self) -> bool:
+        return self.forward.is_identity() and self.inverse.is_identity()
+
     def __invert__(self) -> Transform[ArrayT]:
         return type(self)(self.inverse, self.forward, spaces=invert_spaces(self.spaces))

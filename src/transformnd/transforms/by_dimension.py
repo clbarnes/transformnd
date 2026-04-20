@@ -108,6 +108,12 @@ class ByDimension(Transform[ArrayT]):
                 output[:, o] = transformed[:, idx]  # type: ignore
         return output
 
+    def is_identity(self) -> bool:
+        for t in self.subtransforms:
+            if t.input_axes != t.output_axes or not t.transform.is_identity():
+                return False
+        return True
+
     def __invert__(self) -> Transform[ArrayT]:
         """Invert transformation if possible.
 

@@ -38,13 +38,13 @@ Open it with `uv run --group tutorial marimo edit examples/tutorial.py`.
 - Scale (`transformnd.transforms.Scale`)
 - Reflection (`transformnd.transforms.Reflect`)
 - Affine (`transformnd.transforms.Affine`)
-    - Can be composed efficiently with `@` operator
+  - Can be composed efficiently with `@` operator
 - MapAxis (`transformnd.transforms.MapAxis`): permute coordinate axes
 - ByDimension (`transformnd.transforms.ByDimension`): apply transformations to subsets of coordinate axes
 - Moving Least Squares, affine (`transformnd.transforms.moving_least_squares.MovingLeastSquares`)
-    - uses `movingleastsquares` extra
--   Thin Plate Splines (`transformnd.transforms.thinplate.ThinPlateSplines`)
-    - uses `thinplatesplines` extra
+  - uses `movingleastsquares` extra
+- Thin Plate Splines (`transformnd.transforms.thinplate.ThinPlateSplines`)
+  - uses `thinplatesplines` extra
 
 Arbitrary transforms can be composed into a `TransformSequence` with `transform1 | transform2`.
 A graph of transforms between defined spaces can be traversed using the `TransformGraph`.
@@ -54,7 +54,7 @@ A graph of transforms between defined spaces can be traversed using the `Transfo
 - Numpy arrays of shape `(..., D, ...)` (`transformnd.adapters.ReshapeAdapter`)
 - `meshio.Mesh` (`transformnd.adapters.meshio.MeshAdapter`)
 - `pandas.DataFrame` (`transformnd.adapters.pandas.DataFrameAdapter`)
-    - Takes a subset of columns as a coordinate array
+  - Takes a subset of columns as a coordinate array
 - Geometries from `shapely` (`transformnd.adapters.shapely.GeometryAdapter`)
 - Objects composed of transformable attributes (`transformnd.adapters.AttrAdapter`).
 

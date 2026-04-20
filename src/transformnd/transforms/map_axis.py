@@ -10,16 +10,13 @@ class MapAxis(Transform[ArrayT]):
 
     For example, x -> y and y -> x"""
 
-    # ndim: Optional[Set[int]] = set(2)
-
     def __init__(
         self,
         permutation: list[int],
         *,
         spaces: SpaceTuple = (None, None),
     ):
-        """Base class for transformations.
-
+        """
         Parameters
         ----------
         permutation: list[int]
@@ -27,6 +24,12 @@ class MapAxis(Transform[ArrayT]):
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
         """
+        s_perm = sorted(permutation)
+        if any(a != b for a, b in enumerate(s_perm)):
+            raise ValueError(
+                "N-D permutation must contain all dimensions [0, N) exactly once"
+            )
+
         self.permutation = permutation
         self.ndim = {len(permutation)}
         self.spaces = spaces
@@ -42,6 +45,9 @@ class MapAxis(Transform[ArrayT]):
         coords = self._validate_coords(coords)
         xp = array_namespace(coords)
         return xp.take(coords, self.permutation, 1)
+
+    def is_identity(self) -> bool:
+        return all(a == b for a, b in enumerate(self.permutation))
 
     def __invert__(self) -> Transform[ArrayT]:
         """Invert transformation if possible.

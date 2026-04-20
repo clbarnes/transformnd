@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from copy import copy
-from typing import Self
+from typing import Self, TYPE_CHECKING
 
 from array_api_compat import array_namespace
 
@@ -21,6 +21,9 @@ from .util import (
     ArrayT,
 )
 
+if TYPE_CHECKING:
+    from .transforms import Affine
+
 
 class Transform[ArrayT](ABC):
     """Base class for transforms."""
@@ -32,7 +35,7 @@ class Transform[ArrayT](ABC):
         *,
         spaces: SpaceTuple = (None, None),
     ):
-        """Base class for transformations.
+        """
 
         Parameters
         ----------
@@ -48,6 +51,19 @@ class Transform[ArrayT](ABC):
     @property
     def target_space(self):
         return self.spaces[1]
+
+    def is_identity(self) -> bool:
+        """
+        Whether this is a trivial transformation, i.e. the coordinates pass through unchanged.
+        """
+        return False
+
+    def into_affine(self) -> Affine[ArrayT] | None:
+        """Convert this transformation into an affine if possible.
+
+        Return None otherwise.
+        """
+        return None
 
     def _validate_coords(self, coords: ArrayT) -> ArrayT:
         """Check that dimension of coords are supported.
@@ -304,7 +320,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         """
         return len(self.transforms)
 
-    def __invert__(self) -> Transform:
+    def __invert__(self) -> Transform[ArrayT]:
         try:
             transforms = [~t for t in reversed(self.transforms)]
         except NotImplementedError:
@@ -313,6 +329,9 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             transforms,
             spaces=(self.spaces[1], self.spaces[0]),
         )
+
+    def is_identity(self) -> bool:
+        return all(t.is_identity() for t in self)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         for t in self.transforms:
@@ -350,3 +369,43 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         if isinstance(idx, int):
             return self.transforms[idx]
         return type(self)(self.transforms[idx])
+
+    def simplify(self) -> Self:
+        """Reduce the number of transformations in this sequence if possible.
+
+        - Compose consecutive transformations which can be expressed as affines
+        - Drop trivial transforms (e.g. identity)
+
+        Also drops all internal space tuples; only the sequence's remains.
+
+        Does not check whether transforms invert each other,
+        e.g. `Translation(1) | Translation(-1)`.
+        """
+        out: list[Transform[ArrayT]] = []
+        current_affine: Affine[ArrayT] | None = None
+        for t in self:
+            t.spaces = (None, None)
+            if t.is_identity():
+                continue
+
+            aff = t.into_affine()
+            if aff is None:
+                if current_affine is not None:
+                    if not current_affine.is_identity():
+                        out.append(current_affine)
+                    current_affine = None
+                    continue
+                if not t.is_identity():
+                    out.append(t)
+                continue
+
+            if current_affine is None:
+                current_affine = aff
+            else:
+                current_affine @= aff
+
+        if current_affine is not None:
+            if not current_affine.is_identity():
+                out.append(current_affine)
+
+        return type(self)(out, spaces=self.spaces)

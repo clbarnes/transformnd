@@ -10,8 +10,10 @@ from numpy.typing import ArrayLike
 
 from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
+
 from ..base import Transform
-from ..util import ArrayT, chain_or, SpaceTuple, invert_spaces
+from ..util import ArrayT, chain_or, SpaceTuple, invert_spaces, to_single_ndim
+from .affine import Affine
 
 
 class Identity(Transform[ArrayT]):
@@ -47,6 +49,14 @@ class Identity(Transform[ArrayT]):
     def apply(self, coords: ArrayT) -> ArrayT:
         xp = array_namespace(coords)
         return xp.asarray(coords)
+
+    def is_identity(self) -> bool:
+        return True
+
+    def into_affine(self, ndim: int | None = None) -> Affine[ArrayT]:
+        ndim = to_single_ndim(ndim, self.ndim)
+
+        return Affine[ArrayT].identity(ndim)
 
 
 class Translate(Transform[ArrayT]):
@@ -94,6 +104,16 @@ class Translate(Transform[ArrayT]):
         result = copy(self)
         result.translation = xp.asarray(self.translation, device=device)
         return result
+
+    def is_identity(self) -> bool:
+        xp = array_namespace(self.translation)
+        ones = xp.zeros(xp.shape(self.translation))
+        return xp.equal(ones, self.translation)
+
+    def into_affine(self, ndim: int | None = None) -> Affine[ArrayT]:
+        ndim = to_single_ndim(ndim, self.ndim)
+
+        return Affine[ArrayT].translation(self.translation, ndim)
 
 
 class Scale(Transform[ArrayT]):
@@ -146,3 +166,12 @@ class Scale(Transform[ArrayT]):
         result = copy(self)
         result.scale = xp.asarray(self.scale, device=device)
         return result
+
+    def is_identity(self) -> bool:
+        xp = array_namespace(self.scale)
+        ones = xp.ones(xp.shape(self.scale))
+        return xp.equal(ones, self.scale)
+
+    def into_affine(self, ndim: int | None = None) -> Affine[ArrayT]:
+        ndim = to_single_ndim(ndim, self.ndim)
+        return Affine[ArrayT].translation(self.scale, ndim)
