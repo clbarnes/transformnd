@@ -9,7 +9,7 @@ from ..base import Transform
 from .base import BaseAdapter
 
 
-class DataFrameAdapter(BaseAdapter[pd.DataFrame, np.ndarray]):
+class PandasAdapter(BaseAdapter[pd.DataFrame, np.ndarray]):
     def __init__(self, columns: list[Hashable]):
         """Adapt transformation for coordinates stored in a pandas DataFrame.
 
