@@ -4,7 +4,9 @@ import numpy as np
 import pytest
 
 from transformnd.base import TransformSequence, TransformWrapper
-from transformnd.transforms.simple import Translate
+from transformnd.transforms.simple import Translate, Scale
+from transformnd.transforms.moving_least_squares import MovingLeastSquares
+from transformnd.transforms.affine import Affine
 from transformnd.util import window
 
 
@@ -79,3 +81,41 @@ def test_maths():
 
     assert np.allclose((t1 | ~t1).apply(coords), coords)
     assert np.allclose((~t1).apply(t1.apply(coords)), coords)
+
+
+def test_simplify_affine1():
+    dim = 3
+    s1 = Scale([5, 5, 5])
+    s2 = Translate([2, 3, 4])
+    s3 = MovingLeastSquares(np.array([[0, 0, 0]]), np.array([[1, 1, 1]]))
+    s4 = Scale(6)
+    sequence = TransformSequence([s1, s2, s3, s4])
+    sequence_simplified = sequence.simplify_affine().transforms
+    s1_affine = s1.to_affine()
+    s2_affine = s2.to_affine()
+    s4_affine = s4.to_affine(dim)
+    assert isinstance(s1_affine, Affine)
+    assert isinstance(s2_affine, Affine)
+    assert isinstance(s4_affine, Affine)
+    merged_affine = s1_affine @ s2_affine
+    sequence_expected = [merged_affine, s3, s4_affine]
+    assert sequence_simplified == sequence_expected
+
+
+def test_simplify_affine2():
+    dim = 3
+    s3 = MovingLeastSquares(np.array([[0, 0, 0]]), np.array([[1, 1, 1]]))
+    s1 = Scale([5, 5, 5])
+    s2 = Translate([2, 3, 4])
+    s4 = Scale(6)
+    s1_affine = s1.to_affine()
+    s2_affine = s2.to_affine()
+    s4_affine = s4.to_affine(dim)
+    assert isinstance(s1_affine, Affine)
+    assert isinstance(s2_affine, Affine)
+    assert isinstance(s4_affine, Affine)
+    sequence = TransformSequence([s3, s1, s2, s4])
+    sequence_simplified = sequence.simplify_affine().transforms
+    merged_affine = s1_affine @ s2_affine @ s4_affine
+    sequence_expected = [s3, merged_affine]
+    assert sequence_simplified == sequence_expected
