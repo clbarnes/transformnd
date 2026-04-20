@@ -32,7 +32,8 @@ class GeometryAdapter(BaseAdapter[BaseGeometry, ArrayT]):
     """
 
     def __init__(
-        self, array_fn: Callable[[CoordinateSequence], ArrayT] = as_numpy
+        self,
+        array_fn: Callable[[CoordinateSequence], ArrayT] = as_numpy,  # type:ignore
     ) -> None:
         self.array_fn = array_fn
 
@@ -55,13 +56,17 @@ class GeometryAdapter(BaseAdapter[BaseGeometry, ArrayT]):
             [self.apply_linear_ring(transform, i) for i in polygon.interiors],
         )
 
-    def apply_multipoint(self, transform: Transform, obj: MultiPoint):
+    def apply_multipoint(self, transform: Transform, obj: MultiPoint) -> MultiPoint:
         return MultiPoint([self.apply_point(transform, o) for o in obj.geoms])
 
-    def apply_multilinestring(self, transform: Transform, obj: MultiLineString):
+    def apply_multilinestring(
+        self, transform: Transform, obj: MultiLineString
+    ) -> MultiLineString:
         return MultiLineString([self.apply_linestring(transform, o) for o in obj.geoms])
 
-    def apply_multipolygon(self, transform: Transform, obj: MultiPolygon):
+    def apply_multipolygon(
+        self, transform: Transform, obj: MultiPolygon
+    ) -> MultiPolygon:
         return MultiPolygon([self.apply_polygon(transform, o) for o in obj.geoms])
 
     def apply_multipart(
@@ -79,7 +84,9 @@ class GeometryAdapter(BaseAdapter[BaseGeometry, ArrayT]):
         else:
             raise ValueError(f"Unknown multipart geometry type {type(obj)}")
 
-    def apply_collection(self, transform: Transform, obj: GeometryCollection):
+    def apply_collection(
+        self, transform: Transform, obj: GeometryCollection
+    ) -> GeometryCollection:
         return GeometryCollection([self.apply(transform, o) for o in obj.geoms])
 
     def apply(
