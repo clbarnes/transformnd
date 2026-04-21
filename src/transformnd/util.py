@@ -111,7 +111,7 @@ def same_or_none(*args: Any, default=NO_DEFAULT) -> Any:
     return prev
 
 
-def window(iterable: Iterable, length: int) -> Iterator[tuple[Any, ...]]:
+def window[T](iterable: Iterable[T], length: int) -> Iterator[tuple[T, ...]]:
     """Sliding window over iterable.
 
     e.g. `(it[0], it[1]), (it[1], it[2]), (it[2], it[3]), ...`
@@ -190,21 +190,33 @@ def space_str(space: SpaceRef | None) -> str:
 
 
 def is_square(arr: ArrayT) -> bool:
+    """Check whether an array is 2D and has the same number of rows as columns"""
     xp = array_namespace(arr)
     ndim, shape = xp.ndim(arr), xp.shape(arr)
     return ndim == 2 and shape[0] == shape[1]
 
 
-def dim_intersection(dims1: set[int] | None, dims2: set[int] | None) -> set[int] | None:
+def dim_intersection(
+    dims1: set[int] | None, dims2: set[int] | None, error_on_empty: bool = False
+) -> set[int] | None:
+    """Find the intersection between two sets of constraints.
+
+    None means no constraints.
+    If `error_on_empty` is truthy and there is no intersection, raise an error.
+    """
     if dims1 is None:
-        return dims2
+        out = dims2
     elif dims2 is None:
-        return dims1
+        out = dims1
     else:
-        return dims1.intersection(dims2)
+        out = dims1.intersection(dims2)
+    if error_on_empty and out is not None and len(out) == 0:
+        raise ValueError(f"incompatible dimensions: {dims1} ∩ {dims2}")
+    return out
 
 
 def invert_spaces(spaces: SpaceTuple) -> SpaceTuple:
+    """Invert the given (source, target) space tuple."""
     return (spaces[1], spaces[0])
 
 
@@ -214,3 +226,26 @@ def are_coords(coords: ArrayT, ndim: set[int] | None = None):
         raise ValueError("Coords must be a 2D array")
     check_ndim(xp.shape(coords)[1], ndim)
     return coords
+
+
+def to_single_ndim(ndim: None | int = None, ndims: None | set[int] = None) -> int:
+    """Select a single ndim from the given options.
+
+    Error if a single dimension cannot be selected;
+    i.e. both are None or there is a conflict.
+
+    Useful when converting a transformation with multi-dimensionality support
+    (e.g. a scalar translation) into one with single-dimensionality support
+    (e.g. an affine).
+    """
+    if ndim is None:
+        if ndims is None:
+            raise ValueError("no ndims specified")
+        if len(ndims) != 1:
+            raise ValueError(f"needs exactly one ndim, got {ndims}")
+        return list(ndims).pop()
+
+    if ndims is None or ndim in ndims:
+        return ndim
+
+    raise ValueError(f"dimensionality conflict: {ndim} not in {ndims}")

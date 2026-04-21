@@ -4,8 +4,11 @@ import numpy as np
 import pytest
 
 from transformnd.base import TransformSequence, TransformWrapper
-from transformnd.transforms.simple import Translate
+from transformnd.transforms.simple import Translate, Scale
+from transformnd.transforms.affine import Affine
 from transformnd.util import window
+
+from .common import NullTransform
 
 
 def noop(arg):
@@ -79,3 +82,47 @@ def test_maths():
 
     assert np.allclose((t1 | ~t1).apply(coords), coords)
     assert np.allclose((~t1).apply(t1.apply(coords)), coords)
+
+
+def test_simplify_affine1(rng):
+    s1 = Scale(np.array([5, 5, 5], float))
+    s2 = Translate(np.array([2, 3, 4], float))
+    s3 = NullTransform()
+    s4 = Scale(6)
+    coords = rng.random((10, 3))
+    sequence = TransformSequence([s1, s2, s3, s4])
+    expected = sequence.apply(coords)
+    simplified = sequence.simplify()
+    applied = simplified.apply(coords)
+    assert expected == pytest.approx(applied)
+    assert len(simplified) == 3
+    assert isinstance(simplified[0], Affine)
+    assert not isinstance(simplified[1], Affine)
+    assert isinstance(simplified[2], Affine)
+
+
+def test_simplify_affine2(rng):
+    coords = rng.random((10, 3))
+    dim = 3
+    s1 = NullTransform()
+    s2 = Scale(np.array([5, 5, 5], float))
+    s3 = Translate(np.array([2, 3, 4], float))
+    s4 = Scale(6)
+    s2_affine = s2.to_affine()
+    s3_affine = s3.to_affine()
+    s4_affine = s4.to_affine(dim)
+    assert s2_affine is not None
+    assert s3_affine is not None
+    assert s4_affine is not None
+    seq = TransformSequence([s1, s2, s3, s4])
+    coords2 = seq.apply(coords)
+    simplified = seq.simplify()
+    assert len(simplified) == 2
+    assert isinstance(simplified[0], NullTransform)
+    internal_affine = simplified[1]
+    assert isinstance(internal_affine, Affine)
+    coords3 = simplified.apply(coords)
+    assert coords2 == pytest.approx(coords3)
+
+    merged_affine = s4_affine @ s3_affine @ s2_affine
+    assert merged_affine.matrix == pytest.approx(internal_affine.matrix)

@@ -11,7 +11,8 @@ from numpy.typing import ArrayLike
 from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
 from ..base import Transform
-from ..util import ArrayT, chain_or, SpaceTuple, invert_spaces
+from ..util import ArrayT, chain_or, SpaceTuple, invert_spaces, to_single_ndim
+from ..transforms.affine import Affine
 
 
 class Identity(Transform[ArrayT]):
@@ -43,6 +44,11 @@ class Identity(Transform[ArrayT]):
 
     def __invert__(self) -> Transform[ArrayT]:
         return self
+
+    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
+        ndim = to_single_ndim(ndim, self.ndim)
+        m = np.eye(ndim + 1)
+        return Affine(m, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         xp = array_namespace(coords)
@@ -80,6 +86,13 @@ class Translate(Transform[ArrayT]):
         if self.translation.shape not in [(), (1,)]:
             self.ndim = {self.translation.shape[0]}
         # otherwise, can be broadcast to anything
+
+    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
+        ndim = to_single_ndim(ndim, self.ndim)
+
+        m = np.eye(ndim + 1)
+        m[:-1, -1] = self.translation
+        return Affine(m, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
@@ -130,13 +143,24 @@ class Scale(Transform[ArrayT]):
             self.ndim = {self.scale.shape[0]}
         # otherwise, can be broadcast to anything
 
+    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
+        ndim = to_single_ndim(ndim, self.ndim)
+
+        if np.ndim(self.scale) == 0:
+            scale_vec = np.full(ndim, self.scale)
+        else:
+            scale_vec = self.scale
+        m = np.eye(ndim + 1)
+        m[:-1, :-1] = np.diag(scale_vec)
+        return Affine(m, spaces=self.spaces)
+
     def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
         xp = array_namespace(coords)
         d = xp_device(coords)
         return coords * xp.asarray(self.scale, device=d)
 
-    def __invert__(self) -> Transform:
+    def invert(self) -> Self | None:
         return type(self)(
             1 / self.scale,
             spaces=invert_spaces(self.spaces),

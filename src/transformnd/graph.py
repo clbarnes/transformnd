@@ -1,5 +1,6 @@
 """Bridging transforms between known spaces."""
 
+from __future__ import annotations
 from functools import lru_cache
 from collections.abc import Iterable, Iterator
 
@@ -9,7 +10,7 @@ from .base import Transform, TransformSequence
 from .util import SpaceRef, chain_or, dim_intersection, window, ArrayT
 
 
-def split_sequence(seq: TransformSequence) -> Iterator[Transform]:
+def split_sequence(seq: TransformSequence[ArrayT]) -> Iterator[Transform[ArrayT]]:
     """Split a TransformSequence into Transforms with spaces defined.
 
     If a component Transform has its spaces defined,
@@ -105,7 +106,11 @@ class TransformGraph[ArrayT]:
 
     @lru_cache()
     def get_sequence(
-        self, source_space: SpaceRef, target_space: SpaceRef
+        self,
+        source_space: SpaceRef,
+        target_space: SpaceRef,
+        simplify=False,
+        drop_inverse=False,
     ) -> TransformSequence[ArrayT]:
         """Get the shortest TransformSequence for transforming between two spaces.
 
@@ -113,6 +118,12 @@ class TransformGraph[ArrayT]:
         ----------
         source_space : SpaceRef
         target_space : SpaceRef
+        simplify : bool
+            Whether to simplify the transform sequence; see `TransformSequence.simplify`.
+        drop_inverse : bool
+            If `simplify==True`, whether to drop explicit inverses.
+            See `TransformSequence.simplify` for details.
+            Ignored if `simplify==False`.
 
         Returns
         -------
@@ -125,10 +136,13 @@ class TransformGraph[ArrayT]:
             transforms = [
                 self.graph.edges[src, tgt]["transform"] for src, tgt in window(path, 2)
             ]
-        return TransformSequence(
+        seq = TransformSequence(
             transforms,
             spaces=(source_space, target_space),
         )
+        if simplify:
+            seq = seq.simplify(drop_inverse=drop_inverse)
+        return seq
 
     def transform(
         self, source_space: SpaceRef, target_space: SpaceRef, coords: ArrayT
@@ -154,7 +168,7 @@ class TransformGraph[ArrayT]:
 
         Includes inferred reverse transforms.
 
-        N.B. `networkx.Graph.__iter__` iterates through nodes,
+        N.B. the `__iter__` method of some popular graph libraries like networkx iterate through nodes,
         where this effectively iterates through edges.
 
         Yields
@@ -171,9 +185,8 @@ class TransformGraph[ArrayT]:
         for _, _, t in self.graph.edges.data("transform"):
             yield t
 
-    def to_device(self, xp, device=None) -> "TransformGraph[ArrayT]":
+    def to_device(self, xp, device=None) -> TransformGraph[ArrayT]:
         result: TransformGraph[ArrayT] = TransformGraph()
-        result.ndim = self.ndim
         for src, tgt, t in self.graph.edges.data("transform"):
             result.graph.add_edge(src, tgt, transform=t.to_device(xp, device))
         return result

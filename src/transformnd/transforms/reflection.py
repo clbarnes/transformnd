@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from copy import copy
+from typing import Self
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -202,5 +203,5 @@ class Reflect(Transform[np.ndarray]):
 
         return cls(normals, origin, spaces=spaces)
 
-    def __invert__(self):
+    def invert(self) -> Self | None:
         return copy(self)

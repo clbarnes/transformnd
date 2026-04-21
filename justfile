@@ -18,6 +18,10 @@ lint:
     uv run mypy src tests
     uv run ruff format --check src tests examples
 
+fix:
+    uv run ruff check --fix src tests examples
+    uv run ruff format src tests examples
+
 # Format python code.
 format:
     uv run ruff format src tests examples

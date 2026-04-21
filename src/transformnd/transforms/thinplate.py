@@ -78,7 +78,7 @@ class ThinPlateSplines(Transform[np.ndarray]):
             self.target_control_points,
         )
 
-    def __invert__(self) -> Transform[np.ndarray]:
+    def invert(self) -> Transform[np.ndarray] | None:
         return type(self)(
             self.target_control_points,
             self.source_control_points,

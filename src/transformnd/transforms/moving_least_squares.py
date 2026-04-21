@@ -4,7 +4,9 @@ Implementation of Moving Least Squares transformation.
 Requires the `movingleastsquares` extra.
 """
 
+from array_api_compat import array_namespace
 import numpy as np
+from typing import Self
 from molesq.transform import Transformer as _Transformer
 
 from ..base import SpaceTuple, Transform
@@ -47,7 +49,16 @@ class MovingLeastSquares(Transform[np.ndarray]):
         coords = self._validate_coords(coords)
         return self._transformer.transform(coords)
 
-    def __invert__(self) -> Transform:
+    def is_identity(self) -> bool:
+        xp = array_namespace(self._transformer.control_points)
+        return xp.all(
+            xp.equal(
+                self._transformer.control_points,
+                self._transformer.deformed_control_points,
+            )
+        )
+
+    def invert(self) -> Self | None:
         return type(self)(
             self._transformer.deformed_control_points,
             self._transformer.control_points,
