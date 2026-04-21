@@ -1,5 +1,7 @@
 from typing import Self
 
+from array_api_compat import array_namespace
+
 from transformnd.transforms.affine import Affine
 
 from ..base import Transform, ArrayT
@@ -49,7 +51,18 @@ class Bijection(Transform[ArrayT]):
 
     def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
         fwd = self.forward.to_affine(ndim)
-        inv = self.inverse.to_affine(ndim)
-        if fwd is None or inv is None:
+        if fwd is None:
             return None
-        return type(self)(fwd, inv)  # type:ignore
+        inv = self.inverse.to_affine(ndim)
+        if inv is None:
+            return None
+
+        inv_inv = inv.invert()
+        if inv_inv is None:
+            return None
+
+        xp = array_namespace(fwd.matrix)
+        if xp.equal(fwd.matrix, inv_inv.matrix):
+            return fwd
+
+        return None
