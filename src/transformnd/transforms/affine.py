@@ -104,7 +104,7 @@ class Affine(Transform[ArrayT]):
             [coords, xp.ones((coords.shape[0], 1), dtype=coords.dtype)],  # type: ignore[attr-defined]
             axis=1,
         )
-        out: ArrayT = coords.dot(m.T)[:, :-1]  # type: ignore[attr-defined]
+        out: ArrayT = (coords @ m.T)[:, :-1]  # type: ignore[attr-defined]
         return out
 
     def invert(self) -> Self | None:

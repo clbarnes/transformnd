@@ -60,7 +60,7 @@ def test_matmul(subtests):
     scale = np.array([[2, 0, 0], [0, 3, 0], [0, 0, 1]], float)
     # 3rd column is all 1s to fit the affine matrix
     coords = np.array([[1, 2, 1], [3, 4, 1]], float)
-    s_result = coords.dot(scale.T)
+    s_result = coords @ scale.T
     s_expected = np.array(
         [
             [2, 6, 1],
@@ -72,7 +72,7 @@ def test_matmul(subtests):
         assert s_result == pytest.approx(s_expected)
 
     translation = np.array([[1, 0, 10], [0, 1, 20], [0, 0, 1]], float)
-    t_result = coords.dot(translation.T)
+    t_result = coords @ translation.T
     t_expected = np.array(
         [
             [11, 22, 1],
@@ -96,13 +96,13 @@ def test_matmul(subtests):
         assert scale_translate == pytest.approx(expected_scale_translation)
 
     with subtests.test(msg="scale->translate results"):
-        expected = coords.dot(scale.T).dot(translation.T)
-        assert coords.dot(scale_translate.T) == pytest.approx(expected)
+        expected = (coords @ scale.T) @ translation.T
+        assert coords @ scale_translate.T == pytest.approx(expected)
 
     translation_scale = scale @ translation
     with subtests.test(msg="translate->scale results"):
-        expected = coords.dot(translation.T).dot(scale.T)
-        assert coords.dot(translation_scale.T) == pytest.approx(expected)
+        expected = (coords @ translation.T) @ scale.T
+        assert coords @ translation_scale.T == pytest.approx(expected)
 
 
 def test_affine_combination(rng):
