@@ -1,3 +1,7 @@
+from typing import Self
+
+from transformnd.transforms.affine import Affine
+
 from ..base import Transform, ArrayT
 from ..util import SpaceTuple, dim_intersection, invert_spaces
 
@@ -37,8 +41,15 @@ class Bijection(Transform[ArrayT]):
     def apply(self, coords: ArrayT) -> ArrayT:
         return self.forward.apply(coords)
 
-    def __invert__(self) -> Transform[ArrayT]:
+    def invert(self) -> Self | None:
         return type(self)(self.inverse, self.forward, spaces=invert_spaces(self.spaces))
 
-    def to_affine(self, dim=None) -> None:
-        return None
+    def is_identity(self) -> bool:
+        return self.forward.is_identity() and self.inverse.is_identity()
+
+    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
+        fwd = self.forward.to_affine(ndim)
+        inv = self.inverse.to_affine(ndim)
+        if fwd is None or inv is None:
+            return None
+        return type(self)(fwd, inv)  # type:ignore

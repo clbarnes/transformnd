@@ -3,7 +3,7 @@ from array_api_compat import array_namespace
 from .simple import Identity
 
 from ..base import Transform
-from ..util import SpaceTuple, ArrayT, check_ndim
+from ..util import SpaceTuple, ArrayT, check_ndim, invert_spaces
 
 
 class SubTransform[ArrayT]:
@@ -108,23 +108,26 @@ class ByDimension(Transform[ArrayT]):
                 output[:, o] = transformed[:, idx]  # type: ignore
         return output
 
-    def __invert__(self) -> Transform[ArrayT]:
-        """Invert transformation if possible.
+    def invert(self) -> Transform[ArrayT] | None:
+        try:
+            inverted_transforms = [
+                SubTransform[ArrayT](
+                    input_axes=t.output_axes,
+                    output_axes=t.input_axes,
+                    transform=~t.transform,
+                )
+                for t in reversed(self.subtransforms)
+            ]
+        except NotImplementedError:
+            return None
 
-        Returns
-        -------
-        Transform
-            Inverted transformation.
-        """
-        inverted_transforms = [
-            SubTransform[ArrayT](
-                input_axes=t.output_axes,
-                output_axes=t.input_axes,
-                transform=~t.transform,
-            )
-            for t in reversed(self.subtransforms)
-        ]
         return type(self)(
             subtransforms=inverted_transforms,
-            spaces=(self.spaces[1], self.spaces[0]),
+            spaces=invert_spaces(self.spaces),
         )
+
+    def is_identity(self) -> bool:
+        for t in self.subtransforms:
+            if t.input_axes != t.output_axes or not t.transform.is_identity():
+                return False
+        return True

@@ -9,10 +9,10 @@ def make_coords(shape):
 
 
 @pytest.fixture
-def coords5x3():
+def coords5x3() -> np.ndarray:
     return make_coords((5, 3))
 
 
 @pytest.fixture
-def rng():
+def rng() -> np.random.RandomState:
     return np.random.RandomState(SEED)

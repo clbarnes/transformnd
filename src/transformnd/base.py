@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from copy import copy
-from typing import Self, Optional
+from typing import Self, TYPE_CHECKING
 
 from array_api_compat import array_namespace
 
@@ -14,12 +14,17 @@ from .util import (
     TransformSignature,
     check_ndim,
     dim_intersection,
+    invert_spaces,
     same_or_none,
     space_str,
+    to_single_ndim,
     window,
     SpaceTuple,
     ArrayT,
 )
+
+if TYPE_CHECKING:
+    from .transforms import Affine
 
 
 class Transform[ArrayT](ABC):
@@ -32,8 +37,7 @@ class Transform[ArrayT](ABC):
         *,
         spaces: SpaceTuple = (None, None),
     ):
-        """Base class for transformations.
-
+        """
         Parameters
         ----------
         spaces : tuple[SpaceRef, SpaceRef]
@@ -49,7 +53,11 @@ class Transform[ArrayT](ABC):
     def target_space(self):
         return self.spaces[1]
 
-    def to_affine(self, dim: int | None = None) -> Transform | None:
+    def is_identity(self) -> bool:
+        """Whether this is a no-op transformation."""
+        return False
+
+    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
         """Convert the transform into affine, if conversion is possible.
 
         Parameters
@@ -102,15 +110,26 @@ class Transform[ArrayT](ABC):
         """
         pass
 
+    def invert(self) -> Transform | None:
+        """Invert the transformation, returning `None` if not possible."""
+        if self.is_identity():
+            return copy(self)
+        return None
+
     def __invert__(self) -> Transform:
         """Invert transformation if possible.
+
+        Returns `NotImplemented` otherwise (will raise `NotImplementedError`).
 
         Returns
         -------
         Transform
             Inverted transformation.
         """
-        return NotImplemented
+        t = self.invert()
+        if t is None:
+            return NotImplemented
+        return t
 
     def to_device(self, xp, device=None) -> Self:  # noqa: ARG002
         """Return a copy of this transform with array parameters placed on the given device.
@@ -293,7 +312,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             ),
         )
 
-        self.transforms: list[Transform] = ts
+        self.transforms: list[Transform[ArrayT]] = ts
 
         self.ndim = None
         for t in self.transforms:
@@ -302,7 +321,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         if self.ndim is not None and len(self.ndim) == 0:
             raise ValueError("Transforms have incompatible dimensionalities")
 
-    def __iter__(self) -> Iterator[Transform]:
+    def __iter__(self) -> Iterator[Transform[ArrayT]]:
         """Iterate through component transforms.
 
         Yields
@@ -320,14 +339,14 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         """
         return len(self.transforms)
 
-    def __invert__(self) -> Transform:
+    def invert(self) -> Transform[ArrayT] | None:
         try:
             transforms = [~t for t in reversed(self.transforms)]
         except NotImplementedError:
-            return NotImplemented
+            return None
         return type(self)(
             transforms,
-            spaces=(self.spaces[1], self.spaces[0]),
+            spaces=invert_spaces(self.spaces),
         )
 
     def apply(self, coords: ArrayT) -> ArrayT:
@@ -367,36 +386,56 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             return self.transforms[idx]
         return type(self)(self.transforms[idx])
 
-    def to_affine(self, dim=None) -> None:
-        return None
+    def is_identity(self) -> bool:
+        return all(t.is_identity() for t in self)
 
-    def simplify_affine(self, seq_dim: int | None = None):
+    def simplify(self, ndim: int | None = None, drop_inverse: bool = False):
+        """Reduce the number of transformations in this sequence if possible.
 
-        if seq_dim is None:
-            for t in self.transforms:
-                if t.ndim:
-                    seq_dim = next(iter(t.ndim))
-                    break
-        out = []
+        - Compose consecutive transformations which can be expressed as affines
+        - Drop trivial transforms (e.g. identity)
+        - Optionally drop explicit inverse transforms
+          (e.g. replace `Bijection`s with their `forward` transform)
+
+        Also drops all internal space tuples; only the sequence's remains.
+
+        Does not check whether transforms invert each other,
+        e.g. `Translation(1) | Translation(-1)`.
+        """
+        from .transforms.bijection import Bijection
+
+        ndim = to_single_ndim(ndim, self.ndim)
+        out: list[Transform[ArrayT]] = []
         affine = None
         for t in self.transforms:
-            new_affine = t.to_affine(seq_dim)
+            if drop_inverse and isinstance(t, Bijection):
+                t = t.forward
+
+            new_affine = t.to_affine(ndim)
 
             if new_affine is None:
                 if affine is not None:
-                    out.append(affine)
-                affine = None
-                out.append(t)
+                    add_to_output(affine, out)
+                    affine = None
+                add_to_output(t, out)
                 continue
 
             if affine is None:
                 affine = new_affine
-                continue
-            affine = affine @ new_affine  # type: ignore[operator]
+            else:
+                affine = new_affine @ affine  # type: ignore[operator]
 
         if affine is not None:
-            out.append(affine)
+            add_to_output(affine, out)
 
-        self.transforms = out
+        return type(self)(out)
 
-        return self
+
+def add_to_output(transform: Transform, lst: list[Transform]) -> bool:
+    if transform.is_identity():
+        return False
+
+    transform = copy(transform)
+    transform.spaces = (None, None)
+    lst.append(transform)
+    return True

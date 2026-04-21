@@ -3,7 +3,7 @@ Simple transformations like rigid translation and scaling.
 """
 
 from copy import copy
-from typing import Self, Optional
+from typing import Self
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -11,7 +11,7 @@ from numpy.typing import ArrayLike
 from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
 from ..base import Transform
-from ..util import ArrayT, chain_or, SpaceTuple, invert_spaces
+from ..util import ArrayT, chain_or, SpaceTuple, invert_spaces, to_single_ndim
 from ..transforms.affine import Affine
 
 
@@ -45,11 +45,9 @@ class Identity(Transform[ArrayT]):
     def __invert__(self) -> Transform[ArrayT]:
         return self
 
-    def to_affine(self, dim: int | None = None) -> Optional[Transform]:
-        if dim is None:
-            assert self.ndim is not None
-            dim = next(iter(self.ndim))
-        m = np.eye(dim + 1)
+    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
+        ndim = to_single_ndim(ndim, self.ndim)
+        m = np.eye(ndim + 1)
         return Affine(m, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
@@ -89,16 +87,11 @@ class Translate(Transform[ArrayT]):
             self.ndim = {self.translation.shape[0]}
         # otherwise, can be broadcast to anything
 
-    def to_affine(self, dim: int | None = None) -> Optional[Transform]:
+    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
+        ndim = to_single_ndim(ndim, self.ndim)
 
-        if dim is None:
-            assert self.ndim is not None
-            dim = next(iter(self.ndim))
-        m = np.eye(dim + 1)
-        if self.translation.size == 1:
-            m[:-1, -1] = self.translation.item()
-        else:
-            m[:-1, -1] = self.translation.reshape(dim)
+        m = np.eye(ndim + 1)
+        m[:-1, -1] = self.translation
         return Affine(m, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
@@ -150,22 +143,14 @@ class Scale(Transform[ArrayT]):
             self.ndim = {self.scale.shape[0]}
         # otherwise, can be broadcast to anything
 
-    def to_affine(self, dim: int | None = None) -> Optional[Transform]:
+    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
+        ndim = to_single_ndim(ndim, self.ndim)
 
-        if dim is None:
-            if not self.ndim:
-                return None
-            else:
-                assert self.ndim is not None
-                dim = next(iter(self.ndim))
-
-        if self.scale.size == 1:
-            scale_vec = np.full(dim, self.scale.item())
+        if np.ndim(self.scale) == 0:
+            scale_vec = np.full(ndim, self.scale)
         else:
             scale_vec = self.scale
-            if len(scale_vec) != dim:
-                raise ValueError("Scale vector does not match dimensions.")
-        m = np.eye(dim + 1)
+        m = np.eye(ndim + 1)
         m[:-1, :-1] = np.diag(scale_vec)
         return Affine(m, spaces=self.spaces)
 
@@ -175,7 +160,7 @@ class Scale(Transform[ArrayT]):
         d = xp_device(coords)
         return coords * xp.asarray(self.scale, device=d)
 
-    def __invert__(self) -> Transform:
+    def invert(self) -> Self | None:
         return type(self)(
             1 / self.scale,
             spaces=invert_spaces(self.spaces),

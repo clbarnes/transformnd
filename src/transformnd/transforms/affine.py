@@ -4,7 +4,6 @@ Rigid transformations implemented as affine multiplications.
 
 from __future__ import annotations
 
-from functools import lru_cache
 import math
 from typing import Container, Union, Self
 
@@ -16,7 +15,7 @@ from copy import copy
 from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
 from ..base import Transform, ArrayT
-from ..util import is_square, none_eq, SpaceTuple
+from ..util import is_square, none_eq, SpaceTuple, to_single_ndim
 
 
 def arg_as_array(arg, ndim: int | None) -> np.ndarray:
@@ -88,10 +87,11 @@ class Affine(Transform[ArrayT]):
         self.matrix = m
         self.ndim = {len(self.matrix) - 1}
 
-    def to_affine(self, dim: int | None = None) -> Self:
+    def to_affine(self, ndim: int | None = None) -> Self | None:
+        # check that if ndim is given, it matches expectation
+        to_single_ndim(ndim, self.ndim)
         return self
 
-    @lru_cache()
     def cast_matrix(self, namespace, device) -> ArrayT:
         return namespace.asarray(self.matrix, device=device)
 
@@ -104,17 +104,24 @@ class Affine(Transform[ArrayT]):
             [coords, xp.ones((coords.shape[0], 1), dtype=coords.dtype)],  # type: ignore[attr-defined]
             axis=1,
         )
-        out: ArrayT = (m @ coords.T).T[:, :-1]  # type: ignore[attr-defined]
+        out: ArrayT = coords.dot(m.T)[:, :-1]  # type: ignore[attr-defined]
         return out
 
-    def __invert__(self) -> Transform:
+    def invert(self) -> Self | None:
+        try:
+            inv = np.linalg.inv(self.matrix)
+        except np.linalg.LinAlgError:
+            return None
+
         return type(self)(
-            np.linalg.inv(self.matrix),
+            inv,
             spaces=(self.spaces[1], self.spaces[0]),
         )
 
     def __matmul__(self, rhs: Affine[ArrayT]) -> Affine[ArrayT]:
         """Compose two affine transforms by matrix multiplication.
+
+        As with affine matrices the right hand operand is effectively applied first.
 
         Parameters
         ----------
@@ -220,7 +227,7 @@ class Affine(Transform[ArrayT]):
     def translation(
         cls,
         translation: ArrayLike,
-        ndim: Optional[int] = None,
+        ndim: int | None = None,
         *,
         spaces: SpaceTuple = (None, None),
     ) -> Affine[ArrayT]:
@@ -248,7 +255,7 @@ class Affine(Transform[ArrayT]):
     def scaling(
         cls,
         scale: ArrayLike,
-        ndim: Optional[int] = None,
+        ndim: int | None = None,
         *,
         spaces: SpaceTuple = (None, None),
     ) -> Affine[ArrayT]:
@@ -452,3 +459,14 @@ class Affine(Transform[ArrayT]):
         if not isinstance(other, Affine):
             return NotImplemented
         return np.array_equal(self.matrix, other.matrix) and self.spaces == other.spaces
+
+    def into_affine(self, ndim: int | None = None) -> Affine[ArrayT]:
+        ndim = to_single_ndim(ndim, self.ndim)
+        return self
+
+    def is_identity(self) -> bool:
+        xp = array_namespace(self.matrix)
+        assert self.ndim is not None
+        ndim = list(self.ndim).pop()
+        identity = xp.eye(ndim + 1, dtype=self.matrix.dtype, device=self.matrix.device)
+        return xp.all(xp.equal(self.matrix, identity))

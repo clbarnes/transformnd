@@ -1,8 +1,9 @@
+from typing import Self
 from array_api_compat import array_namespace
 import numpy as np
 
 from ..base import Transform
-from ..util import ArrayT, SpaceTuple
+from ..util import ArrayT, SpaceTuple, to_single_ndim
 from ..transforms.affine import Affine
 
 
@@ -28,19 +29,23 @@ class MapAxis(Transform[ArrayT]):
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
         """
+        s_perm = sorted(permutation)
+        if any(a != b for a, b in enumerate(s_perm)):
+            raise ValueError(
+                "N-D permutation must contain all dimensions [0, N) exactly once"
+            )
         self.permutation = permutation
         self.ndim = {len(permutation)}
         self.spaces = spaces
 
-    def to_affine(self, dim: int | None = None) -> Affine:
+    def is_identity(self) -> bool:
+        return all(a == b for a, b in enumerate(self.permutation))
 
-        if dim is None:
-            assert self.ndim is not None
-            dim = next(iter(self.ndim))
-        if len(self.permutation) != dim:
-            raise ValueError("Permutation vector does not match dimensions.")
-        m = np.eye(dim + 1)
-        m[:-1, :-1] = np.eye(dim)[self.permutation]
+    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
+        ndim = to_single_ndim(ndim, self.ndim)
+        m = np.eye(ndim + 1)
+        perm = self.permutation + [ndim]
+        m = m[perm, :]
         return Affine(m, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
@@ -55,14 +60,7 @@ class MapAxis(Transform[ArrayT]):
         xp = array_namespace(coords)
         return xp.take(coords, self.permutation, 1)
 
-    def __invert__(self) -> Transform[ArrayT]:
-        """Invert transformation if possible.
-
-        Returns
-        -------
-        Transform[ArrayT]
-            Inverted transformation.
-        """
+    def invert(self) -> Self | None:
         return type(self)(
             list(np.argsort(self.permutation)),
             spaces=(self.spaces[1], self.spaces[0]),
