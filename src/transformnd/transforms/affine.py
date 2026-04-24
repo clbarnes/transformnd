@@ -12,8 +12,7 @@ from numpy.typing import ArrayLike
 
 from copy import copy
 
-from array_api_compat import array_namespace
-from array_api_compat import device as xp_device
+from array_api_compat import array_namespace, device as xp_device
 from ..base import Transform, ArrayT
 from ..util import is_square, none_eq, SpaceTuple, to_single_ndim
 
@@ -55,8 +54,13 @@ class Affine(Transform[ArrayT]):
         spaces: SpaceTuple = (None, None),
     ):
         """
-        Matrix must have shape (D+1, D+1) or (D, D+1);
-        the bottom row is assumed to be [0, 0, ..., 0, 1].
+        Affine transformation matrices' bottom row must be all zeroes except a 1 in the rightmost column.
+
+        Matrix may have shape:
+
+        - (D+1, D+1): an affine transformation matrix (the bottom row will be validated)
+        - (D, D+1): an affine transformation matrix missing the bottom row (it will be added)
+        - (D,): a vector of scales which become the first D elements of a diagonal matrix of size D+1
 
         Parameters
         ----------
@@ -74,7 +78,11 @@ class Affine(Transform[ArrayT]):
         super().__init__(spaces=spaces)
         m = np.asarray(matrix)
 
-        if m.ndim != 2:
+        if m.ndim == 1:
+            scales = m
+            m = np.eye(len(m) + 1, dtype=m.dtype)
+            m[:-1, :-1] *= scales
+        elif m.ndim != 2:
             raise ValueError("Transformation matrix must be 2D")
 
         if m.shape[1] == m.shape[0] + 1:
@@ -83,6 +91,12 @@ class Affine(Transform[ArrayT]):
             m = base
         elif not is_square(m):
             raise ValueError("Transformation matrix must be square")
+        else:
+            bottom_row = m[-1, :]
+            if bottom_row[-1] != 1 or not np.all(bottom_row[:-1] == 0):
+                raise ValueError(
+                    "Transformation matrix is not affine (bottom row must be [0,0,0,...,1])."
+                )
 
         self.matrix = m
         self.ndim = {len(self.matrix) - 1}
@@ -100,11 +114,21 @@ class Affine(Transform[ArrayT]):
         xp = array_namespace(coords)
         d = xp_device(coords)
         m = self.cast_matrix(xp, d)
-        coords = xp.concatenate(
-            [coords, xp.ones((coords.shape[0], 1), dtype=coords.dtype)],  # type: ignore[attr-defined]
-            axis=1,
-        )
-        out: ArrayT = (coords @ m.T)[:, :-1]  # type: ignore[attr-defined]
+        linear_map = xp.matrix_transpose(m[:-1, :-1])  # type: ignore[index]
+        translation = m[:-1, -1]  # type: ignore[index]
+
+        out = coords @ linear_map
+        out += translation
+
+        ## Padding and then unpadding the coords is slower, especially in C order
+        # coords = xp.concatenate(
+        #     [coords, xp.ones((coords.shape[0], 1), dtype=coords.dtype)],  # type: ignore[attr-defined]
+        #     axis=1,
+        # )
+        # out: ArrayT = (coords @ m.T)[:, :-1]  # type: ignore[attr-defined]
+
+        return out
+
         return out
 
     def invert(self) -> Self | None:

@@ -14,17 +14,17 @@ doc:
 
 # Run linters and type checkers.
 lint:
-    uv run ruff check src tests examples
-    uv run mypy src tests
-    uv run ruff format --check src tests examples
+    uv run ruff check src tests examples bench
+    uv run mypy src tests bench
+    uv run ruff format --check src tests examples bench
 
 fix:
-    uv run ruff check --fix src tests examples
-    uv run ruff format src tests examples
+    uv run ruff check --fix src tests examples bench
+    uv run ruff format src tests examples bench
 
 # Format python code.
 format:
-    uv run ruff format src tests examples
+    uv run ruff format src tests examples bench
 
 # Run unit tests.
 test:
