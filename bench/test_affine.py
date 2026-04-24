@@ -33,7 +33,7 @@ class TestPadUnpadCoords:
                 [coords, np.ones((coords.shape[0], 1), dtype=coords.dtype)], axis=1
             )
             inter = c2 @ affine.T
-            out = inter[:, :-1]
+            out = inter[:, :-1]  # noqa
 
         benchmark(fn)
 

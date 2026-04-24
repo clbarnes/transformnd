@@ -114,8 +114,8 @@ class Affine(Transform[ArrayT]):
         xp = array_namespace(coords)
         d = xp_device(coords)
         m = self.cast_matrix(xp, d)
-        linear_map = xp.matrix_transpose(m[:-1, :-1])  # type: ignore[attr-undefined]
-        translation = m[:-1, -1]  # type: ignore[attr-undefined]
+        linear_map = xp.matrix_transpose(m[:-1, :-1])  # type: ignore[index]
+        translation = m[:-1, -1]  # type: ignore[index]
 
         out = coords @ linear_map
         out += translation
