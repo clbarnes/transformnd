@@ -25,6 +25,7 @@ dev = [
     {include-group = "lint"},
     {include-group = "doc"},
     {include-group = "tutorial"},
+    {include-group = "bench"},
 ]
 test = ["pytest", "jax"]
 lint = [
@@ -41,6 +42,9 @@ tutorial = [
     "matplotlib>=3.10.8",
     "pandas>=3.0.2",
 ]
+bench = [
+    "pytest-benchmark>=5.2.3",
+]
 
 [build-system]
 requires = ["uv_build>=0.9.8,<0.10.0"]
@@ -49,3 +53,7 @@ build-backend = "uv_build"
 [tool.mypy]
 ignore_missing_imports = true
 check_untyped_defs = true
+
+[tool.pytest]
+testpaths = ["tests", "bench"]
+addopts = ["--benchmark-skip"]
