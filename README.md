@@ -56,6 +56,8 @@ A graph of transforms between defined spaces can be traversed using the `Transfo
 - `pandas.DataFrame` (`transformnd.adapters.pandas.PandasAdapter`)
   - Takes a subset of columns as a coordinate array
 - `polars.DataFrame` (`transformnd.adapters.polars.PolarsAdapter`)
+  - Similar to the pandas adapter
+  - Currently, only scalar columns are supported (e.g. not a single struct column with fields `x`, `y`, `z`)
 - Geometries from `shapely` (`transformnd.adapters.shapely.GeometryAdapter`)
 - Objects composed of transformable attributes (`transformnd.adapters.AttrAdapter`).
 
