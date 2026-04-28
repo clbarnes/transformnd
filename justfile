@@ -18,6 +18,7 @@ lint:
     uv run mypy src tests bench
     uv run ruff format --check src tests examples bench
 
+# Auto-fix format and lints where possible.
 fix:
     uv run ruff check --fix src tests examples bench
     uv run ruff format src tests examples bench
@@ -29,3 +30,7 @@ format:
 # Run unit tests.
 test:
     uv run pytest -v
+
+# Run benchmarks.
+bench:
+    uv run pytest --benchmark-only
