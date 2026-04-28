@@ -53,8 +53,9 @@ A graph of transforms between defined spaces can be traversed using the `Transfo
 
 - Numpy arrays of shape `(..., D, ...)` (`transformnd.adapters.ReshapeAdapter`)
 - `meshio.Mesh` (`transformnd.adapters.meshio.MeshAdapter`)
-- `pandas.DataFrame` (`transformnd.adapters.pandas.DataFrameAdapter`)
+- `pandas.DataFrame` (`transformnd.adapters.pandas.PandasAdapter`)
   - Takes a subset of columns as a coordinate array
+- `polars.DataFrame` (`transformnd.adapters.polars.PolarsAdapter`)
 - Geometries from `shapely` (`transformnd.adapters.shapely.GeometryAdapter`)
 - Objects composed of transformable attributes (`transformnd.adapters.AttrAdapter`).
 

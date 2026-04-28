@@ -18,6 +18,9 @@ thinplatesplines = ["morphops>=0.1.13", "scipy>=1.17.1"]
 movingleastsquares = ["molesq>=0.4.0"]
 pandas = ["pandas>=3.0.2"]
 shapely = ["shapely>=2.1.2"]
+polars = [
+    "polars>=1.40.1",
+]
 
 [dependency-groups]
 dev = [
