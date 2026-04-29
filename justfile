@@ -29,7 +29,7 @@ format:
 
 # Run unit tests.
 test:
-    uv run pytest -v
+    uv run --all-groups --all-extras pytest -v
 
 # Run benchmarks.
 bench:

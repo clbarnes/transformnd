@@ -99,19 +99,18 @@ class Affine(Transform[ArrayT]):
                 )
 
         self.matrix = m
-        self.skip_linear_map = np.allclose(
-            self._linear_map(), np.eye(*self.matrix.shape, dtype=self.matrix.dtype)
-        )
-        translation = self._translation()
-        self.skip_translation = np.allclose(np.zeros_like(translation), translation)
+
+        self._linear_map = m[:-1, :-1]
+        if np.allclose(
+            self._linear_map, np.eye(self._linear_map.shape[0], dtype=self.matrix.dtype)
+        ):
+            self._linear_map = None
+
+        self._translation = self.matrix[:-1, -1]
+        if np.allclose(np.zeros_like(self._translation), self._translation):
+            self._translation = None
 
         self.ndim = {len(self.matrix) - 1}
-
-    def _linear_map(self) -> np.ndarray:
-        return self.matrix[:-1, :-1]
-
-    def _translation(self) -> np.ndarray:
-        return self.matrix[:-1, -1]
 
     def to_affine(self, ndim: int | None = None) -> Self | None:
         # check that if ndim is given, it matches expectation
@@ -125,20 +124,19 @@ class Affine(Transform[ArrayT]):
         coords = self._validate_coords(coords)
         xp = array_namespace(coords)
         d = xp_device(coords)
-        m = self.cast_matrix(xp, d)
-        linear_map = xp.matrix_transpose(m[:-1, :-1])  # type: ignore[index]
-        translation = m[:-1, -1]  # type: ignore[index]
 
-        has_copied = False
         out = coords
-        if not self.skip_linear_map:
-            out = coords @ linear_map
-            has_copied = True
-        if not self.skip_translation:
-            if has_copied:
-                out += translation
+
+        if self._linear_map is not None:
+            lm = xp.asarray(self._linear_map, device=d)
+            out = coords @ xp.matrix_transpose(lm)
+
+        if self._translation is not None:
+            t = xp.asarray(self._translation, device=d)
+            if self._linear_map is None:
+                out = coords + t
             else:
-                out = coords + translation
+                out += t
 
         ## Padding and then unpadding the coords is slower, especially in C order
         # coords = xp.concatenate(
