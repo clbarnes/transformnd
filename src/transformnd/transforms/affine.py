@@ -100,13 +100,13 @@ class Affine(Transform[ArrayT]):
 
         self.matrix = m
 
-        self._linear_map = m[:-1, :-1]
+        self._linear_map: np.ndarray | None = m[:-1, :-1]
         if np.allclose(
             self._linear_map, np.eye(self._linear_map.shape[0], dtype=self.matrix.dtype)
         ):
             self._linear_map = None
 
-        self._translation = self.matrix[:-1, -1]
+        self._translation: np.ndarray | None = self.matrix[:-1, -1]
         if np.allclose(np.zeros_like(self._translation), self._translation):
             self._translation = None
 
