@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v6
         with:
-          enable-cache: true
+          enable-cache: false
       - run: uv sync --all-extras
       - run: uv run marimo check --strict --ignore-scripts examples/*.py
 
