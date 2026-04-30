@@ -1556,7 +1556,6 @@ shapely = [
 ]
 thinplatesplines = [
     { name = "morphops" },
-    { name = "scipy" },
 ]
 
 [package.dev-dependencies]
@@ -1603,7 +1602,6 @@ requires-dist = [
     { name = "networkx", specifier = ">=3" },
     { name = "numpy", specifier = ">=2" },
     { name = "pandas", marker = "extra == 'pandas'", specifier = ">=3.0.2" },
-    { name = "scipy", marker = "extra == 'thinplatesplines'", specifier = ">=1.17.1" },
     { name = "shapely", marker = "extra == 'shapely'", specifier = ">=2.1.2" },
     { name = "typing-extensions", specifier = ">=4.15.0" },
 ]
