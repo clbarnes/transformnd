@@ -53,8 +53,11 @@ A graph of transforms between defined spaces can be traversed using the `Transfo
 
 - Numpy arrays of shape `(..., D, ...)` (`transformnd.adapters.ReshapeAdapter`)
 - `meshio.Mesh` (`transformnd.adapters.meshio.MeshAdapter`)
-- `pandas.DataFrame` (`transformnd.adapters.pandas.DataFrameAdapter`)
+- `pandas.DataFrame` (`transformnd.adapters.pandas.PandasAdapter`)
   - Takes a subset of columns as a coordinate array
+- `polars.DataFrame` (`transformnd.adapters.polars.PolarsAdapter`)
+  - Similar to the pandas adapter
+  - Currently, only scalar columns are supported (e.g. not a single struct column with fields `x`, `y`, `z`)
 - Geometries from `shapely` (`transformnd.adapters.shapely.GeometryAdapter`)
 - Objects composed of transformable attributes (`transformnd.adapters.AttrAdapter`).
 
@@ -75,6 +78,7 @@ and have your transformation instantly compatible for downstream users.
 
 Methods which MUST be implemented:
 
+- `__init__`: should validate parameters and set `self.ndim` if the parameters constrain the dimensionality
 - `apply`: should call `_validate_coords` method early to check that the given coordinates are the correct shape
 
 Methods which SHOULD be implemented if applicable:
@@ -82,10 +86,8 @@ Methods which SHOULD be implemented if applicable:
 - `to_device`: if any of the transformation's parameters need to be placed on a specific device (e.g. affine matrices on the GPU)
 - `is_identity`: if you can cheaply check whether your transformation is an identity transformation. The base class implementation returns `False`.
 - `into_affine`: if your transformation can be represented as an affine matrix. The base class implementation returns `None`.
-- `__invert__`: if your transformation can be inverted. The base class implementation returns `NotImplemented`.
-
-If the transformation's dimensionality is constrained by its parameters,
-`self.ndim` should be set in the `__init__` method.
+- `invert`: if your transformation can be inverted (default None if not)
+  - This automatically implements `__invert__` (the `~my_transform` operator), which raises NotImplemented if `invert` would return `None`.
 
 ## Contributing
 
@@ -93,7 +95,7 @@ If the transformation's dimensionality is constrained by its parameters,
   - `uv sync` to set up the environment.
 - Use [`prek`](https://prek.j178.dev/) for running pre-commit hooks.
   - `prek install-hooks && prek run --all-files` to get started.
-- Use [`just`](https://github.com/casey/just) for common development tasks (format, lint, test, generate docs).
+- Use [`just`](https://github.com/casey/just) for common development tasks (format, lint, test, generate docs, run benchmarks).
   - `just` to list commands.
 
 ## Thanks

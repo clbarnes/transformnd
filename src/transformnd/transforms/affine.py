@@ -99,6 +99,17 @@ class Affine(Transform[ArrayT]):
                 )
 
         self.matrix = m
+
+        self._linear_map: np.ndarray | None = m[:-1, :-1]
+        if np.allclose(
+            self._linear_map, np.eye(self._linear_map.shape[0], dtype=self.matrix.dtype)
+        ):
+            self._linear_map = None
+
+        self._translation: np.ndarray | None = self.matrix[:-1, -1]
+        if np.allclose(np.zeros_like(self._translation), self._translation):
+            self._translation = None
+
         self.ndim = {len(self.matrix) - 1}
 
     def to_affine(self, ndim: int | None = None) -> Self | None:
@@ -113,12 +124,19 @@ class Affine(Transform[ArrayT]):
         coords = self._validate_coords(coords)
         xp = array_namespace(coords)
         d = xp_device(coords)
-        m = self.cast_matrix(xp, d)
-        linear_map = xp.matrix_transpose(m[:-1, :-1])  # type: ignore[index]
-        translation = m[:-1, -1]  # type: ignore[index]
 
-        out = coords @ linear_map
-        out += translation
+        out = coords
+
+        if self._linear_map is not None:
+            lm = xp.asarray(self._linear_map, device=d)
+            out = coords @ xp.matrix_transpose(lm)
+
+        if self._translation is not None:
+            t = xp.asarray(self._translation, device=d)
+            if self._linear_map is None:
+                out = coords + t
+            else:
+                out += t
 
         ## Padding and then unpadding the coords is slower, especially in C order
         # coords = xp.concatenate(
@@ -126,8 +144,6 @@ class Affine(Transform[ArrayT]):
         #     axis=1,
         # )
         # out: ArrayT = (coords @ m.T)[:, :-1]  # type: ignore[attr-defined]
-
-        return out
 
         return out
 
