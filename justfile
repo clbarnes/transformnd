@@ -2,13 +2,13 @@
 default:
     just --list
 
-# Generate documentation, by default under `./doc/`.
-doc docdir='doc':
-    rm -rf {{docdir}}/transformnd
+# Generate documentation, by default under `./doc/html`.
+doc docdir='doc/html':
+    rm -rf {{docdir}}
     uv run --group doc pdoc \
         --output-directory {{docdir}} \
         --no-include-undocumented \
-        --docformat markdown \
+        --docformat numpy \
         --search \
         transformnd
 
