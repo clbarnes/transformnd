@@ -97,6 +97,7 @@ Methods which SHOULD be implemented if applicable:
   - `prek install-hooks && prek run --all-files` to get started.
 - Use [`just`](https://github.com/casey/just) for common development tasks (format, lint, test, generate docs, run benchmarks).
   - `just` to list commands.
+- Docs are generated with `pdoc` (use `just doc`) and hosted on ReadTheDocs
 
 ## Thanks
 
