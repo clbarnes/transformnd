@@ -1,9 +1,10 @@
 # transformnd
 
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![GitHub](https://img.shields.io/github/license/clbarnes/transformnd)](https://github.com/clbarnes/transformnd/blob/main/LICENSE)
-[![Test Status](https://img.shields.io/github/workflow/status/clbarnes/transformnd/ci)](https://github.com/clbarnes/transformnd/actions/workflows/ci.yaml)
-[![Docs Status](https://img.shields.io/github/workflow/status/clbarnes/transformnd/docs?label=docs)](https://clbarnes.github.io/transformnd/)
+[![PyPI - Version](https://img.shields.io/pypi/v/transformnd)](https://pypi.org/project/transformnd/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/transformnd)](https://pypi.org/project/transformnd/)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/clbarnes/transformnd/ci.yaml)](https://github.com/clbarnes/transformnd/actions)
+[![Read the Docs](https://img.shields.io/readthedocs/transformnd)](https://transformnd.readthedocs.io)
+![PyPI - License](https://img.shields.io/pypi/l/transformnd)
 
 A library providing an API for coordinate transformations,
 as well as some common transforms.
