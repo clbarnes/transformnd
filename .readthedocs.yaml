@@ -15,4 +15,4 @@ build:
         # this would be preferable but readthedocs' ubuntu doesn't seem to have `just` available as a package
         # - just doc ${READTHEDOCS_OUTPUT}/html
         - mkdir -p ${READTHEDOCS_OUTPUT}/html
-        - uv run --group doc pdoc --output-directory ${READTHEDOCS_OUTPUT}/html --no-include-undocumented --docformat markdown --search transformnd
+        - uv run --group doc pdoc --output-directory ${READTHEDOCS_OUTPUT}/html --no-include-undocumented --docformat numpy --search transformnd
