@@ -1,7 +1,6 @@
 # transformnd
 
 [![PyPI - Version](https://img.shields.io/pypi/v/transformnd)](https://pypi.org/project/transformnd/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/transformnd)](https://pypi.org/project/transformnd/)
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/clbarnes/transformnd/ci.yaml)](https://github.com/clbarnes/transformnd/actions)
 [![Read the Docs](https://img.shields.io/readthedocs/transformnd)](https://transformnd.readthedocs.io)
 ![PyPI - License](https://img.shields.io/pypi/l/transformnd)
