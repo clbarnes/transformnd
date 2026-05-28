@@ -38,9 +38,7 @@ class Identity(Transform[ArrayT]):
         """
         src = chain_or(*spaces, default=None)
         tgt = chain_or(*spaces[::-1], default=None)
-        if src != tgt:
-            raise ValueError("Source and target spaces are different")
-        super().__init__(spaces=(src, src))
+        super().__init__(spaces=(src, tgt))
 
     def __invert__(self) -> Transform[ArrayT]:
         return self
