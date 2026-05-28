@@ -414,6 +414,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             if drop_inverse and isinstance(t, Bijection):
                 t = t.forward
 
+            new_affine = None
             if ndim is not None:
                 new_affine = t.to_affine(ndim)
 
