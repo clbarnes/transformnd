@@ -304,12 +304,11 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             If spaces are incompatible.
         """
         ts = infer_spaces(transforms, *spaces)
+        if ts:
+            spaces = (ts[0].source_space, ts[1].target_space)
 
         super().__init__(
-            spaces=(
-                ts[0].source_space,
-                ts[-1].target_space,
-            ),
+            spaces=spaces,
         )
 
         self.transforms: list[Transform[ArrayT]] = ts
@@ -428,7 +427,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         if affine is not None:
             add_to_output(affine, out)
 
-        return type(self)(out)
+        return type(self)(out, spaces=self.spaces)
 
 
 def add_to_output(transform: Transform, lst: list[Transform]) -> bool:
