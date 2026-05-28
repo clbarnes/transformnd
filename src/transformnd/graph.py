@@ -160,7 +160,7 @@ class TransformGraph[ArrayT]:
         -------
         ArrayT
         """
-        t = self.get_sequence(source_space, target_space)
+        t = self.get_sequence(source_space, target_space, True, True)
         return t.apply(coords)
 
     def __iter__(self) -> Iterator[Transform[ArrayT]]:
