@@ -17,7 +17,6 @@ from .util import (
     invert_spaces,
     same_or_none,
     space_str,
-    to_single_ndim,
     window,
     SpaceTuple,
     ArrayT,
@@ -403,14 +402,20 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         """
         from .transforms.bijection import Bijection
 
-        ndim = to_single_ndim(ndim, self.ndim)
+        if ndim is None:
+            if self.ndim is not None and len(self.ndim) == 1:
+                ndim = tuple(self.ndim)[0]
+        else:
+            check_ndim(ndim, self.ndim)
+
         out: list[Transform[ArrayT]] = []
         affine = None
         for t in self.transforms:
             if drop_inverse and isinstance(t, Bijection):
                 t = t.forward
 
-            new_affine = t.to_affine(ndim)
+            if ndim is not None:
+                new_affine = t.to_affine(ndim)
 
             if new_affine is None:
                 if affine is not None:

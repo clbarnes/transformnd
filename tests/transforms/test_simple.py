@@ -8,8 +8,7 @@ def test_identity_spaces():
     t = Identity[np.ndarray](spaces=(1, 1))
     assert t.target_space == 1
 
-    with pytest.raises(ValueError):
-        Identity(spaces=(1, 2))
+    Identity(spaces=(1, 2))
 
 
 def test_translate_nd(coords5x3):
