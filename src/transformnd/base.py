@@ -305,7 +305,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         """
         ts = infer_spaces(transforms, *spaces)
         if ts:
-            spaces = (ts[0].source_space, ts[1].target_space)
+            spaces = (ts[0].source_space, ts[-1].target_space)
 
         super().__init__(
             spaces=spaces,
