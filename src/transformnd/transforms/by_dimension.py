@@ -3,7 +3,8 @@ from array_api_compat import array_namespace
 from .simple import Identity
 
 from ..base import Transform
-from ..util import SpaceTuple, ArrayT, check_ndim, invert_spaces
+from ..util import ArrayT
+from ..types import NDims, Spaces
 
 
 class SubTransform[ArrayT]:
@@ -18,7 +19,6 @@ class SubTransform[ArrayT]:
 
         self.input_axes = input_axes
         if output_axes is None:
-            # this needs to be adjusted if we want to support drop and add axis
             self.output_axes = input_axes
         else:
             self.output_axes = output_axes
@@ -26,17 +26,15 @@ class SubTransform[ArrayT]:
         in_ndim = len(self.input_axes)
         out_ndim = len(self.output_axes)
 
-        if len(set(self.input_axes)) != in_ndim:
-            raise ValueError("Input axes must be unique and non-empty")
-        if len(set(self.output_axes)) != out_ndim:
-            raise ValueError("Output axes must be unique and non-empty")
+        if transform.ndims.source != in_ndim:
+            raise ValueError(
+                f"Subtransform input dimensionality ({transform.ndims.source}) must match length of input_axes"
+            )
+        if transform.ndims.target != out_ndim:
+            raise ValueError(
+                f"Subtransform output dimensionality ({transform.ndims.target}) must match length of output_axes"
+            )
 
-        if in_ndim != out_ndim:
-            raise ValueError("Input and output axes must have the same length")
-
-        check_ndim(in_ndim, transform.ndim)
-
-        self.ndim = in_ndim
         self.transform = transform
 
 
@@ -51,7 +49,7 @@ class ByDimension(Transform[ArrayT]):
         subtransforms: list[SubTransform[ArrayT]],
         fill_identity: int | None = None,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """
         Parameters
@@ -64,8 +62,6 @@ class ByDimension(Transform[ArrayT]):
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
         """
-        self.spaces = spaces
-
         if fill_identity is not None:
             to_fill_in = set(range(fill_identity))
             to_fill_out = set(range(fill_identity))
@@ -81,7 +77,9 @@ class ByDimension(Transform[ArrayT]):
                     except KeyError:
                         pass
             subtransforms.append(
-                SubTransform(Identity(), sorted(to_fill_in), sorted(to_fill_out))
+                SubTransform(
+                    Identity(len(to_fill_in)), sorted(to_fill_in), sorted(to_fill_out)
+                )
             )
 
         # check that input and output axes of sub transforms are disjoint
@@ -94,8 +92,8 @@ class ByDimension(Transform[ArrayT]):
         if sorted_out != list(range(len(sorted_out))):
             raise ValueError("N-length output axes must go from 0 to N-1")
 
+        super().__init__(NDims(len(sorted_in), len(sorted_out)), spaces=spaces)
         self.subtransforms = subtransforms
-        self.ndim = {len(sorted_in)}
 
     def apply(self, coords: ArrayT) -> ArrayT:
         """Apply transformation to subset of coordinates."""
@@ -123,7 +121,7 @@ class ByDimension(Transform[ArrayT]):
 
         return type(self)(
             subtransforms=inverted_transforms,
-            spaces=invert_spaces(self.spaces),
+            spaces=self.spaces.invert(),
         )
 
     def is_identity(self) -> bool:

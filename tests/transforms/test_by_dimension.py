@@ -7,7 +7,7 @@ from transformnd.base import TransformSequence
 
 
 def test_2d_scale():
-    factor = 1.5
+    factor = [1.5]
     coords = np.array([[1, 2], [3, 4]], dtype=float)
     scale = Scale[np.ndarray](factor)
     subseq = SubTransform(input_axes=[0], output_axes=[0], transform=scale)
@@ -29,7 +29,7 @@ def test_3d_map_axis_and_scale():
     )
 
     # Scale: apply scale to column 2
-    scale = Scale[np.ndarray](s)
+    scale = Scale[np.ndarray]([s])
     scale_subseq = SubTransform[np.ndarray](
         input_axes=[2], output_axes=[2], transform=scale
     )
@@ -65,14 +65,14 @@ def test_3d_transform_sequence():
 
     # MapAxis: swap columns 0 and 1, keep column 2
     map_axis = MapAxis[np.ndarray](permutation=[1, 0])
-    scale_seq = Scale[np.ndarray](s + 2)
+    scale_seq = Scale[np.ndarray]([s + 2] * 2)
     transform_sequence = TransformSequence[np.ndarray]([map_axis, scale_seq])
     map_axis_subseq = SubTransform(
         input_axes=[0, 1], output_axes=[0, 1], transform=transform_sequence
     )
 
     # Scale: apply scale to column 2
-    scale = Scale[np.ndarray](s)
+    scale = Scale[np.ndarray]([s])
     scale_subseq = SubTransform(input_axes=[2], output_axes=[2], transform=scale)
 
     # Apply both transformations
@@ -93,7 +93,7 @@ def test_3d_transform_sequence():
 
 def test_non_unique_axes():
     """Test that non-unique axes raise an error."""
-    scale = Scale[np.ndarray](2)
+    scale = Scale[np.ndarray]([2])
     # non-unique input axes
     with pytest.raises(ValueError):
         SubTransform(input_axes=[0, 0], output_axes=[0, 1], transform=scale)
@@ -111,10 +111,10 @@ def test_cross_axes_transform():
     coords = np.array([[1, 2], [3, 4]], dtype=float)
     coords_transformed = np.array([[2 * s_2, 1 * s_1], [4 * s_2, 3 * s_1]])
     t_1 = SubTransform(
-        input_axes=[0], output_axes=[1], transform=Scale[np.ndarray](s_1)
+        input_axes=[0], output_axes=[1], transform=Scale[np.ndarray]([s_1])
     )
     t_2 = SubTransform(
-        input_axes=[1], output_axes=[0], transform=Scale[np.ndarray](s_2)
+        input_axes=[1], output_axes=[0], transform=Scale[np.ndarray]([s_2])
     )
     by_dim = ByDimension(subtransforms=[t_1, t_2])
     coords_byDim = by_dim.apply(coords.copy())

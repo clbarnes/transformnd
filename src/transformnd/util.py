@@ -1,26 +1,12 @@
 """Utilities used elsewhere in the package."""
 
-from collections import deque
-from collections.abc import Callable, Hashable, Iterable, Iterator
 from typing import Any
-
-# required for TypeVar(default=) argument
-from typing_extensions import TypeVar
-
-import numpy as np
 from array_api_compat import array_namespace
+from numpy.typing import ArrayLike
+import numpy as np
 
-UNSPECIFIED_SPACE_NAME = "???"
-
-ArrayT = TypeVar("ArrayT", default=np.ndarray)
-
-TransformSignature = Callable[[ArrayT], ArrayT]
-"""Type annotation of a function which can be used as a transform."""
-
-SpaceRef = Hashable
-"""Type annotation of things which can be used to refer to spaces"""
-
-SpaceTuple = tuple[SpaceRef | None, SpaceRef | None]
+from .types import SpaceRef, ArrayT
+from .constants import UNSPECIFIED_SPACE_NAME
 
 
 def none_eq(a: Any | None, b: Any | None) -> bool:
@@ -111,57 +97,6 @@ def same_or_none(*args: Any, default=NO_DEFAULT) -> Any:
     return prev
 
 
-def window[T](iterable: Iterable[T], length: int) -> Iterator[tuple[T, ...]]:
-    """Sliding window over iterable.
-
-    e.g. `(it[0], it[1]), (it[1], it[2]), (it[2], it[3]), ...`
-
-    Parameters
-    ----------
-    iterable : Iterable
-    length : int
-        Length of windows to return.
-
-    Yields
-    -------
-    Tuple[Any, ...]
-    """
-    it = iter(iterable)
-    q: deque[Any] = deque(maxlen=length)
-    for _ in range(length):
-        try:
-            item = next(it)
-        except StopIteration:
-            return
-        q.append(item)
-    yield tuple(q)
-    for item in it:
-        q.append(item)
-        yield tuple(q)
-
-
-def check_ndim(given_ndim: int, supported_ndim: set[int] | None) -> None:
-    """Raise a ValueError if dimensionality is unsupported.
-
-    Parameters
-    ----------
-    given_ndim : int
-        The dimensionality to check.
-    supported_ndim : Optional[Set[int]]
-        Which dimensions are supported.
-        If None, the check passes.
-
-    Raises
-    ------
-    ValueError
-        If supported dimensions are defined and given_ndim is not in them.
-    """
-    if supported_ndim is not None and given_ndim not in supported_ndim:
-        raise ValueError(
-            f"Transform supported for {format_dims(supported_ndim)}, not {given_ndim}"
-        )
-
-
 def format_dims(supported: set[int] | None) -> str:
     """Format supported dimensions for e.g. error messages.
 
@@ -196,38 +131,6 @@ def is_square(arr: ArrayT) -> bool:
     return ndim == 2 and shape[0] == shape[1]
 
 
-def dim_intersection(
-    dims1: set[int] | None, dims2: set[int] | None, error_on_empty: bool = False
-) -> set[int] | None:
-    """Find the intersection between two sets of constraints.
-
-    None means no constraints.
-    If `error_on_empty` is truthy and there is no intersection, raise an error.
-    """
-    if dims1 is None:
-        out = dims2
-    elif dims2 is None:
-        out = dims1
-    else:
-        out = dims1.intersection(dims2)
-    if error_on_empty and out is not None and len(out) == 0:
-        raise ValueError(f"incompatible dimensions: {dims1} ∩ {dims2}")
-    return out
-
-
-def invert_spaces(spaces: SpaceTuple) -> SpaceTuple:
-    """Invert the given (source, target) space tuple."""
-    return (spaces[1], spaces[0])
-
-
-def are_coords(coords: ArrayT, ndim: set[int] | None = None):
-    xp = array_namespace(coords)
-    if xp.ndim(coords) != 2:
-        raise ValueError("Coords must be a 2D array")
-    check_ndim(xp.shape(coords)[1], ndim)
-    return coords
-
-
 def to_single_ndim(ndim: None | int = None, ndims: None | set[int] = None) -> int:
     """Select a single ndim from the given options.
 
@@ -249,3 +152,11 @@ def to_single_ndim(ndim: None | int = None, ndims: None | set[int] = None) -> in
         return ndim
 
     raise ValueError(f"dimensionality conflict: {ndim} not in {ndims}")
+
+
+def as_floats(arr: ArrayLike):
+    """Get array-like as a numpy array, casting to float if integral."""
+    arr = np.asarray(arr)
+    if not np.issubdtype(arr.dtype, np.floating):
+        arr = arr.astype(np.float64)
+    return arr

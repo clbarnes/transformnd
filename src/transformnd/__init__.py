@@ -3,7 +3,8 @@
 """
 
 from .base import Transform, TransformSequence, TransformWrapper
-from .util import SpaceRef, TransformSignature, check_ndim
+from .util import SpaceRef
+from .types import Spaces, TransformSignature, NDims
 from . import transforms
 from . import adapters
 from .graph import TransformGraph
@@ -18,7 +19,8 @@ __all__ = [
     "TransformWrapper",
     "TransformSignature",
     "SpaceRef",
-    "check_ndim",
     "transforms",
     "adapters",
+    "Spaces",
+    "NDims",
 ]

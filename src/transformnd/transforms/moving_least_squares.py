@@ -9,8 +9,9 @@ import numpy as np
 from typing import Self
 from molesq.transform import Transformer as _Transformer
 
-from ..base import SpaceTuple, Transform
-from ..util import invert_spaces
+from ..base import Transform
+from ..types import NDims, Spaces
+from ..util import as_floats
 
 
 class MovingLeastSquares(Transform[np.ndarray]):
@@ -24,7 +25,7 @@ class MovingLeastSquares(Transform[np.ndarray]):
         source_control_points: np.ndarray,
         target_control_points: np.ndarray,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """Non-rigid transforms powered by molesq package.
 
@@ -38,12 +39,16 @@ class MovingLeastSquares(Transform[np.ndarray]):
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
         """
-        super().__init__(spaces=spaces)
-        self._transformer = _Transformer(
-            np.asarray(source_control_points),
-            np.asarray(target_control_points),
+        s = as_floats(source_control_points)
+        t = as_floats(target_control_points)
+        self._transformer = _Transformer(s, t)
+        super().__init__(
+            NDims(
+                s.shape[1],
+                t.shape[1],
+            ),
+            spaces=spaces,
         )
-        self.ndim = {self._transformer.control_points.shape[1]}
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
         coords = self._validate_coords(coords)
@@ -62,5 +67,5 @@ class MovingLeastSquares(Transform[np.ndarray]):
         return type(self)(
             self._transformer.deformed_control_points,
             self._transformer.control_points,
-            spaces=invert_spaces(self.spaces),
+            spaces=self.spaces.invert(),
         )

@@ -5,7 +5,7 @@ from array_api_compat import array_namespace
 from transformnd.transforms.affine import Affine
 
 from ..base import Transform, ArrayT
-from ..util import SpaceTuple, dim_intersection, invert_spaces
+from ..types import Spaces
 
 
 class Bijection(Transform[ArrayT]):
@@ -13,14 +13,12 @@ class Bijection(Transform[ArrayT]):
 
     For example, x -> y and y -> x"""
 
-    # ndim: Optional[Set[int]] = set(2)
-
     def __init__(
         self,
         forward: Transform[ArrayT],
         inverse: Transform[ArrayT],
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """Base class for transformations.
 
@@ -32,28 +30,26 @@ class Bijection(Transform[ArrayT]):
 
         self.forward = forward
         self.inverse = inverse
-        ndim = dim_intersection(forward.ndim, inverse.ndim)
-        if ndim is not None and len(ndim) == 0:
+        if forward.ndims != inverse.ndims.invert():
             raise ValueError(
-                "forward and inverse transforms do not share a dimensionality"
+                f"Bijection dimensionalities mismatch: fwd:{forward.ndims}, inv:{inverse.ndims}"
             )
-        self.ndim = ndim
-        self.spaces = spaces
+        super().__init__(self.forward.ndims, spaces=spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         return self.forward.apply(coords)
 
     def invert(self) -> Self | None:
-        return type(self)(self.inverse, self.forward, spaces=invert_spaces(self.spaces))
+        return type(self)(self.inverse, self.forward, spaces=self.spaces.invert())
 
     def is_identity(self) -> bool:
         return self.forward.is_identity() and self.inverse.is_identity()
 
-    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
-        fwd = self.forward.to_affine(ndim)
+    def to_affine(self) -> Affine[ArrayT] | None:
+        fwd = self.forward.to_affine()
         if fwd is None:
             return None
-        inv = self.inverse.to_affine(ndim)
+        inv = self.inverse.to_affine()
         if inv is None:
             return None
 

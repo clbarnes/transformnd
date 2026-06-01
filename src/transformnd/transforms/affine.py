@@ -14,7 +14,8 @@ from copy import copy
 
 from array_api_compat import array_namespace, device as xp_device
 from ..base import Transform, ArrayT
-from ..util import is_square, none_eq, SpaceTuple, to_single_ndim
+from ..util import as_floats, none_eq
+from ..types import NDims, Spaces
 
 
 def arg_as_array(arg, ndim: int | None) -> np.ndarray:
@@ -45,28 +46,19 @@ class Affine(Transform[ArrayT]):
     so the transform works transparently with NumPy, JAX, PyTorch, CuPy, etc.
     """
 
-    matrix: np.ndarray
-
     def __init__(
         self,
         matrix: ArrayLike,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """
-        Affine transformation matrices' bottom row must be all zeroes except a 1 in the rightmost column.
-
-        Matrix may have shape:
-
-        - (D+1, D+1): an affine transformation matrix (the bottom row will be validated)
-        - (D, D+1): an affine transformation matrix missing the bottom row (it will be added)
-        - (D,): a vector of scales which become the first D elements of a diagonal matrix of size D+1
-
         Parameters
         ----------
         matrix : ArrayLike
-            Affine transformation matrix. Any array-like (including JAX/PyTorch
-            arrays) is accepted and converted to NumPy for storage.
+            Affine transformation matrix,
+            i.e. a 2D array-like with shape `(Di + 1, Do + 1)`,
+            where the bottom row is all 0s except in the rightmost column, which is 1.
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
 
@@ -75,30 +67,21 @@ class Affine(Transform[ArrayT]):
         ValueError
             Malformed matrix.
         """
-        super().__init__(spaces=spaces)
-        m = np.asarray(matrix)
+        m = as_floats(matrix)
+        if m.ndim != 2:
+            raise ValueError("Affine matrix must be 2D")
 
-        if m.ndim == 1:
-            scales = m
-            m = np.eye(len(m) + 1, dtype=m.dtype)
-            m[:-1, :-1] *= scales
-        elif m.ndim != 2:
-            raise ValueError("Transformation matrix must be 2D")
+        bottom_row = m[-1, :]
+        expected = np.zeros_like(bottom_row)
+        expected[-1] = 1
+        if not np.allclose(bottom_row, expected):
+            raise ValueError(
+                f"Transformation matrix is not affine (expected bottom row {expected}, got {bottom_row})."
+            )
 
-        if m.shape[1] == m.shape[0] + 1:
-            base = np.eye(m.shape[1], dtype=m.dtype)
-            base[:-1, :] = m
-            m = base
-        elif not is_square(m):
-            raise ValueError("Transformation matrix must be square")
-        else:
-            bottom_row = m[-1, :]
-            if bottom_row[-1] != 1 or not np.all(bottom_row[:-1] == 0):
-                raise ValueError(
-                    "Transformation matrix is not affine (bottom row must be [0,0,0,...,1])."
-                )
+        super().__init__(NDims(m.shape[0] - 1, m.shape[1] - 1), spaces=spaces)
 
-        self.matrix = m
+        self.matrix: np.ndarray = m
 
         self._linear_map: np.ndarray | None = m[:-1, :-1]
         if np.allclose(
@@ -110,11 +93,7 @@ class Affine(Transform[ArrayT]):
         if np.allclose(np.zeros_like(self._translation), self._translation):
             self._translation = None
 
-        self.ndim = {len(self.matrix) - 1}
-
-    def to_affine(self, ndim: int | None = None) -> Self | None:
-        # check that if ndim is given, it matches expectation
-        to_single_ndim(ndim, self.ndim)
+    def to_affine(self) -> Self | None:
         return self
 
     def cast_matrix(self, namespace, device) -> ArrayT:
@@ -155,7 +134,7 @@ class Affine(Transform[ArrayT]):
 
         return type(self)(
             inv,
-            spaces=(self.spaces[1], self.spaces[0]),
+            spaces=self.spaces.invert(),
         )
 
     def __matmul__(self, rhs: Affine[ArrayT]) -> Affine[ArrayT]:
@@ -182,11 +161,11 @@ class Affine(Transform[ArrayT]):
             raise ValueError(
                 "Cannot multiply affine matrices of different dimensionality"
             )
-        if not none_eq(self.target_space, rhs.source_space):
+        if not none_eq(self.spaces.target, rhs.spaces.source):
             raise ValueError("Affine transforms do not share a space")
         return Affine(
             self.matrix @ rhs.matrix,
-            spaces=(self.source_space, rhs.target_space),
+            spaces=Spaces(self.spaces.source, rhs.spaces.target),
         )
 
     def to_device(self, xp, device=None) -> "Affine[ArrayT]":
@@ -215,9 +194,9 @@ class Affine(Transform[ArrayT]):
     def from_linear_map(
         cls,
         linear_map: ArrayLike,
-        translation=0,
+        translation: ArrayLike | None = None,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an augmented affine matrix from a linear map,
         with an optional translation.
@@ -225,7 +204,7 @@ class Affine(Transform[ArrayT]):
         Parameters
         ----------
         linear_map : ArrayLike
-            Shape (D, D)
+            Shape `(Di, Do)`
         translation : ArrayLike, optional
             Translation to add to the matrix, by default 0
         spaces : tuple[SpaceRef, SpaceRef]
@@ -235,11 +214,21 @@ class Affine(Transform[ArrayT]):
         -------
         AffineTransform
         """
-        lin_map = np.asarray(linear_map)
-        side = len(lin_map) + 1
-        matrix = np.eye(side, dtype=lin_map.dtype)
+        lin_map = as_floats(linear_map)
+        if lin_map.ndim != 2:
+            raise ValueError(f"Linear map must be 2D; got shape {lin_map.shape}")
+        matrix = np.zeros_like(
+            lin_map, shape=(lin_map.shape[0] + 1, lin_map.shape[1] + 1)
+        )
         matrix[:-1, :-1] = lin_map
-        matrix[:-1, -1] = translation
+        matrix[-1, -1] = 1
+        if translation is not None:
+            t = as_floats(translation)
+            if len(t) != lin_map.shape[0]:
+                raise ValueError(
+                    "Translation array must be the same length as linear map columns"
+                )
+            matrix[:-1, -1] = translation
         return cls(matrix, spaces=spaces)
 
     @classmethod
@@ -247,7 +236,7 @@ class Affine(Transform[ArrayT]):
         cls,
         ndim: int,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an identity affine transformation.
 
@@ -267,16 +256,14 @@ class Affine(Transform[ArrayT]):
     def translation(
         cls,
         translation: ArrayLike,
-        ndim: int | None = None,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an affine translation.
 
         Parameters
         ----------
         translation : ArrayLike
-            If scalar, broadcast to ndim.
         ndim : int, optional
             If translation is scalar, how many dims to use.
         spaces : tuple[SpaceRef, SpaceRef]
@@ -286,7 +273,9 @@ class Affine(Transform[ArrayT]):
         -------
         AffineTransform
         """
-        t = arg_as_array(translation, ndim)
+        t = as_floats(translation)
+        if t.ndim != 1:
+            raise ValueError(f"Translation array must be 1D; got shape {t.shape}")
         m = np.eye(len(t) + 1, dtype=t.dtype)
         m[:-1, -1] = t
         return cls(m, spaces=spaces)
@@ -295,9 +284,8 @@ class Affine(Transform[ArrayT]):
     def scaling(
         cls,
         scale: ArrayLike,
-        ndim: int | None = None,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an affine scaling.
 
@@ -314,10 +302,10 @@ class Affine(Transform[ArrayT]):
         -------
         AffineTransform
         """
-        s = arg_as_array(scale, ndim)
-        m = np.eye(len(s) + 1, dtype=s.dtype)
-        m[:-1, :-1] *= s
-        return cls(m, spaces=spaces)
+        s = as_floats(scale)
+        if s.ndim != 1:
+            raise ValueError(f"Scale array must be 1D; got shape {s.shape}")
+        return cls.from_linear_map(np.diag(s), spaces=spaces)
 
     @classmethod
     def reflection(
@@ -325,7 +313,7 @@ class Affine(Transform[ArrayT]):
         axis: Union[int, Container[int]],
         ndim: int,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an affine reflection.
 
@@ -354,7 +342,7 @@ class Affine(Transform[ArrayT]):
         degrees=True,
         clockwise=False,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create a 2D affine rotation.
 
@@ -388,7 +376,7 @@ class Affine(Transform[ArrayT]):
         clockwise=False,
         order=(0, 1, 2),
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create a 3D affine rotation.
 
@@ -446,7 +434,7 @@ class Affine(Transform[ArrayT]):
         factor: Union[float, np.ndarray],
         ndim: int | None = None,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an affine shear.
 
@@ -500,13 +488,10 @@ class Affine(Transform[ArrayT]):
             return NotImplemented
         return np.array_equal(self.matrix, other.matrix) and self.spaces == other.spaces
 
-    def into_affine(self, ndim: int | None = None) -> Affine[ArrayT]:
-        ndim = to_single_ndim(ndim, self.ndim)
-        return self
-
     def is_identity(self) -> bool:
         xp = array_namespace(self.matrix)
-        assert self.ndim is not None
-        ndim = list(self.ndim).pop()
-        identity = xp.eye(ndim + 1, dtype=self.matrix.dtype, device=self.matrix.device)
+        sh = xp.shape(self.matrix)
+        if sh[0] != sh[1]:
+            return False
+        identity = xp.eye(sh[0], dtype=self.matrix.dtype, device=self.matrix.device)
         return xp.all(xp.equal(self.matrix, identity))

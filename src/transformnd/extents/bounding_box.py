@@ -1,6 +1,6 @@
 from functools import lru_cache
 from array_api_compat import array_namespace
-from ..util import ArrayT, are_coords
+from ..util import ArrayT
 from .base import Extents
 from array_api_compat import device as xp_device
 
@@ -13,9 +13,9 @@ class BoundingBox(Extents[ArrayT]):
         if len(xp.shape(mins)) != 1:
             raise ValueError("mins and maxes must be 1D")
 
-        self.ndim = {xp.shape(mins)[0]}
         self.mins = mins
         self.maxes = maxes
+        super().__init__(xp.shape(mins)[0])
 
     @lru_cache()
     def extents_cast(self, namespace, device) -> tuple[ArrayT, ArrayT]:
@@ -25,7 +25,13 @@ class BoundingBox(Extents[ArrayT]):
         )
 
     def _validate_coords(self, coords: ArrayT) -> ArrayT:
-        return are_coords(coords, self.ndim)
+        xp = array_namespace(coords)
+        if xp.ndim(coords) != 2:
+            raise ValueError("Coords must be a 2D array")
+        dim = xp.shape(coords)[1]
+        if xp.shape(coords)[1] != self.ndim:
+            raise ValueError(f"Coords must have dimensionality {self.ndim}, got {dim}")
+        return coords
 
     def contains(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)

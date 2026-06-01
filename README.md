@@ -85,7 +85,7 @@ Methods which SHOULD be implemented if applicable:
 
 - `to_device`: if any of the transformation's parameters need to be placed on a specific device (e.g. affine matrices on the GPU)
 - `is_identity`: if you can cheaply check whether your transformation is an identity transformation. The base class implementation returns `False`.
-- `into_affine`: if your transformation can be represented as an affine matrix. The base class implementation returns `None`.
+- `to_affine`: if your transformation can be represented as an affine matrix. The base class implementation returns `None`.
 - `invert`: if your transformation can be inverted (default None if not)
   - This automatically implements `__invert__` (the `~my_transform` operator), which raises NotImplemented if `invert` would return `None`.
 
