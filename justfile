@@ -17,6 +17,7 @@ lint:
     uv run --group lint ruff check src tests examples bench
     uv run --group lint mypy src tests bench
     uv run --group lint ruff format --check src tests examples bench
+    uv run --group tutorial marimo check --strict --ignore-scripts examples/*.py
 
 # Auto-fix format and lints where possible.
 fix:
