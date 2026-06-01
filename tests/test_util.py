@@ -1,6 +1,6 @@
 import pytest
 
-from transformnd.util import chain_or, none_eq, same_or_none, window
+from transformnd.util import chain_or, none_eq, same_or_none
 
 
 def test_same_or_none():
@@ -26,14 +26,3 @@ def test_chain_or():
     with pytest.raises(ValueError):
         chain_or(None)
     assert chain_or(None, default=1) == 1
-
-
-def test_window():
-    test = list(window(range(5), 2))
-    ref = [
-        (0, 1),
-        (1, 2),
-        (2, 3),
-        (3, 4),
-    ]
-    assert test == ref

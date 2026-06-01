@@ -8,7 +8,9 @@ from collections.abc import Iterable, Iterator
 import networkx as nx
 
 from .base import Transform, TransformSequence
-from .util import SpaceRef, chain_or, dim_intersection, window, ArrayT
+from .util import SpaceRef, chain_or, ArrayT
+from .types import Spaces
+from itertools import pairwise
 
 
 def split_sequence(seq: TransformSequence[ArrayT]) -> Iterator[Transform[ArrayT]]:
@@ -28,12 +30,12 @@ def split_sequence(seq: TransformSequence[ArrayT]) -> Iterator[Transform[ArrayT]
     """
     this_seq = []
     for t in seq.transforms:
-        if t.source_space is not None and t.target_space is not None:
+        if t.spaces.source is not None and t.spaces.target is not None:
             yield t
             continue
 
         this_seq.append(t)
-        if t.target_space is not None:
+        if t.spaces.target is not None:
             yield TransformSequence(this_seq)
             this_seq = []
 
@@ -45,6 +47,32 @@ class SimplifyConfig:
 
     drop_inverse: bool = False
     """Drop explicit inverses in bijection transformations."""
+
+
+class NDimRegistries:
+    def __init__(self, perm: dict[SpaceRef, int]) -> None:
+        self.perm = perm
+        self.temp: dict[SpaceRef, int] = dict()
+
+    def _check_inner(
+        self, space: SpaceRef, ndim: int, reg: dict[SpaceRef, int], add: bool = False
+    ):
+        val = reg.get(space)
+        if val is None:
+            if add:
+                reg[space] = ndim
+            return None
+        if val != ndim:
+            raise ValueError(
+                f"New transform implies space {space} is {ndim}D, but it is already registered as {val}D"
+            )
+
+    def merge(self):
+        self.perm.update(self.temp)
+
+    def check(self, space: SpaceRef, ndim: int):
+        self._check_inner(space, ndim, self.perm)
+        self._check_inner(space, ndim, self.temp, True)
 
 
 class TransformGraph[ArrayT]:
@@ -59,6 +87,7 @@ class TransformGraph[ArrayT]:
     def __init__(self):
         self.graph = nx.DiGraph()
         self.ndim: set[int] | None = None
+        self.space_ndims: dict[SpaceRef, int] = dict()
 
     def add_transforms(self, transforms: Iterable[Transform[ArrayT]]) -> int:
         """
@@ -78,27 +107,23 @@ class TransformGraph[ArrayT]:
         edges: dict[tuple[SpaceRef, SpaceRef], Transform[ArrayT]] = dict()
         self.get_sequence.cache_clear()
 
-        ndim = self.ndim
+        registry = NDimRegistries(self.space_ndims)
 
         for t in transforms:
-            ndim = dim_intersection(ndim, t.ndim)
-            if ndim is not None and len(ndim) == 0:
-                raise ValueError("This TransformGraph supports no dimensionality")
-
             if isinstance(t, TransformSequence):
                 ts = list(split_sequence(t))
             else:
                 ts = [t]
 
             for t2 in ts:
-                if chain_or(t2.source_space, t2.target_space, default=None) is None:
+                if chain_or(t2.spaces.source, t2.spaces.target, default=None) is None:
                     raise ValueError(
                         "All transforms in a graph "
                         "need explicit source and target spaces"
                     )
-                edges[(t2.source_space, t2.target_space)] = t2
-
-        self.ndim = ndim
+                registry.check(t2.spaces.source, t2.ndims.source)
+                registry.check(t2.spaces.target, t2.ndims.target)
+                edges[(t2.spaces.source, t2.spaces.target)] = t2
 
         count = 0
 
@@ -112,6 +137,8 @@ class TransformGraph[ArrayT]:
                 except NotImplementedError:
                     pass
 
+        registry.merge()
+
         return count
 
     @lru_cache()
@@ -119,7 +146,7 @@ class TransformGraph[ArrayT]:
         self,
         source_space: SpaceRef,
         target_space: SpaceRef,
-        simplify: SimplifyConfig | None = None,
+        full: bool = False,
     ) -> TransformSequence[ArrayT]:
         """Get the shortest TransformSequence for transforming between two spaces.
 
@@ -127,12 +154,9 @@ class TransformGraph[ArrayT]:
         ----------
         source_space : SpaceRef
         target_space : SpaceRef
-        simplify : bool
-            Whether to simplify the transform sequence; see `TransformSequence.simplify`.
-        drop_inverse : bool
-            If `simplify==True`, whether to drop explicit inverses.
-            See `TransformSequence.simplify` for details.
-            Ignored if `simplify==False`.
+        full : bool
+            By default, simplifies consecutive affines and drops bijections' inverse form.
+            If `full` is True, keeps each transformation as-is.
 
         Returns
         -------
@@ -143,14 +167,14 @@ class TransformGraph[ArrayT]:
             transforms = []
         else:
             transforms = [
-                self.graph.edges[src, tgt]["transform"] for src, tgt in window(path, 2)
+                self.graph.edges[src, tgt]["transform"] for src, tgt in pairwise(path)
             ]
         seq = TransformSequence(
             transforms,
-            spaces=(source_space, target_space),
+            spaces=Spaces(source_space, target_space),
         )
-        if simplify is not None:
-            seq = seq.simplify(ndim=simplify.ndim, drop_inverse=simplify.drop_inverse)
+        if not full:
+            seq = seq.simplify(drop_inverse=False)
         return seq
 
     def transform(
@@ -158,8 +182,6 @@ class TransformGraph[ArrayT]:
         source_space: SpaceRef,
         target_space: SpaceRef,
         coords: ArrayT,
-        *,
-        simplify=SimplifyConfig(drop_inverse=True),
     ) -> ArrayT:
         """Transform coordinates from one space to another,
         possibly via intermediates.
@@ -174,7 +196,7 @@ class TransformGraph[ArrayT]:
         -------
         ArrayT
         """
-        t = self.get_sequence(source_space, target_space, simplify)
+        t = self.get_sequence(source_space, target_space)
         return t.apply(coords)
 
     def __iter__(self) -> Iterator[Transform[ArrayT]]:

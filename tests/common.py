@@ -1,5 +1,5 @@
 from transformnd.base import Transform
-from transformnd.util import SpaceTuple, to_single_ndim
+from transformnd.types import Spaces, NDims
 from transformnd.transforms.affine import Affine
 from copy import copy
 import numpy as np
@@ -10,14 +10,13 @@ class NullTransform(Transform):
 
     def __init__(
         self,
-        ndim: set[int] | None = None,
+        ndim: int,
         invertible: bool = False,
         affineable: bool = False,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
-        super().__init__(spaces=spaces)
-        self.ndim = ndim
+        super().__init__(NDims(ndim, ndim), spaces=spaces)
         self.invertible = invertible
         self.affineable = affineable
 
@@ -26,10 +25,9 @@ class NullTransform(Transform):
             return copy(self)
         return None
 
-    def to_affine(self, ndim: int | None = None) -> Affine | None:
-        ndim = to_single_ndim(ndim, self.ndim)
+    def to_affine(self) -> Affine | None:
         if self.affineable:
-            return Affine.identity(ndim, spaces=self.spaces)
+            return Affine.identity(self.ndims.source, spaces=self.spaces)
         return None
 
     def apply(self, coords: np.ndarray) -> np.ndarray:

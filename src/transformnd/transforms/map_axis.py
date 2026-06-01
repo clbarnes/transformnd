@@ -3,7 +3,8 @@ from array_api_compat import array_namespace
 import numpy as np
 
 from ..base import Transform
-from ..util import ArrayT, SpaceTuple, to_single_ndim
+from ..util import ArrayT
+from ..types import Spaces, NDims
 from ..transforms.affine import Affine
 
 
@@ -18,7 +19,7 @@ class MapAxis(Transform[ArrayT]):
         self,
         permutation: list[int],
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """Base class for transformations.
 
@@ -35,18 +36,15 @@ class MapAxis(Transform[ArrayT]):
                 "N-D permutation must contain all dimensions [0, N) exactly once"
             )
         self.permutation = permutation
-        self.ndim = {len(permutation)}
-        self.spaces = spaces
+        super().__init__(NDims(len(permutation), len(permutation)), spaces=spaces)
 
     def is_identity(self) -> bool:
         return all(a == b for a, b in enumerate(self.permutation))
 
-    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
-        ndim = to_single_ndim(ndim, self.ndim)
-        m = np.eye(ndim + 1)
-        perm = self.permutation + [ndim]
-        m = m[perm, :]
-        return Affine(m, spaces=self.spaces)
+    def to_affine(self) -> Affine[ArrayT] | None:
+        m = np.eye(self.ndims.source)
+        m = m[self.permutation, :]
+        return Affine.from_linear_map(m, spaces=self.spaces)  # type: ignore
 
     def apply(self, coords: ArrayT) -> ArrayT:
         """Apply transformation to coordinates.
@@ -63,5 +61,5 @@ class MapAxis(Transform[ArrayT]):
     def invert(self) -> Self | None:
         return type(self)(
             list(np.argsort(self.permutation)),
-            spaces=(self.spaces[1], self.spaces[0]),
+            spaces=self.spaces.invert(),
         )

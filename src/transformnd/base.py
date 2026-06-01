@@ -11,16 +11,13 @@ from array_api_compat import array_namespace
 
 from .util import (
     SpaceRef,
-    TransformSignature,
-    check_ndim,
-    dim_intersection,
-    invert_spaces,
     same_or_none,
     space_str,
-    window,
-    SpaceTuple,
     ArrayT,
 )
+from itertools import pairwise
+
+from .types import TransformSignature, Spaces, NDims
 
 if TYPE_CHECKING:
     from .transforms import Affine
@@ -29,40 +26,27 @@ if TYPE_CHECKING:
 class Transform[ArrayT](ABC):
     """Base class for transforms."""
 
-    ndim: set[int] | None = None
-
     def __init__(
         self,
+        ndims: NDims,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """
         Parameters
         ----------
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces
             Optional source and target spaces
         """
-        self.spaces = spaces
-
-    @property
-    def source_space(self):
-        return self.spaces[0]
-
-    @property
-    def target_space(self):
-        return self.spaces[1]
+        self.ndims: NDims = ndims
+        self.spaces: Spaces = spaces
 
     def is_identity(self) -> bool:
         """Whether this is a no-op transformation."""
         return False
 
-    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
+    def to_affine(self) -> Affine[ArrayT] | None:
         """Convert the transform into affine, if conversion is possible.
-
-        Parameters
-        ----------
-        dim: int, optional
-            Total number of dimensions; If None, dim is set equal to self.ndim.
 
         Returns
         -------
@@ -73,7 +57,7 @@ class Transform[ArrayT](ABC):
         return None
 
     def _validate_coords(self, coords: ArrayT) -> ArrayT:
-        """Check that dimension of coords are supported.
+        """Check that input coordinates are of the correct shape.
 
         Also ensure that coords is a 2D array.
 
@@ -90,7 +74,11 @@ class Transform[ArrayT](ABC):
         xp = array_namespace(coords)
         if xp.ndim(coords) != 2:
             raise ValueError("Coords must be a 2D array")
-        check_ndim(xp.shape(coords)[1], self.ndim)
+        dim = xp.shape(coords)[1]
+        if xp.shape(coords)[1] != self.ndims.source:
+            raise ValueError(
+                f"Coords must have dimensionality {self.ndims.source}, got {dim}"
+            )
         return coords
 
     @abstractmethod
@@ -111,8 +99,6 @@ class Transform[ArrayT](ABC):
 
     def invert(self) -> Transform | None:
         """Invert the transformation, returning `None` if not possible."""
-        if self.is_identity():
-            return copy(self)
         return None
 
     def __invert__(self) -> Transform:
@@ -167,10 +153,10 @@ class Transform[ArrayT](ABC):
         """
         if not isinstance(other, Transform):
             return NotImplemented
-        transforms = get_transform_list(self) + get_transform_list(other)
+        transforms = as_transform_list(self) + as_transform_list(other)
         return TransformSequence[ArrayT](
             transforms,
-            spaces=(self.source_space, other.target_space),
+            spaces=Spaces(self.spaces.source, other.spaces.target),
         )
 
     def __ror__(self, other: Transform[ArrayT]) -> TransformSequence[ArrayT]:
@@ -188,16 +174,16 @@ class Transform[ArrayT](ABC):
         """
         if not isinstance(other, Transform):
             return NotImplemented
-        transforms = get_transform_list(other) + get_transform_list(self)
+        transforms = as_transform_list(other) + as_transform_list(self)
         return TransformSequence(
             transforms,
-            spaces=(other.source_space, self.target_space),
+            spaces=Spaces(other.spaces.source, self.spaces.target),
         )
 
     def __str__(self) -> str:
         cls_name = type(self).__name__
-        src = space_str(self.source_space)
-        tgt = space_str(self.target_space)
+        src = space_str(self.spaces.source)
+        tgt = space_str(self.spaces.target)
         return f"{cls_name}[{src}->{tgt}]"
 
 
@@ -207,9 +193,10 @@ class TransformWrapper(Transform[ArrayT]):
     def __init__(
         self,
         fn: TransformSignature[ArrayT],
-        ndim: set[int] | int | None = None,
+        in_ndim: int,
+        out_ndim: int,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """Wrapper around an arbitrary function.
 
@@ -223,13 +210,8 @@ class TransformWrapper(Transform[ArrayT]):
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
         """
-        super().__init__(spaces=spaces)
+        super().__init__(NDims(in_ndim, out_ndim), spaces=spaces)
         self.fn = fn
-        if ndim is not None:
-            if isinstance(ndim, int):
-                self.ndim = {ndim}
-            else:
-                self.ndim = set(ndim)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         self._validate_coords(coords)
@@ -241,12 +223,12 @@ def _with_spaces(
     source_space: SpaceRef | None = None,
     target_space: SpaceRef | None = None,
 ) -> Transform[ArrayT]:
-    src_tgt = (t.source_space, t.target_space)
+    src_tgt = (t.spaces.source, t.spaces.target)
     src = same_or_none(src_tgt[0], source_space, default=None)
     tgt = same_or_none(src_tgt[1], target_space, default=None)
     if (src, tgt) != src_tgt:
         t = copy(t)
-        t.spaces = (src, tgt)
+        t.spaces = Spaces(src, tgt)
     return t
 
 
@@ -255,9 +237,9 @@ def infer_spaces(
 ) -> list[Transform[ArrayT]]:
     prev_tgts = [source_space]
     next_srcs = []
-    for t1, t2 in window(transforms, 2):
-        prev_tgts.append(t1.target_space)
-        next_srcs.append(t2.source_space)
+    for t1, t2 in pairwise(transforms):
+        prev_tgts.append(t1.spaces.target)
+        next_srcs.append(t2.spaces.source)
 
     next_srcs.append(target_space)
 
@@ -267,7 +249,7 @@ def infer_spaces(
     return out
 
 
-def get_transform_list(t: Transform[ArrayT]) -> list[Transform[ArrayT]]:
+def as_transform_list(t: Transform[ArrayT]) -> list[Transform[ArrayT]]:
     if isinstance(t, TransformSequence):
         return t.transforms.copy()
     else:
@@ -281,7 +263,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         self,
         transforms: Sequence[Transform[ArrayT]],
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ) -> None:
         """Combine transforms by chaining them.
 
@@ -303,21 +285,18 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             If spaces are incompatible.
         """
         ts = infer_spaces(transforms, *spaces)
-        if ts:
-            spaces = (ts[0].source_space, ts[-1].target_space)
+        if not ts:
+            raise ValueError("Empty transform sequence")
+
+        spaces = Spaces(ts[0].spaces.source, ts[-1].spaces.target)
+        ndims = NDims(ts[0].ndims.source, ts[-1].ndims.target)
 
         super().__init__(
+            ndims,
             spaces=spaces,
         )
 
         self.transforms: list[Transform[ArrayT]] = ts
-
-        self.ndim = None
-        for t in self.transforms:
-            self.ndim = dim_intersection(self.ndim, t.ndim)
-
-        if self.ndim is not None and len(self.ndim) == 0:
-            raise ValueError("Transforms have incompatible dimensionalities")
 
     def __iter__(self) -> Iterator[Transform[ArrayT]]:
         """Iterate through component transforms.
@@ -344,7 +323,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             return None
         return type(self)(
             transforms,
-            spaces=invert_spaces(self.spaces),
+            spaces=self.spaces.invert(),
         )
 
     def apply(self, coords: ArrayT) -> ArrayT:
@@ -369,7 +348,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         -------
         List[SpaceRef]
         """
-        spaces = [self.source_space] + [t.target_space for t in self.transforms]
+        spaces = [self.spaces.source] + [t.spaces.target for t in self.transforms]
         if skip_none:
             spaces = [s for s in spaces if s is not None]
         return spaces
@@ -387,7 +366,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
     def is_identity(self) -> bool:
         return all(t.is_identity() for t in self)
 
-    def simplify(self, ndim: int | None = None, drop_inverse: bool = False):
+    def simplify(self, drop_inverse: bool = True):
         """Reduce the number of transformations in this sequence if possible.
 
         - Compose consecutive transformations which can be expressed as affines
@@ -402,21 +381,13 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         """
         from .transforms.bijection import Bijection
 
-        if ndim is None:
-            if self.ndim is not None and len(self.ndim) == 1:
-                ndim = tuple(self.ndim)[0]
-        else:
-            check_ndim(ndim, self.ndim)
-
         out: list[Transform[ArrayT]] = []
         affine = None
         for t in self.transforms:
             if drop_inverse and isinstance(t, Bijection):
                 t = t.forward
 
-            new_affine = None
-            if ndim is not None:
-                new_affine = t.to_affine(ndim)
+            new_affine = t.to_affine()
 
             if new_affine is None:
                 if affine is not None:
@@ -441,6 +412,6 @@ def add_to_output(transform: Transform, lst: list[Transform]) -> bool:
         return False
 
     transform = copy(transform)
-    transform.spaces = (None, None)
+    transform.spaces = Spaces(None, None)
     lst.append(transform)
     return True

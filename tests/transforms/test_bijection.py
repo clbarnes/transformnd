@@ -54,15 +54,10 @@ def test_bijection_roundtrip(coords5x3):
 
 
 def test_bijection_dim_mismatch():
-    forward = Scale[np.ndarray](2)
-    inverse = Scale[np.ndarray](0.5)
-    bij = Bijection(forward, inverse)
-    assert bij.ndim is None  # both support all dimensions
-
     forward_2d = MapAxis(permutation=[1, 0])
     inverse_2d = MapAxis(permutation=[1, 0])
     bij_2d = Bijection(forward_2d, inverse_2d)
-    assert bij_2d.ndim == {2}
+    assert bij_2d.ndims.source == 2
 
     forward_3d = MapAxis([2, 1, 0])
 

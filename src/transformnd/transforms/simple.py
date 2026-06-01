@@ -11,7 +11,8 @@ from numpy.typing import ArrayLike
 from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
 from ..base import Transform
-from ..util import ArrayT, chain_or, SpaceTuple, invert_spaces, to_single_ndim
+from ..types import NDims, Spaces
+from ..util import ArrayT, chain_or, as_floats
 from ..transforms.affine import Affine
 
 
@@ -20,9 +21,9 @@ class Identity(Transform[ArrayT]):
 
     def __init__(
         self,
-        ndim: int | set[int] | None = None,
+        ndim: int,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """
         Transform which does nothing.
@@ -37,24 +38,20 @@ class Identity(Transform[ArrayT]):
         ValueError
             [description]
         """
-        if isinstance(ndim, int):
-            ndim = {ndim}
         self.ndim = ndim
         src = chain_or(*spaces, default=None)
         tgt = chain_or(*spaces[::-1], default=None)
-        super().__init__(spaces=(src, tgt))
+        super().__init__(NDims(ndim, ndim), spaces=Spaces(src, tgt))
 
     def invert(self) -> Transform[ArrayT]:
-        return type(self)(self.ndim, spaces=invert_spaces(self.spaces))
+        return type(self)(self.ndim, spaces=self.spaces.invert())
 
-    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
-        ndim = to_single_ndim(ndim, self.ndim)
-        m = np.eye(ndim + 1)
+    def to_affine(self) -> Affine[ArrayT] | None:
+        m = np.eye(self.ndims.source + 1)
         return Affine(m, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
-        xp = array_namespace(coords)
-        return xp.asarray(coords)
+        return coords
 
 
 class Translate(Transform[ArrayT]):
@@ -64,13 +61,13 @@ class Translate(Transform[ArrayT]):
         self,
         translation: ArrayLike,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """Simple translation.
 
         Parameters
         ----------
-        translation : scalar or D-length array
+        translation : D-length array
             Translation to apply in all dimensions, or each dimension.
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
@@ -80,21 +77,17 @@ class Translate(Transform[ArrayT]):
         ValueError
             If the translation is the wrong shape
         """
-        super().__init__(spaces=spaces)
-        self.translation = np.asarray(translation)
-        if self.translation.ndim > 1:
-            raise ValueError("Translation must be scalar or 1D")
+        self.translation = as_floats(translation)
+        if self.translation.ndim != 1:
+            raise ValueError(
+                f"Translation must be 1D, got shape {self.translation.shape}"
+            )
+        super().__init__(
+            NDims(len(self.translation), len(self.translation)), spaces=spaces
+        )
 
-        if self.translation.shape not in [(), (1,)]:
-            self.ndim = {self.translation.shape[0]}
-        # otherwise, can be broadcast to anything
-
-    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
-        ndim = to_single_ndim(ndim, self.ndim)
-
-        m = np.eye(ndim + 1)
-        m[:-1, -1] = self.translation
-        return Affine(m, spaces=self.spaces)
+    def to_affine(self) -> Affine[ArrayT] | None:
+        return Affine[ArrayT].translation(self.translation, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
@@ -103,7 +96,7 @@ class Translate(Transform[ArrayT]):
         return coords + xp.asarray(self.translation, device=d)
 
     def invert(self) -> Transform | None:
-        return type(self)(-self.translation, spaces=invert_spaces(self.spaces))
+        return type(self)(-self.translation, spaces=self.spaces.invert())
 
     def to_device(self, xp, device=None) -> Self:
         result = copy(self)
@@ -118,7 +111,7 @@ class Scale(Transform[ArrayT]):
         self,
         scale: ArrayLike,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """Simple scale transform.
 
@@ -136,25 +129,13 @@ class Scale(Transform[ArrayT]):
         ValueError
             If scale is the wrong shape.
         """
-        super().__init__(spaces=spaces)
-        self.scale = np.asarray(scale)
-        if self.scale.ndim > 1:
-            raise ValueError("Scale must be scalar or 1D")
+        self.scale = as_floats(scale)
+        if self.scale.ndim != 1:
+            raise ValueError(f"Scale must be 1D, got shape {self.scale.shape}")
+        super().__init__(NDims(len(self.scale), len(self.scale)), spaces=spaces)
 
-        if self.scale.shape not in [(), (1,)]:
-            self.ndim = {self.scale.shape[0]}
-        # otherwise, can be broadcast to anything
-
-    def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
-        ndim = to_single_ndim(ndim, self.ndim)
-
-        if np.ndim(self.scale) == 0:
-            scale_vec = np.full(ndim, self.scale)
-        else:
-            scale_vec = self.scale
-        m = np.eye(ndim + 1)
-        m[:-1, :-1] = np.diag(scale_vec)
-        return Affine(m, spaces=self.spaces)
+    def to_affine(self) -> Affine[ArrayT] | None:
+        return Affine[ArrayT].scaling(self.scale, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
@@ -165,7 +146,7 @@ class Scale(Transform[ArrayT]):
     def invert(self) -> Self | None:
         return type(self)(
             1 / self.scale,
-            spaces=invert_spaces(self.spaces),
+            spaces=self.spaces.invert(),
         )
 
     def to_device(self, xp, device=None) -> Self:

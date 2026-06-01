@@ -9,8 +9,9 @@ import logging
 import morphops as mops
 import numpy as np
 
-from ..base import SpaceTuple, Transform
-from ..util import check_ndim, invert_spaces
+from ..base import Transform
+from ..util import as_floats
+from ..types import Spaces, NDims
 
 logger = logging.getLogger(__name__)
 
@@ -21,14 +22,12 @@ class ThinPlateSplines(Transform[np.ndarray]):
     Deform based on matched pairs of control points.
     """
 
-    ndim = {2, 3}
-
     def __init__(
         self,
         source_control_points: np.ndarray,
         target_control_points: np.ndarray,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """Non-rigid control point based transforms in 2/3D.
 
@@ -49,9 +48,8 @@ class ThinPlateSplines(Transform[np.ndarray]):
         ValueError
             Invalid control points.
         """
-        super().__init__(spaces=spaces)
-        self.source_control_points = np.asarray(source_control_points)
-        self.target_control_points = np.asarray(target_control_points)
+        self.source_control_points = as_floats(source_control_points)
+        self.target_control_points = as_floats(target_control_points)
 
         if self.source_control_points.shape != self.target_control_points.shape:
             raise ValueError("Control point arrays must be the same shape")
@@ -60,19 +58,18 @@ class ThinPlateSplines(Transform[np.ndarray]):
             raise ValueError("Control points array must be 2D")
 
         ndim = self.source_control_points.shape[1]
-        check_ndim(ndim, self.ndim)
-        self.ndim = {ndim}
 
         self.W, self.A = mops.tps_coefs(
             self.source_control_points,
             self.target_control_points,
         )
+        super().__init__(NDims(ndim, ndim), spaces=spaces)
 
     def invert(self) -> Transform[np.ndarray] | None:
         return type(self)(
             self.target_control_points,
             self.source_control_points,
-            spaces=invert_spaces(self.spaces),
+            spaces=self.spaces.invert(),
         )
 
     def apply(self, coords: np.ndarray) -> np.ndarray:

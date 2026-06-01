@@ -16,11 +16,11 @@ def test_identity():
 
 @pytest.mark.parametrize(["ndim"], [[d] for d in range(1, 6)])
 def test_translation(ndim, rng):
-    t = 1
+    t = [1]
 
     coords = rng.random((5, ndim)) - 0.5
     t_arr = [t] * ndim
-    trans = Affine[np.ndarray].translation(t, ndim)
+    trans = Affine[np.ndarray].translation(t)
     trans_arr = Affine[np.ndarray].translation(t_arr)
     assert np.allclose(trans.apply(coords), coords + t)
     assert np.allclose(trans_arr.apply(coords), coords + t)
@@ -29,15 +29,15 @@ def test_translation(ndim, rng):
 
 @pytest.mark.parametrize(["ndim"], [[d] for d in range(2, 6)])
 def test_scaling(ndim, rng):
-    s = 2
+    s = [2] * ndim
+    s_arr = [s] * ndim
 
     coords = rng.random((5, ndim)) - 0.5
-    trans = Affine[np.ndarray].scaling(s, ndim)
+    trans = Affine[np.ndarray].scaling(s_arr)
     assert np.allclose(trans.apply(coords), coords * s)
     assert np.allclose((~trans).apply(coords), coords / s)
 
-    t_arr = [s] * ndim
-    trans_arr = Affine[np.ndarray].scaling(t_arr)
+    trans_arr = Affine[np.ndarray].scaling(s_arr)
     assert np.allclose(trans_arr.apply(coords), coords * s)
 
 

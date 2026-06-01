@@ -1,13 +1,12 @@
 import numpy as np
 
 from transformnd.transforms.simple import Identity, Scale, Translate
+from transformnd.types import Spaces
 
 
 def test_identity_spaces():
-    t = Identity[np.ndarray](spaces=(1, 1))
-    assert t.target_space == 1
-
-    Identity(spaces=(1, 2))
+    t = Identity[np.ndarray](1, spaces=Spaces(1, 1))
+    assert t.spaces.target == 1
 
 
 def test_translate_nd(coords5x3):

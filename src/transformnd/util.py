@@ -1,26 +1,12 @@
 """Utilities used elsewhere in the package."""
 
-from collections import deque
-from collections.abc import Callable, Hashable, Iterable, Iterator
 from typing import Any
-
-# required for TypeVar(default=) argument
-from typing_extensions import TypeVar
-
-import numpy as np
 from array_api_compat import array_namespace
+from numpy.typing import ArrayLike
+import numpy as np
 
-UNSPECIFIED_SPACE_NAME = "???"
-
-ArrayT = TypeVar("ArrayT", default=np.ndarray)
-
-TransformSignature = Callable[[ArrayT], ArrayT]
-"""Type annotation of a function which can be used as a transform."""
-
-SpaceRef = Hashable
-"""Type annotation of things which can be used to refer to spaces"""
-
-SpaceTuple = tuple[SpaceRef | None, SpaceRef | None]
+from .types import SpaceRef, ArrayT
+from .constants import UNSPECIFIED_SPACE_NAME
 
 
 def none_eq(a: Any | None, b: Any | None) -> bool:
@@ -111,35 +97,6 @@ def same_or_none(*args: Any, default=NO_DEFAULT) -> Any:
     return prev
 
 
-def window[T](iterable: Iterable[T], length: int) -> Iterator[tuple[T, ...]]:
-    """Sliding window over iterable.
-
-    e.g. `(it[0], it[1]), (it[1], it[2]), (it[2], it[3]), ...`
-
-    Parameters
-    ----------
-    iterable : Iterable
-    length : int
-        Length of windows to return.
-
-    Yields
-    -------
-    Tuple[Any, ...]
-    """
-    it = iter(iterable)
-    q: deque[Any] = deque(maxlen=length)
-    for _ in range(length):
-        try:
-            item = next(it)
-        except StopIteration:
-            return
-        q.append(item)
-    yield tuple(q)
-    for item in it:
-        q.append(item)
-        yield tuple(q)
-
-
 def check_ndim(given_ndim: int, supported_ndim: set[int] | None) -> None:
     """Raise a ValueError if dimensionality is unsupported.
 
@@ -215,11 +172,6 @@ def dim_intersection(
     return out
 
 
-def invert_spaces(spaces: SpaceTuple) -> SpaceTuple:
-    """Invert the given (source, target) space tuple."""
-    return (spaces[1], spaces[0])
-
-
 def are_coords(coords: ArrayT, ndim: set[int] | None = None):
     xp = array_namespace(coords)
     if xp.ndim(coords) != 2:
@@ -249,3 +201,11 @@ def to_single_ndim(ndim: None | int = None, ndims: None | set[int] = None) -> in
         return ndim
 
     raise ValueError(f"dimensionality conflict: {ndim} not in {ndims}")
+
+
+def as_floats(arr: ArrayLike):
+    """Get array-like as a numpy array, casting to float if integral."""
+    arr = np.asarray(arr)
+    if not np.issubdtype(arr.dtype, np.floating):
+        arr = arr.astype(np.float64)
+    return arr

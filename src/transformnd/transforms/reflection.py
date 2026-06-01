@@ -5,7 +5,10 @@ from typing import Self
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ..base import SpaceTuple, Transform
+from transformnd.transforms import Affine
+
+from ..base import Transform
+from ..types import NDims, Spaces
 from ..util import is_square
 
 
@@ -88,7 +91,7 @@ class Reflect(Transform[np.ndarray]):
         normals: ArrayLike,
         point: float | ArrayLike = 0.0,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """
         Parameters
@@ -107,7 +110,6 @@ class Reflect(Transform[np.ndarray]):
         ValueError
             Inconsistent dimensionality
         """
-        super().__init__(spaces=spaces)
         normals = np.asarray(normals)
         if normals.ndim == 1:
             normals = [normals]
@@ -123,6 +125,7 @@ class Reflect(Transform[np.ndarray]):
         self.ndim = {len(n1)}
         self.normals = [unitise(n) for n in normals]
         # todo: matmul is associative, so turn this into an affine in 2/3D?
+        super().__init__(NDims(len(n1), len(n1)), spaces=spaces)
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
         coords = self._validate_coords(coords)
@@ -139,7 +142,7 @@ class Reflect(Transform[np.ndarray]):
         cls,
         points: ArrayLike,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """Infer a single plane of reflection from a minimal number of points on it.
 
@@ -163,7 +166,7 @@ class Reflect(Transform[np.ndarray]):
         axis: int | Sequence[int],
         origin: ArrayLike,
         *,
-        spaces: SpaceTuple = (None, None),
+        spaces: Spaces = Spaces(None, None),
     ):
         """Reflect around hyperplane(s) parallel with axes.
 
@@ -205,3 +208,8 @@ class Reflect(Transform[np.ndarray]):
 
     def invert(self) -> Self | None:
         return copy(self)
+
+    def to_affine(self) -> Affine[np.ndarray] | None:
+        # TODO: should be possible?
+        # rotate to align plane with origin and reflect it
+        return None

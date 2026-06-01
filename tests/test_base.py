@@ -4,9 +4,10 @@ import numpy as np
 import pytest
 
 from transformnd.base import TransformSequence, TransformWrapper
+from transformnd.types import Spaces
 from transformnd.transforms.simple import Translate, Scale
 from transformnd.transforms.affine import Affine
-from transformnd.util import window
+from itertools import pairwise
 
 from .common import NullTransform
 
@@ -16,7 +17,7 @@ def noop(arg):
 
 
 def test_transform(coords5x3):
-    t = TransformWrapper(noop, spaces=(1, 2))
+    t = TransformWrapper(noop, 3, 3, spaces=Spaces(1, 2))
 
     assert np.allclose(t.apply(coords5x3), coords5x3)
 
@@ -24,27 +25,27 @@ def test_transform(coords5x3):
 def test_sequence(coords5x3):
     ts = []
     last = 3
-    for a, b in window(range(last + 1), 2):
-        ts.append(TransformWrapper(noop, spaces=(a, b)))
+    for a, b in pairwise(range(last + 1)):
+        ts.append(TransformWrapper(noop, 3, 3, spaces=Spaces(a, b)))
 
     t = TransformSequence(ts)
     assert np.allclose(t.apply(coords5x3), coords5x3)
-    assert t.source_space == 0
-    assert t.target_space == last
+    assert t.spaces.source == 0
+    assert t.spaces.target == last
 
 
 def test_sequence_errors():
     with pytest.raises(ValueError):
         TransformSequence(
             [
-                TransformWrapper(noop, spaces=(1, 2)),
-                TransformWrapper(noop, spaces=(3, 4)),
+                TransformWrapper(noop, 3, 3, spaces=Spaces(1, 2)),
+                TransformWrapper(noop, 3, 3, spaces=Spaces(3, 4)),
             ]
         )
 
 
 def test_sequence_does_not_split():
-    t = TransformWrapper(noop)
+    t = TransformWrapper(noop, 3, 3)
     seq1 = t | copy(t)
     seq2 = TransformSequence([copy(t), seq1, copy(t)])
     assert len(seq2) == 3
@@ -54,15 +55,15 @@ def test_sequence_does_not_split():
 def test_sequence_infers():
     t = TransformSequence(
         [
-            TransformWrapper(noop, spaces=(0, None)),
-            TransformWrapper(noop, spaces=(1, 2)),
+            TransformWrapper(noop, 3, 3, spaces=Spaces(0, None)),
+            TransformWrapper(noop, 3, 3, spaces=Spaces(1, 2)),
         ]
     )
-    assert t[0].target_space == 1
+    assert t[0].spaces.target == 1
 
 
 def test_add():
-    t = [TransformWrapper(noop) for _ in range(5)]
+    t = [TransformWrapper(noop, 3, 3) for _ in range(5)]
     t12 = t[1] | t[2]
     assert isinstance(t12, TransformSequence)
     assert len(t12) == 2
@@ -87,8 +88,8 @@ def test_maths():
 def test_simplify_affine1(rng):
     s1 = Scale(np.array([5, 5, 5], float))
     s2 = Translate(np.array([2, 3, 4], float))
-    s3 = NullTransform()
-    s4 = Scale(6)
+    s3 = NullTransform(3)
+    s4 = Scale([6, 6, 6])
     coords = rng.random((10, 3))
     sequence = TransformSequence([s1, s2, s3, s4])
     expected = sequence.apply(coords)
@@ -104,13 +105,13 @@ def test_simplify_affine1(rng):
 def test_simplify_affine2(rng):
     coords = rng.random((10, 3))
     dim = 3
-    s1 = NullTransform()
+    s1 = NullTransform(dim)
     s2 = Scale(np.array([5, 5, 5], float))
     s3 = Translate(np.array([2, 3, 4], float))
     s4 = Scale(6)
     s2_affine = s2.to_affine()
     s3_affine = s3.to_affine()
-    s4_affine = s4.to_affine(dim)
+    s4_affine = s4.to_affine()
     assert s2_affine is not None
     assert s3_affine is not None
     assert s4_affine is not None
