@@ -78,7 +78,7 @@ def test_add():
 
 
 def test_maths():
-    t1 = Translate[np.ndarray](1)
+    t1 = Translate[np.ndarray]([1] * 3)
     coords = np.zeros((5, 3))
 
     assert np.allclose((t1 | ~t1).apply(coords), coords)
@@ -108,7 +108,7 @@ def test_simplify_affine2(rng):
     s1 = NullTransform(dim)
     s2 = Scale(np.array([5, 5, 5], float))
     s3 = Translate(np.array([2, 3, 4], float))
-    s4 = Scale(6)
+    s4 = Scale([6] * 3)
     s2_affine = s2.to_affine()
     s3_affine = s3.to_affine()
     s4_affine = s4.to_affine()
