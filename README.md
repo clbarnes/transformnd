@@ -21,7 +21,7 @@ co-developed with [xform](https://github.com/schlegelp/xform/) as a red team pro
 `Transform` subclasses which are restricted to certain dimensionalities
 can specify this in their `ndim` class variable.
 Instances of `Transform` subclasses can further restrict their `ndim`.
-Use `self._validate_coords(coords)` in `__call__` to ensure the coordinates
+Use `self._validate_coords(coords)` in the `apply` method to ensure the coordinates
 are of valid type and dimensions.
 
 Additionally, `transformnd` provides an interface for transforming types other than NxD numpy arrays,
