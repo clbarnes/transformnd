@@ -239,14 +239,12 @@ def _(mo):
 
 @app.cell
 def _(np):
-    from transformnd import Transform
+    from transformnd import Transform, NDims
 
     class IsotropicScale2d(Transform):
-        ndim = {2}  # a set of valid dimensionalities
-
         def __init__(self, factor: float, *, spaces=(None, None)):
             # ensure the spaces are handled properly
-            super().__init__(spaces=spaces)
+            super().__init__(NDims(2, 2), spaces=spaces)
             self.factor = factor
 
         def apply(self, coords: np.ndarray) -> np.ndarray:
