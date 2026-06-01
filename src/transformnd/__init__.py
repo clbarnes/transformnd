@@ -3,7 +3,7 @@
 """
 
 from .base import Transform, TransformSequence, TransformWrapper
-from .util import SpaceRef, check_ndim
+from .util import SpaceRef
 from .types import Spaces, TransformSignature, NDims
 from . import transforms
 from . import adapters
@@ -19,7 +19,6 @@ __all__ = [
     "TransformWrapper",
     "TransformSignature",
     "SpaceRef",
-    "check_ndim",
     "transforms",
     "adapters",
     "Spaces",

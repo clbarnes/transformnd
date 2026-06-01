@@ -86,7 +86,6 @@ class TransformGraph[ArrayT]:
 
     def __init__(self):
         self.graph = nx.DiGraph()
-        self.ndim: set[int] | None = None
         self.space_ndims: dict[SpaceRef, int] = dict()
 
     def add_transforms(self, transforms: Iterable[Transform[ArrayT]]) -> int:

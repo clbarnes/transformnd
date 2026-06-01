@@ -13,8 +13,6 @@ class MapAxis(Transform[ArrayT]):
 
     For example, x -> y and y -> x"""
 
-    # ndim: Optional[Set[int]] = set(2)
-
     def __init__(
         self,
         permutation: list[int],

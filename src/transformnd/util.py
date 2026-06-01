@@ -97,28 +97,6 @@ def same_or_none(*args: Any, default=NO_DEFAULT) -> Any:
     return prev
 
 
-def check_ndim(given_ndim: int, supported_ndim: set[int] | None) -> None:
-    """Raise a ValueError if dimensionality is unsupported.
-
-    Parameters
-    ----------
-    given_ndim : int
-        The dimensionality to check.
-    supported_ndim : Optional[Set[int]]
-        Which dimensions are supported.
-        If None, the check passes.
-
-    Raises
-    ------
-    ValueError
-        If supported dimensions are defined and given_ndim is not in them.
-    """
-    if supported_ndim is not None and given_ndim not in supported_ndim:
-        raise ValueError(
-            f"Transform supported for {format_dims(supported_ndim)}, not {given_ndim}"
-        )
-
-
 def format_dims(supported: set[int] | None) -> str:
     """Format supported dimensions for e.g. error messages.
 
@@ -151,33 +129,6 @@ def is_square(arr: ArrayT) -> bool:
     xp = array_namespace(arr)
     ndim, shape = xp.ndim(arr), xp.shape(arr)
     return ndim == 2 and shape[0] == shape[1]
-
-
-def dim_intersection(
-    dims1: set[int] | None, dims2: set[int] | None, error_on_empty: bool = False
-) -> set[int] | None:
-    """Find the intersection between two sets of constraints.
-
-    None means no constraints.
-    If `error_on_empty` is truthy and there is no intersection, raise an error.
-    """
-    if dims1 is None:
-        out = dims2
-    elif dims2 is None:
-        out = dims1
-    else:
-        out = dims1.intersection(dims2)
-    if error_on_empty and out is not None and len(out) == 0:
-        raise ValueError(f"incompatible dimensions: {dims1} ∩ {dims2}")
-    return out
-
-
-def are_coords(coords: ArrayT, ndim: set[int] | None = None):
-    xp = array_namespace(coords)
-    if xp.ndim(coords) != 2:
-        raise ValueError("Coords must be a 2D array")
-    check_ndim(xp.shape(coords)[1], ndim)
-    return coords
 
 
 def to_single_ndim(ndim: None | int = None, ndims: None | set[int] = None) -> int:
