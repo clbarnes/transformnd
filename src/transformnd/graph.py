@@ -1,6 +1,7 @@
 """Bridging transforms between known spaces."""
 
 from __future__ import annotations
+from dataclasses import dataclass
 from functools import lru_cache
 from collections.abc import Iterable, Iterator
 
@@ -35,6 +36,15 @@ def split_sequence(seq: TransformSequence[ArrayT]) -> Iterator[Transform[ArrayT]
         if t.target_space is not None:
             yield TransformSequence(this_seq)
             this_seq = []
+
+
+@dataclass(frozen=True, eq=True)
+class SimplifyConfig:
+    ndim: int | None = None
+    """Force specific dimensionality, allowing conversion to affines."""
+
+    drop_inverse: bool = False
+    """Drop explicit inverses in bijection transformations."""
 
 
 class TransformGraph[ArrayT]:
@@ -109,8 +119,7 @@ class TransformGraph[ArrayT]:
         self,
         source_space: SpaceRef,
         target_space: SpaceRef,
-        simplify=False,
-        drop_inverse=False,
+        simplify: SimplifyConfig | None = None,
     ) -> TransformSequence[ArrayT]:
         """Get the shortest TransformSequence for transforming between two spaces.
 
@@ -140,12 +149,17 @@ class TransformGraph[ArrayT]:
             transforms,
             spaces=(source_space, target_space),
         )
-        if simplify:
-            seq = seq.simplify(drop_inverse=drop_inverse)
+        if simplify is not None:
+            seq = seq.simplify(ndim=simplify.ndim, drop_inverse=simplify.drop_inverse)
         return seq
 
     def transform(
-        self, source_space: SpaceRef, target_space: SpaceRef, coords: ArrayT
+        self,
+        source_space: SpaceRef,
+        target_space: SpaceRef,
+        coords: ArrayT,
+        *,
+        simplify=SimplifyConfig(drop_inverse=True),
     ) -> ArrayT:
         """Transform coordinates from one space to another,
         possibly via intermediates.
@@ -160,7 +174,7 @@ class TransformGraph[ArrayT]:
         -------
         ArrayT
         """
-        t = self.get_sequence(source_space, target_space)
+        t = self.get_sequence(source_space, target_space, simplify)
         return t.apply(coords)
 
     def __iter__(self) -> Iterator[Transform[ArrayT]]:

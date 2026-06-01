@@ -254,8 +254,8 @@ def _(np):
             coords = self._validate_coords(coords)
             return coords * self.factor
 
-        def __invert__(self):
-            return IsotropicScale2d(
+        def invert(self):
+            return type(self)(
                 1 / self.factor,
                 spaces=self.spaces[::-1],
             )

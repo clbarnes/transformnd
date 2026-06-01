@@ -17,7 +17,6 @@ from .util import (
     invert_spaces,
     same_or_none,
     space_str,
-    to_single_ndim,
     window,
     SpaceTuple,
     ArrayT,
@@ -304,12 +303,11 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             If spaces are incompatible.
         """
         ts = infer_spaces(transforms, *spaces)
+        if ts:
+            spaces = (ts[0].source_space, ts[-1].target_space)
 
         super().__init__(
-            spaces=(
-                ts[0].source_space,
-                ts[-1].target_space,
-            ),
+            spaces=spaces,
         )
 
         self.transforms: list[Transform[ArrayT]] = ts
@@ -404,14 +402,21 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         """
         from .transforms.bijection import Bijection
 
-        ndim = to_single_ndim(ndim, self.ndim)
+        if ndim is None:
+            if self.ndim is not None and len(self.ndim) == 1:
+                ndim = tuple(self.ndim)[0]
+        else:
+            check_ndim(ndim, self.ndim)
+
         out: list[Transform[ArrayT]] = []
         affine = None
         for t in self.transforms:
             if drop_inverse and isinstance(t, Bijection):
                 t = t.forward
 
-            new_affine = t.to_affine(ndim)
+            new_affine = None
+            if ndim is not None:
+                new_affine = t.to_affine(ndim)
 
             if new_affine is None:
                 if affine is not None:
@@ -428,7 +433,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         if affine is not None:
             add_to_output(affine, out)
 
-        return type(self)(out)
+        return type(self)(out, spaces=self.spaces)
 
 
 def add_to_output(transform: Transform, lst: list[Transform]) -> bool:

@@ -20,6 +20,7 @@ class Identity(Transform[ArrayT]):
 
     def __init__(
         self,
+        ndim: int | set[int] | None = None,
         *,
         spaces: SpaceTuple = (None, None),
     ):
@@ -36,14 +37,15 @@ class Identity(Transform[ArrayT]):
         ValueError
             [description]
         """
+        if isinstance(ndim, int):
+            ndim = {ndim}
+        self.ndim = ndim
         src = chain_or(*spaces, default=None)
         tgt = chain_or(*spaces[::-1], default=None)
-        if src != tgt:
-            raise ValueError("Source and target spaces are different")
-        super().__init__(spaces=(src, src))
+        super().__init__(spaces=(src, tgt))
 
-    def __invert__(self) -> Transform[ArrayT]:
-        return self
+    def invert(self) -> Transform[ArrayT]:
+        return type(self)(self.ndim, spaces=invert_spaces(self.spaces))
 
     def to_affine(self, ndim: int | None = None) -> Affine[ArrayT] | None:
         ndim = to_single_ndim(ndim, self.ndim)
@@ -100,8 +102,8 @@ class Translate(Transform[ArrayT]):
         d = xp_device(coords)
         return coords + xp.asarray(self.translation, device=d)
 
-    def __invert__(self) -> Transform:
-        return type(self)(-self.translation, spaces=(self.spaces[1], self.spaces[0]))
+    def invert(self) -> Transform | None:
+        return type(self)(-self.translation, spaces=invert_spaces(self.spaces))
 
     def to_device(self, xp, device=None) -> Self:
         result = copy(self)
