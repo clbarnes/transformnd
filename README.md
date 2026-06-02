@@ -67,18 +67,16 @@ Contributions of additional transforms and adapters are welcome!
 Even if they're only thin wrappers around an external library,
 the downstream ecosystem benefits from a consistent API.
 
-Such external transformation libraries should be specified as "extras",
+Such external transformation libraries should be specified as "extras" (`pyproject.toml:project.optional-dependencies`),
 and be contained in a submodule so that they are not immediately imported
 with `transformnd`.
-Dependencies for new adapters do not need to be included in `transformnd`'s dependencies,
-but should be specified in the `requirements.txt` for tests.
 
 Alternatively, consider adopting `transformnd`'s base classes in your own library,
 and have your transformation instantly compatible for downstream users.
 
 Methods which MUST be implemented:
 
-- `__init__`: should validate parameters and set `self.ndim` if the parameters constrain the dimensionality
+- `__init__`: should validate parameters and must call the `super()` constructor
 - `apply`: should call `_validate_coords` method early to check that the given coordinates are the correct shape
 
 Methods which SHOULD be implemented if applicable:
@@ -87,7 +85,7 @@ Methods which SHOULD be implemented if applicable:
 - `is_identity`: if you can cheaply check whether your transformation is an identity transformation. The base class implementation returns `False`.
 - `to_affine`: if your transformation can be represented as an affine matrix. The base class implementation returns `None`.
 - `invert`: if your transformation can be inverted (default None if not)
-  - This automatically implements `__invert__` (the `~my_transform` operator), which raises NotImplemented if `invert` would return `None`.
+  - This automatically implements `__invert__` (the `~my_transform` operator), which returns `NotImplemented` (probably raising `NotImplementedError`) if `invert` would return `None`.
 
 ## Contributing
 
@@ -97,7 +95,8 @@ Methods which SHOULD be implemented if applicable:
   - `prek install-hooks && prek run --all-files` to get started.
 - Use [`just`](https://github.com/casey/just) for common development tasks (format, lint, test, generate docs, run benchmarks).
   - `just` to list commands.
-- Docs are generated with `pdoc` (use `just doc`) and hosted on ReadTheDocs
+- Docs are generated with [`pdoc`](https://pdoc.dev/) (use `just doc`) and hosted on ReadTheDocs
+- `just bump` bumps the version, commits, and tags (but does not push); depends on [`schpet/changelog`](https://github.com/schpet/changelog)
 
 ## Thanks
 
