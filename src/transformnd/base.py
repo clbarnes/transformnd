@@ -272,10 +272,10 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
 
         Parameters
         ----------
-        transforms : List[Transform[ArrayT]]
+        transforms :
             Items which are a TransformSequences
             will each still be treated as a single transform.
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces :
             Optional source and target spaces.
             Can also be inferred from the first and last transforms.
 
