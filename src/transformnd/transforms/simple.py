@@ -5,7 +5,6 @@ Simple transformations like rigid translation and scaling.
 from copy import copy
 from typing import Self
 
-import numpy as np
 from numpy.typing import ArrayLike
 
 from array_api_compat import array_namespace
@@ -30,25 +29,20 @@ class Identity(Transform[ArrayT]):
 
         Parameters
         ----------
-        spaces : tuple[SpaceRef, SpaceRef]
+        ndim:
+            Number of dimensions of this transform.
+        spaces:
             Optional source and target spaces
-
-        Raises
-        ------
-        ValueError
-            [description]
         """
-        self.ndim = ndim
         src = chain_or(*spaces, default=None)
         tgt = chain_or(*spaces[::-1], default=None)
         super().__init__(NDims(ndim, ndim), spaces=Spaces(src, tgt))
 
     def invert(self) -> Transform[ArrayT]:
-        return type(self)(self.ndim, spaces=self.spaces.invert())
+        return type(self)(self.ndims.source, spaces=self.spaces.invert())
 
     def to_affine(self) -> Affine[ArrayT] | None:
-        m = np.eye(self.ndims.source + 1)
-        return Affine(m, spaces=self.spaces)
+        return Affine[ArrayT].identity(self.ndims.source, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         return coords

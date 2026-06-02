@@ -84,9 +84,16 @@ class TransformGraph[ArrayT]:
     Populate with `my_transform_graph.add_transforms(my_transforms)`.
     """
 
-    def __init__(self):
+    def __init__(self, transforms: Iterable[Transform[ArrayT]] | None = None):
+        """Create an transform graph, optionally with some starting transforms.
+
+        See the `TransformGraph.add_transforms` documentation for restrictions on the
+        given transforms.
+        """
         self.graph = nx.DiGraph()
         self.space_ndims: dict[SpaceRef, int] = dict()
+        if transforms is not None:
+            self.add_transforms(transforms)
 
     def add_transforms(self, transforms: Iterable[Transform[ArrayT]]) -> int:
         """Bulk-add transformations to the graph.
