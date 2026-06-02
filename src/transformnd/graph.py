@@ -89,7 +89,24 @@ class TransformGraph[ArrayT]:
         self.space_ndims: dict[SpaceRef, int] = dict()
 
     def add_transforms(self, transforms: Iterable[Transform[ArrayT]]) -> int:
-        """
+        """Bulk-add transformations to the graph.
+
+        Every given transform must have a source and target space defined;
+        these spaces are the nodes of the graph.
+
+        If any of the given transforms are `TransformSequence`s,
+        any subsequences of transformations with source and target spaces
+        (explicitly defined or implicit based on their neighbours')
+        will be split into separate graph edges.
+
+        Note that a single `TransformSequence` is itself an `Iterable[Transform]`
+        and so could be used as the `transforms` argument.
+        However, a `TransformSequence` does not require that all of its members
+        have explicit source and target spaces,
+        where the `transforms` argument here does,
+        so not all `TransformSequence`s can be used directly as the argument
+        (wrap them in a list instead).
+
         Parameters
         ----------
         transforms : Iterable[Transform[ArrayT]]
