@@ -59,7 +59,7 @@ class Transform[ArrayT](ABC):
     def _validate_coords(self, coords: ArrayT) -> ArrayT:
         """Check that input coordinates are of the correct shape.
 
-        Also ensure that coords is a 2D array.
+        Also ensure that coords is a 2Darray.
 
         Parameters
         ----------
@@ -272,10 +272,10 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
 
         Parameters
         ----------
-        transforms : List[Transform[ArrayT]]
+        transforms :
             Items which are a TransformSequences
             will each still be treated as a single transform.
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces :
             Optional source and target spaces.
             Can also be inferred from the first and last transforms.
 
@@ -380,6 +380,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         e.g. `Translation(1) | Translation(-1)`.
         """
         from .transforms.bijection import Bijection
+        from .transforms import Identity
 
         out: list[Transform[ArrayT]] = []
         affine = None
@@ -404,7 +405,16 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         if affine is not None:
             add_to_output(affine, out)
 
+        if not out:
+            out.append(Identity(self.ndims.source))
+
         return type(self)(out, spaces=self.spaces)
+
+    def to_affine(self) -> Affine[ArrayT] | None:
+        simple = self.simplify(True)
+        if len(simple) != 1:
+            return None
+        return simple[0].to_affine()
 
 
 def add_to_output(transform: Transform, lst: list[Transform]) -> bool:

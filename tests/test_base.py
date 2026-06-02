@@ -127,3 +127,20 @@ def test_simplify_affine2(rng):
 
     merged_affine = s4_affine @ s3_affine @ s2_affine
     assert merged_affine.matrix == pytest.approx(internal_affine.matrix)
+
+
+def test_to_affine():
+    t1 = Scale([1, 2])
+    t2 = Translate([10, 20])
+    seq = TransformSequence([t1, t2])
+    aff = seq.to_affine()
+    assert isinstance(aff, Affine)
+
+
+def test_to_affine_no():
+    t1 = Scale([1, 2])
+    t2 = Translate([10, 20])
+    t3 = NullTransform(2)
+    seq = TransformSequence([t1, t2, t3])
+    aff = seq.to_affine()
+    assert aff is None

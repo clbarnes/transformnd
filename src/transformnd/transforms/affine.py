@@ -157,11 +157,14 @@ class Affine(Transform[ArrayT]):
         """
         if not isinstance(rhs, Affine):
             return NotImplemented
-        if self.matrix.shape != rhs.matrix.shape:
+        if self.ndims.source != rhs.ndims.target:
             raise ValueError(
-                "Cannot multiply affine matrices of different dimensionality"
+                "Cannot compose affine transformations of different dimensionality"
             )
-        if not none_eq(self.spaces.target, rhs.spaces.source):
+
+        # this ordering looks wrong but this is the way affine transforms get combined;
+        # the sequence transform A followed by transform B is expressed B @ A
+        if not none_eq(self.spaces.source, rhs.spaces.target):
             raise ValueError("Affine transforms do not share a space")
         return Affine(
             self.matrix @ rhs.matrix,

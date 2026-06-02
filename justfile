@@ -34,3 +34,11 @@ test:
 # Run benchmarks.
 bench:
     uv run --group test pytest --benchmark-only
+
+bump level:
+    test -z "$(git status --porcelain)" || git status && false
+    uv version --bump {{level}}
+    changelog release "$(uv version --short)"
+    git add .
+    git commit -m "Bump to v$(uv version --short)"
+    git tag -a "v$(uv version --short)" -m "Release v$(uv version --short)"
