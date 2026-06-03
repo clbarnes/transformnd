@@ -44,6 +44,10 @@ class Affine(Transform[ArrayT]):
     The transformation matrix is stored as a NumPy array (backend-neutral).
     At apply()-time it is converted to the input coords' backend and device,
     so the transform works transparently with NumPy, JAX, PyTorch, CuPy, etc.
+
+    Affines can be composed by matrix multiplication: `affine2 @ affine1`.
+    Note that the right hand transformation is effectively applied to the coordinates first,
+    so `(aff2 @ aff1).apply(coords) == (aff1 | aff2).apply(coords)`.
     """
 
     def __init__(
