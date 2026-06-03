@@ -6,6 +6,7 @@ from transformnd.transforms.affine import Affine
 
 from ..base import Transform, ArrayT
 from ..types import Spaces
+from ..util import same_or_none
 
 
 class Bijection(Transform[ArrayT]):
@@ -27,6 +28,12 @@ class Bijection(Transform[ArrayT]):
         spaces : tuple[SpaceRef, SpaceRef]
             Optional source and target spaces
         """
+        src = same_or_none(
+            spaces.source, forward.spaces.source, inverse.spaces.target, default=None
+        )
+        tgt = same_or_none(
+            spaces.target, forward.spaces.target, inverse.spaces.source, default=None
+        )
 
         self.forward = forward
         self.inverse = inverse
@@ -34,7 +41,7 @@ class Bijection(Transform[ArrayT]):
             raise ValueError(
                 f"Bijection dimensionalities mismatch: fwd:{forward.ndims}, inv:{inverse.ndims}"
             )
-        super().__init__(self.forward.ndims, spaces=spaces)
+        super().__init__(self.forward.ndims, spaces=Spaces(src, tgt))
 
     def apply(self, coords: ArrayT) -> ArrayT:
         return self.forward.apply(coords)

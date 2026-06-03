@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- `TransformGraph.add_transform` method
+
+### Fixed
+
+- Handle `Bijection`s as an explicit pair of edges in `TransformGraph`
+
 ## 0.2.0 - 2026-06-02
 
 ### Fixed

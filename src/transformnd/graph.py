@@ -4,13 +4,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import lru_cache
 from collections.abc import Iterable, Iterator
+import warnings
+import logging
+from itertools import chain, pairwise
 
 import networkx as nx
 
+from .transforms.bijection import Bijection
 from .base import Transform, TransformSequence
-from .util import SpaceRef, chain_or, ArrayT
+from .util import SpaceRef, ArrayT, same_or_none
 from .types import Spaces
-from itertools import pairwise
+
+logger = logging.getLogger(__name__)
 
 
 def split_sequence(seq: TransformSequence[ArrayT]) -> Iterator[Transform[ArrayT]]:
@@ -84,7 +89,9 @@ class TransformGraph[ArrayT]:
     Populate with `my_transform_graph.add_transforms(my_transforms)`.
     """
 
-    def __init__(self, transforms: Iterable[Transform[ArrayT]] | None = None):
+    def __init__(
+        self, transforms: Iterable[Transform[ArrayT]] | None = None, invert=True
+    ):
         """Create an transform graph, optionally with some starting transforms.
 
         See the `TransformGraph.add_transforms` documentation for restrictions on the
@@ -93,18 +100,190 @@ class TransformGraph[ArrayT]:
         self.graph = nx.DiGraph()
         self.space_ndims: dict[SpaceRef, int] = dict()
         if transforms is not None:
-            self.add_transforms(transforms)
+            self.add_transforms(transforms, invert)
 
-    def add_transforms(self, transforms: Iterable[Transform[ArrayT]]) -> int:
+    def _update_spaces(
+        self,
+        transform: Transform[ArrayT],
+        source: SpaceRef | None,
+        target: SpaceRef | None,
+    ) -> Spaces:
+        """Check that the transform's spaces do not conflict with those given explicitly,
+        that the source and target space is defined somewhere,
+        and that the dimensionality of the spaces (inferred from the transforms)
+        does not conflict with known spaces.
+        """
+        # check explicit spaces do not conflict with transform's spaces
+        src = same_or_none(transform.spaces.source, source)
+        tgt = same_or_none(transform.spaces.target, target)
+
+        # if the node already exists, make sure the dimensionality does not conflict
+        self.space_ndims[src] = same_or_none(
+            self.space_ndims.get(src), transform.ndims.source
+        )
+        self.space_ndims[tgt] = same_or_none(
+            self.space_ndims.get(tgt), transform.ndims.target
+        )
+        return Spaces(src, tgt)
+
+    def _add_transform(
+        self,
+        transform: Transform[ArrayT],
+        source: SpaceRef | None,
+        target: SpaceRef | None,
+        invert: bool,
+    ) -> list[tuple[SpaceRef, SpaceRef]]:
+        """Clearing the get_sequence cache and splitting sequences should be handled outside this method."""
+        count = []
+        if isinstance(transform, Bijection):
+            count.extend(
+                self._add_transform(
+                    transform.forward,
+                    transform.spaces.source,
+                    transform.spaces.target,
+                    False,
+                )
+            )
+            if invert:
+                count.extend(
+                    self._add_transform(
+                        transform.inverse,
+                        transform.spaces.target,
+                        transform.spaces.source,
+                        False,
+                    )
+                )
+            return count
+
+        src, tgt = self._update_spaces(transform, source, target)
+
+        if self.graph.has_edge(src, tgt):
+            logger.warning(f"Replacing existing edge between {src} and {tgt}")
+
+        self.graph.add_edge(src, tgt, transform=transform)
+        count.append((src, tgt))
+        if invert:
+            count.extend(self._add_inverse(transform, src, tgt))
+        return count
+
+    def _add_inverse(
+        self,
+        transform: Transform[ArrayT],
+        source: SpaceRef | None,
+        target: SpaceRef | None,
+    ) -> list[tuple[SpaceRef, SpaceRef]]:
+        src, tgt = self._update_spaces(transform, source, target)
+        out = []
+
+        if self.graph.has_edge(tgt, src):
+            logger.debug(
+                "Implicit reverse edge not added to graph as explicit edge already exists for %s->%s",
+                tgt,
+                src,
+            )
+        elif t := transform.invert():
+            if isinstance(t, Bijection):
+                t = t.forward
+            self.graph.add_edge(tgt, src, transform=t)
+            out.append((tgt, src))
+        else:
+            logger.debug(
+                "Reverse edge not added to graph for non-invertible %s->%s transform",
+                src,
+                tgt,
+            )
+        return out
+
+    def add_transform(
+        self,
+        transform: Transform[ArrayT],
+        source: SpaceRef | None = None,
+        target: SpaceRef | None = None,
+        invert: bool = True,
+    ) -> list[tuple[SpaceRef, SpaceRef]]:
+        """Add a transform to the graph, optionally with its inverse.
+
+        If the given transform is a `TransformSequence`,
+        it will be split down into subsequences where intermediate spaces are known.
+
+        If the given transform is a `Bijection`,
+        its forward component will be added as an independent edges;
+        if `invert=True`, the same will be done with the inverse component.
+
+        This method will overwrite existing edges.
+        Implicit inverses calculated from the given transform will not overwrite existing explicit edges,
+        except in the case of the `Bijection`.
+
+        Parameters
+        ----------
+        transform :
+            Transform to add to the graph as an edge.
+        source :
+            May be omitted if `transform` has its source space defined.
+        target : SpaceRef | None, optional
+            May be omitted if `transform` has its target space defined.
+        invert : bool, optional
+            Try to add the reverse edge by inverting the transform if possible; default True
+
+        Returns
+        -------
+        int
+            Number of edges added to the graph.
+        """
+        out = []
+        if isinstance(transform, TransformSequence):
+            # TODO: weighting of split-out sequences could be problematic
+            ts = split_sequence(transform)
+            out.extend(
+                chain.from_iterable(
+                    self.add_transform(t, None, None, invert) for t in ts
+                )
+            )
+
+        elif isinstance(transform, Bijection):
+            out.extend(
+                self.add_transform(
+                    transform.forward,
+                    source,
+                    target,
+                    False,
+                )
+            )
+            if invert:
+                out.extend(
+                    self.add_transform(
+                        transform.inverse,
+                        target,
+                        source,
+                        False,
+                    )
+                )
+
+        else:
+            out.extend(self._add_transform(transform, source, target, invert))
+
+        if out:
+            self.get_sequence.cache_clear()
+
+        return out
+
+    def add_transforms(
+        self,
+        transforms: Iterable[Transform[ArrayT]],
+        inverse: bool = True,
+    ) -> list[tuple[SpaceRef, SpaceRef]]:
         """Bulk-add transformations to the graph.
 
         Every given transform must have a source and target space defined;
         these spaces are the nodes of the graph.
 
-        If any of the given transforms are `TransformSequence`s,
-        any subsequences of transformations with source and target spaces
-        (explicitly defined or implicit based on their neighbours')
-        will be split into separate graph edges.
+        This method is preferred over `TransformGraph.add_transform`
+        when some reverse edges are explicitly defined
+        and you don't want them to be overridden by implicit reverse edges
+        when `inverse=True`.
+
+        `Bijection`s and `TransformSequence`s will be split out as documented in
+        `TransformGraph.add_transform`.
 
         Note that a single `TransformSequence` is itself an `Iterable[Transform]`
         and so could be used as the `transforms` argument.
@@ -112,57 +291,44 @@ class TransformGraph[ArrayT]:
         have explicit source and target spaces,
         where the `transforms` argument here does,
         so not all `TransformSequence`s can be used directly as the argument
-        (wrap them in a list instead).
+        (wrap them in a list instead or use `TransformGraph.add_transform`).
 
         Parameters
         ----------
         transforms : Iterable[Transform[ArrayT]]
             Transforms which must have a source and target space defined.
-            TransformSequences are split out if their inner transforms'
-            spaces are defined.
+        inverse:
+            Invert the transformations and add them too.
 
         Raises
         ------
         ValueError
             Undefined source and target spaces.
         """
-        # TODO: weighting of split-out sequences could be problematic
-        edges: dict[tuple[SpaceRef, SpaceRef], Transform[ArrayT]] = dict()
-        self.get_sequence.cache_clear()
+        if isinstance(transforms, TransformSequence):
+            warnings.warn(
+                "add_transforms() argument is a TransformSequence, "
+                "which allows undefined intermediate spaces, "
+                "in which case this method will fail. "
+                "Prefer the add_transform() argument for single logical transforms, "
+                "or wrap the given argument in a collection (e.g. a list)."
+            )
 
-        registry = NDimRegistries(self.space_ndims)
-
+        forwards = []
         for t in transforms:
-            if isinstance(t, TransformSequence):
-                ts = list(split_sequence(t))
-            else:
-                ts = [t]
+            forwards.extend(self.add_transform(t, invert=False))
 
-            for t2 in ts:
-                if chain_or(t2.spaces.source, t2.spaces.target, default=None) is None:
-                    raise ValueError(
-                        "All transforms in a graph "
-                        "need explicit source and target spaces"
-                    )
-                registry.check(t2.spaces.source, t2.ndims.source)
-                registry.check(t2.spaces.target, t2.ndims.target)
-                edges[(t2.spaces.source, t2.spaces.target)] = t2
+        if not inverse:
+            return forwards
 
-        count = 0
+        out = list(forwards)
 
-        for (src, tgt), t in edges.items():
-            self.graph.add_edge(src, tgt, transform=t)
-            count += 1
-            if (tgt, src) not in edges:
-                try:
-                    self.graph.add_edge(tgt, src, transform=~t)
-                    count += 1
-                except NotImplementedError:
-                    pass
+        # add inverses in second stage to prevent implicit reverse transforms blocking explicit
+        for src, tgt in forwards:
+            t = self.graph.edges[src, tgt]["transform"]
+            out.extend(self._add_inverse(t, src, tgt))
 
-        registry.merge()
-
-        return count
+        return out
 
     @lru_cache()
     def get_sequence(

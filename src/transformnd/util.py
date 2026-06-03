@@ -24,10 +24,14 @@ def none_eq(a: Any | None, b: Any | None) -> bool:
     return a == b or a is None or b is None
 
 
-NO_DEFAULT = object()
+class _NoDefault:
+    pass
 
 
-def chain_or(*args: Any | None, default=NO_DEFAULT) -> Any:
+NO_DEFAULT = _NoDefault()
+
+
+def chain_or[T](*args: T | None, default: _NoDefault | T = NO_DEFAULT) -> T:
     """Return the first of *args which is not None.
 
     Can either error or return a default if there are no non-None args.
@@ -51,12 +55,12 @@ def chain_or(*args: Any | None, default=NO_DEFAULT) -> Any:
     for arg in args:
         if arg is not None:
             return arg
-    if default is NO_DEFAULT:
+    if isinstance(default, _NoDefault):
         raise ValueError("No non-None arguments")
     return default
 
 
-def same_or_none(*args: Any, default=NO_DEFAULT) -> Any:
+def same_or_none[T](*args: T | None, default: T | _NoDefault = NO_DEFAULT) -> T:
     """Check args are the same or None.
 
     If so, return the non-None value.
@@ -90,7 +94,7 @@ def same_or_none(*args: Any, default=NO_DEFAULT) -> Any:
         prev = arg
 
     if prev is None:
-        if default is NO_DEFAULT:
+        if isinstance(default, _NoDefault):
             raise ValueError("No non-None arguments found")
         return default
 
