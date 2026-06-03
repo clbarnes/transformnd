@@ -230,7 +230,7 @@ class TransformGraph[ArrayT]:
         int
             Number of edges added to the graph.
         """
-        out = []
+        out: list[tuple[SpaceRef, SpaceRef]] = []
         if isinstance(transform, TransformSequence):
             # TODO: weighting of split-out sequences could be problematic
             ts = split_sequence(transform)
