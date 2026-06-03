@@ -172,7 +172,7 @@ class Affine(Transform[ArrayT]):
             raise ValueError("Affine transforms do not share a space")
         return Affine(
             self.matrix @ rhs.matrix,
-            spaces=Spaces(self.spaces.source, rhs.spaces.target),
+            spaces=Spaces(rhs.spaces.source, self.spaces.target),
         )
 
     def to_device(self, xp, device=None) -> "Affine[ArrayT]":
