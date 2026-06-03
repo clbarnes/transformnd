@@ -157,25 +157,31 @@ def _(mo):
 
     Because this all uses matrix multiplication under the hood, `AffineTransform` instances can be composed using the matrix multiplication operator `@` rather than needing to apply the transforms one at a time in a `TransformSequence`.
 
+    Note that, as with raw affine transformation matrices, the individual transformations are effectively applied right to left.
+    That is, to apply a scale, then a rotation, then a translation, use `(translation @ rotation @ scale).apply(coordinates)`.
+
     Affine transformations are invertible.
     """)
     return
 
 
 @app.cell
-def _(plot_shape, square):
+def _(np, plot_shape, square):
     from transformnd.transforms.affine import Affine
 
-    tran = Affine.translation([1, 0])
-    rot = Affine.rotation2(45)  # Only 2D, 3D have convenient constructors
     sca = Affine.scaling([1.5, 1])
-    tran_rot_sca = tran @ rot @ sca
+    rot = Affine.rotation2(45)  # Only 2D, 3D have convenient constructors
+    tran = Affine.translation([1, 0])
+    sca_rot_tran = tran @ rot @ sca
 
     plot_shape(
         translated=tran.apply(square),
         rotated=rot.apply(square),
         scaled=sca.apply(square),
-        translated_rotated_scaled=tran_rot_sca.apply(square),
+        translated_rotated_scaled=sca_rot_tran.apply(square),
+    )
+    assert np.allclose(
+        (tran @ rot @ sca).apply(square), (sca | rot | tran).apply(square)
     )
     return
 
@@ -205,11 +211,12 @@ def _(mo):
 @app.cell
 def _(Scale, Translate):
     from transformnd.graph import TransformGraph
+    from transformnd import Spaces
 
     g = TransformGraph()
-    ab = Scale(2, spaces=("a", "b"))
-    bc = Translate([0.5, 1], spaces=("b", "c"))
-    bd = Translate([1, 0.5], spaces=("b", "d"))
+    ab = Scale([2, 2], spaces=Spaces("a", "b"))
+    bc = Translate([0.5, 1], spaces=Spaces("b", "c"))
+    bd = Translate([1, 0.5], spaces=Spaces("b", "d"))
 
     g.add_transforms([ab, bc, bd])
 
@@ -238,15 +245,13 @@ def _(mo):
 
 
 @app.cell
-def _(np):
-    from transformnd import Transform
+def _(np, Spaces):
+    from transformnd import Transform, NDims
 
     class IsotropicScale2d(Transform):
-        ndim = {2}  # a set of valid dimensionalities
-
-        def __init__(self, factor: float, *, spaces=(None, None)):
+        def __init__(self, factor: float, *, spaces=Spaces(None, None)):
             # ensure the spaces are handled properly
-            super().__init__(spaces=spaces)
+            super().__init__(ndims=NDims(2, 2), spaces=spaces)
             self.factor = factor
 
         def apply(self, coords: np.ndarray) -> np.ndarray:
@@ -257,7 +262,7 @@ def _(np):
         def invert(self):
             return type(self)(
                 1 / self.factor,
-                spaces=self.spaces[::-1],
+                spaces=self.spaces.invert(),
             )
 
     return
