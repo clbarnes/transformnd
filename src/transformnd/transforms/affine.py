@@ -44,6 +44,10 @@ class Affine(Transform[ArrayT]):
     The transformation matrix is stored as a NumPy array (backend-neutral).
     At apply()-time it is converted to the input coords' backend and device,
     so the transform works transparently with NumPy, JAX, PyTorch, CuPy, etc.
+
+    Affines can be composed by matrix multiplication: `affine2 @ affine1`.
+    Note that the right hand transformation is effectively applied to the coordinates first,
+    so `(aff2 @ aff1).apply(coords) == (aff1 | aff2).apply(coords)`.
     """
 
     def __init__(
@@ -168,7 +172,7 @@ class Affine(Transform[ArrayT]):
             raise ValueError("Affine transforms do not share a space")
         return Affine(
             self.matrix @ rhs.matrix,
-            spaces=Spaces(self.spaces.source, rhs.spaces.target),
+            spaces=Spaces(rhs.spaces.source, self.spaces.target),
         )
 
     def to_device(self, xp, device=None) -> "Affine[ArrayT]":

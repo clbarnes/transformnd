@@ -9,6 +9,14 @@
 ### Fixed
 
 - Handle `Bijection`s as an explicit pair of edges in `TransformGraph`
+- Source/target spaces in affine matmul
+
+## 0.2.1 - 2026-06-03
+
+### Fixed
+
+- Update tutorial
+- Improve docs around matmul order
 
 ## 0.2.0 - 2026-06-02
 
