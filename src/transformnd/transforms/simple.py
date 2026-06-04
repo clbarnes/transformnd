@@ -3,7 +3,8 @@ Simple transformations like rigid translation and scaling.
 """
 
 from copy import copy
-from typing import Self, TYPE_CHECKING
+from typing import Self
+from types import ModuleType
 
 from numpy.typing import ArrayLike
 
@@ -13,9 +14,6 @@ from ..base import Transform
 from ..types import NDims, Spaces
 from ..util import ArrayT, chain_or, as_floats
 from ..transforms.affine import Affine
-
-if TYPE_CHECKING:
-    from array_api_compat.common._typing import Device, Namespace
 
 
 class Identity(Transform[ArrayT]):
@@ -95,7 +93,7 @@ class Translate(Transform[ArrayT]):
     def invert(self) -> Transform | None:
         return type(self)(-self.translation, spaces=self.spaces.invert())
 
-    def to_device(self, xp: Namespace, device: Device | None = None) -> Self:
+    def to_device(self, xp: ModuleType, device: str | None = None) -> Self:
         result = copy(self)
         result.translation = xp.asarray(self.translation, device=device)
         return result
@@ -146,7 +144,7 @@ class Scale(Transform[ArrayT]):
             spaces=self.spaces.invert(),
         )
 
-    def to_device(self, xp: Namespace, device: Device | None = None) -> Self:
+    def to_device(self, xp: ModuleType, device: str | None = None) -> Self:
         result = copy(self)
         result.scale = xp.asarray(self.scale, device=device)
         return result

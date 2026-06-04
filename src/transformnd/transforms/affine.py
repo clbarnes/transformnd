@@ -5,7 +5,8 @@ Rigid transformations implemented as affine multiplications.
 from __future__ import annotations
 
 import math
-from typing import Container, Union, Self, TYPE_CHECKING
+from typing import Container, Union, Self
+from types import ModuleType
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -16,9 +17,6 @@ from array_api_compat import array_namespace, device as xp_device
 from ..base import Transform, ArrayT
 from ..util import as_floats, none_eq
 from ..types import NDims, Spaces
-
-if TYPE_CHECKING:
-    from array_api_compat.common._typing import Device, Namespace
 
 
 class Affine(Transform[ArrayT]):
@@ -160,9 +158,7 @@ class Affine(Transform[ArrayT]):
             spaces=Spaces(rhs.spaces.source, self.spaces.target),
         )
 
-    def to_device(
-        self, xp: Namespace, device: Device | None = None
-    ) -> "Affine[ArrayT]":
+    def to_device(self, xp: ModuleType, device: str | None = None) -> "Affine[ArrayT]":
         """Return a copy with the matrix placed on the given device/backend.
 
         Use this before a tight apply() loop to avoid per-call host-to-device

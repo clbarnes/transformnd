@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from copy import copy
 from typing import Self, TYPE_CHECKING
+from types import ModuleType
 
 from array_api_compat import array_namespace
 
@@ -21,7 +22,6 @@ from .types import TransformSignature, Spaces, NDims
 
 if TYPE_CHECKING:
     from .transforms import Affine
-    from array_api_compat.common._typing import Device, Namespace
 
 
 class Transform[ArrayT](ABC):
@@ -124,7 +124,7 @@ class Transform[ArrayT](ABC):
             return NotImplemented
         return t
 
-    def to_device(self, xp: Namespace, device: Device | None = None) -> Self:  # noqa: ARG002
+    def to_device(self, xp: ModuleType, device: str | None = None) -> Self:  # noqa: ARG002
         """Return a copy of this transform with array parameters placed on the given device.
 
         Useful for pre-allocating parameters on GPU before a tight apply() loop,
@@ -347,7 +347,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             coords = t.apply(coords)
         return coords
 
-    def to_device(self, xp: Namespace, device: Device | None = None) -> Self:
+    def to_device(self, xp: ModuleType, device: str | None = None) -> Self:
         result = copy(self)
         result.transforms = [t.to_device(xp, device) for t in self.transforms]
         return result

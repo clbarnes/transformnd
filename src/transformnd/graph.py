@@ -7,6 +7,7 @@ from collections.abc import Iterable, Iterator
 import logging
 from itertools import chain, pairwise
 from typing import TYPE_CHECKING
+from types import ModuleType
 
 import networkx as nx
 
@@ -16,7 +17,7 @@ from .util import SpaceRef, ArrayT, same_or_none
 from .types import Spaces
 
 if TYPE_CHECKING:
-    from array_api_compat.common._typing import Device, Namespace
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -405,7 +406,7 @@ class TransformGraph[ArrayT]:
             yield t
 
     def to_device(
-        self, xp: Namespace, device: Device | None = None
+        self, xp: ModuleType, device: str | None = None
     ) -> TransformGraph[ArrayT]:
         result: TransformGraph[ArrayT] = TransformGraph()
         for src, tgt, t in self.graph.edges.data("transform"):
