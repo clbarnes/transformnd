@@ -25,7 +25,7 @@ class MapAxis(Transform[ArrayT]):
         ----------
         permutation: list[int]
             New order of column axis. For example, [1, 0] means x -> y and y -> x.
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
         """
         s_perm = sorted(permutation)

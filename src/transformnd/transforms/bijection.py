@@ -25,7 +25,11 @@ class Bijection(Transform[ArrayT]):
 
         Parameters
         ----------
-        spaces : tuple[SpaceRef, SpaceRef]
+        forward : Transform[ArrayT]
+            The forward transformation.
+        inverse : Transform[ArrayT]
+            The inverse transformation.
+        spaces : Spaces
             Optional source and target spaces
         """
         src = same_or_none(

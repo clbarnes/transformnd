@@ -63,7 +63,7 @@ class Translate(Transform[ArrayT]):
         ----------
         translation : D-length array
             Translation to apply in all dimensions, or each dimension.
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Raises
@@ -115,7 +115,7 @@ class Scale(Transform[ArrayT]):
         ----------
         scale : scalar or D-length array-like
             Scaling to apply in all dimensions, or each dimension.
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Raises

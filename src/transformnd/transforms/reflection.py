@@ -102,7 +102,7 @@ class Reflect(Transform[np.ndarray]):
         point : float or array-like, optional
             Intersection point of all reflection planes
             (can be broadcast from scalar), by default 0 (i.e. the origin)
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Raises
@@ -150,7 +150,7 @@ class Reflect(Transform[np.ndarray]):
         ----------
         points : array-like
             NxD array of N points in D dimensions. N == D
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Returns
@@ -176,7 +176,7 @@ class Reflect(Transform[np.ndarray]):
             Index (or indices) of axes in which to reflect.
         origin : array-like
             Point around which to reflect.
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Returns

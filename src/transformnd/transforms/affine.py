@@ -63,7 +63,7 @@ class Affine(Transform[ArrayT]):
             Affine transformation matrix,
             i.e. a 2D array-like with shape `(Di + 1, Do + 1)`,
             where the bottom row is all 0s except in the rightmost column, which is 1.
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Raises
@@ -148,11 +148,11 @@ class Affine(Transform[ArrayT]):
 
         Parameters
         ----------
-        rhs : AffineTransform
+        rhs : Affine
 
         Returns
         -------
-        AffineTransform
+        Affine
 
         Raises
         ------
@@ -214,12 +214,12 @@ class Affine(Transform[ArrayT]):
             Shape `(Di, Do)`
         translation : ArrayLike, optional
             Translation to add to the matrix, by default 0
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Returns
         -------
-        AffineTransform
+        Affine
         """
         lin_map = as_floats(linear_map)
         if lin_map.ndim != 2:
@@ -250,12 +250,12 @@ class Affine(Transform[ArrayT]):
         Parameters
         ----------
         ndim : int
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Returns
         -------
-        AffineTransform
+        Affine
         """
         return cls(np.eye(ndim + 1), spaces=spaces)
 
@@ -271,14 +271,13 @@ class Affine(Transform[ArrayT]):
         Parameters
         ----------
         translation : ArrayLike
-        ndim : int, optional
-            If translation is scalar, how many dims to use.
-        spaces : tuple[SpaceRef, SpaceRef]
+            D-length array of translation values.
+        spaces : Spaces
             Optional source and target spaces
 
         Returns
         -------
-        AffineTransform
+        Affine
         """
         t = as_floats(translation)
         if t.ndim != 1:
@@ -299,15 +298,13 @@ class Affine(Transform[ArrayT]):
         Parameters
         ----------
         scale : ArrayLike
-            If scalar, broadcast to ndim.
-        ndim : Optional[int], optional
-            If scale is scalar, how many dimensions to use
-        spaces : tuple[SpaceRef, SpaceRef]
+            D-length array of scaling factors.
+        spaces : Spaces
             Optional source and target spaces
 
         Returns
         -------
-        AffineTransform
+        Affine
         """
         s = as_floats(scale)
         if s.ndim != 1:
@@ -330,12 +327,12 @@ class Affine(Transform[ArrayT]):
             A single axis or multiple to reflect in.
         ndim : int
             How many dimensions to work in.
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Returns
         -------
-        AffineTransform
+        Affine
         """
         if isinstance(axis, (int, np.integer)):
             axis = [axis]
@@ -361,12 +358,12 @@ class Affine(Transform[ArrayT]):
             Whether rotation is in degrees (rather than radians), by default True
         clockwise : bool, optional
             Whether rotation is clockwise, by default False
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Returns
         -------
-        AffineTransform
+        Affine
         """
         if degrees:
             rotation = math.radians(rotation)
@@ -397,12 +394,12 @@ class Affine(Transform[ArrayT]):
             Whether rotation is clockwise, by default False
         order : tuple, optional
             What order to apply the rotations, by default (0, 1, 2)
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Returns
         -------
-        AffineTransform
+        Affine
 
         Raises
         ------
@@ -456,14 +453,14 @@ class Affine(Transform[ArrayT]):
         ----------
         factor : Union[float, np.ndarray]
             Shear scale factors; see above for more details.
-        ndim : Optional[int], optional
+        ndim : int, optional
             If factor is scalar, broadcast to this many dimensions, by default None
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Returns
         -------
-        AffineTransform
+        Affine
 
         Raises
         ------

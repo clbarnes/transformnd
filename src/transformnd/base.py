@@ -92,7 +92,7 @@ class Transform[ArrayT](ABC):
 
         Returns
         -------
-        np.ndarray
+        ArrayT
             Transformed coordinates in the same shape.
         """
         pass
@@ -207,7 +207,11 @@ class TransformWrapper(Transform[ArrayT]):
         ----------
         fn : TransformSignature
             Callable.
-        spaces : tuple[SpaceRef, SpaceRef]
+        in_ndim : int
+            Dimensionality of the input coordinates.
+        out_ndim : int
+            Dimensionality of the output coordinates.
+        spaces : Spaces
             Optional source and target spaces
         """
         super().__init__(NDims(in_ndim, out_ndim), spaces=spaces)

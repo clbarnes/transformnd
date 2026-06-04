@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import lru_cache
 from collections.abc import Iterable, Iterator
-import warnings
 import logging
 from itertools import chain, pairwise
 
@@ -133,27 +132,8 @@ class TransformGraph[ArrayT]:
         target: SpaceRef | None,
         invert: bool,
     ) -> list[tuple[SpaceRef, SpaceRef]]:
-        """Clearing the get_sequence cache and splitting sequences should be handled outside this method."""
-        count = []
-        if isinstance(transform, Bijection):
-            count.extend(
-                self._add_transform(
-                    transform.forward,
-                    transform.spaces.source,
-                    transform.spaces.target,
-                    False,
-                )
-            )
-            if invert:
-                count.extend(
-                    self._add_transform(
-                        transform.inverse,
-                        transform.spaces.target,
-                        transform.spaces.source,
-                        False,
-                    )
-                )
-            return count
+        """Clearing the get_sequence cache and splitting sequences and bijections should be handled outside this method."""
+        out = []
 
         src, tgt = self._update_spaces(transform, source, target)
 
@@ -161,10 +141,10 @@ class TransformGraph[ArrayT]:
             logger.warning(f"Replacing existing edge between {src} and {tgt}")
 
         self.graph.add_edge(src, tgt, transform=transform)
-        count.append((src, tgt))
+        out.append((src, tgt))
         if invert:
-            count.extend(self._add_inverse(transform, src, tgt))
-        return count
+            out.extend(self._add_inverse(transform, src, tgt))
+        return out
 
     def _add_inverse(
         self,
@@ -227,8 +207,8 @@ class TransformGraph[ArrayT]:
 
         Returns
         -------
-        int
-            Number of edges added to the graph.
+        list[tuple[SpaceRef, SpaceRef]]
+            List of `(src, tgt)` edges added to the graph.
         """
         out: list[tuple[SpaceRef, SpaceRef]] = []
         if isinstance(transform, TransformSequence):
@@ -306,7 +286,7 @@ class TransformGraph[ArrayT]:
             Undefined source and target spaces.
         """
         if isinstance(transforms, TransformSequence):
-            warnings.warn(
+            logger.warning(
                 "add_transforms() argument is a TransformSequence, "
                 "which allows undefined intermediate spaces, "
                 "in which case this method will fail. "

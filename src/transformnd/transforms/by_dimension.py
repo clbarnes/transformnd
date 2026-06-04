@@ -59,7 +59,7 @@ class ByDimension(Transform[ArrayT]):
         fill_identity: int | None
             If not None, fill any missing input and output axes with identity transforms in order, up to a maximum number of dimensions.
             e.g. if you have XYT imates which you only want to transform in XY, provide the XY subtransformations and `fill_identity=3`.
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
         """
         if fill_identity is not None:
