@@ -18,26 +18,6 @@ from ..util import as_floats, none_eq
 from ..types import NDims, Spaces
 
 
-def arg_as_array(arg, ndim: int | None) -> np.ndarray:
-    """Convert a scalar or array-like argument to a 1-D NumPy array.
-
-    Parameters
-    ----------
-    arg :
-        Scalar (broadcast to ndim) or array-like.
-    ndim : int, optional
-        Required length. If arg is scalar, used to broadcast.
-    """
-    if isinstance(arg, (int, float, complex)):
-        if ndim is None:
-            raise ValueError("Argument must be array-like or ndim must be given")
-        return np.full(ndim, arg)
-    arr = np.asarray(arg)
-    if ndim is not None and len(arr) != ndim:
-        raise ValueError("Mismatch between ndim and length of argument")
-    return arr
-
-
 class Affine(Transform[ArrayT]):
     """Affine transformation using an augmented matrix.
 

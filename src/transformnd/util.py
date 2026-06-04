@@ -1,6 +1,5 @@
 """Utilities used elsewhere in the package."""
 
-from typing import Any
 from array_api_compat import array_namespace
 from numpy.typing import ArrayLike
 import numpy as np
@@ -9,13 +8,15 @@ from .types import SpaceRef, ArrayT
 from .constants import UNSPECIFIED_SPACE_NAME
 
 
-def none_eq(a: Any | None, b: Any | None) -> bool:
+def none_eq[T](a: T | None, b: T | None) -> bool:
     """Check whether either is None or both are equal.
 
     Parameters
     ----------
-    a : Optional[Any]
-    b : Optional[Any]
+    a :
+        First argument to check
+    b :
+        Second argument to check
 
     Returns
     -------
@@ -38,13 +39,15 @@ def chain_or[T](*args: T | None, default: _NoDefault | T = NO_DEFAULT) -> T:
 
     Parameters
     ----------
+    args:
+        Optional arguments to check.
     default : any, optional
         By default, raises a ValueError if *args are exhausted.
         If given, returns the given value instead.
 
     Returns
     -------
-    Any
+    T
         One of the given args, or the default.
 
     Raises
@@ -68,6 +71,8 @@ def same_or_none[T](*args: T | None, default: T | _NoDefault = NO_DEFAULT) -> T:
 
     Parameters
     ----------
+    *args:
+        Arguments to check.
     default : Any, optional
         If given, return this instead of an error
         if all *args are None.
@@ -80,9 +85,7 @@ def same_or_none[T](*args: T | None, default: T | _NoDefault = NO_DEFAULT) -> T:
     Raises
     ------
     ValueError
-        Arguments are not None, or the same.
-    ValueError
-        No non-None arguments found and no default given.
+        Arguments differ (other than Nones), or no non-None arguments are given (without a default).
     """
     prev = None
 
