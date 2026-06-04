@@ -212,7 +212,7 @@ class TransformWrapper(Transform[ArrayT]):
     ):
         """Wrapper around an arbitrary function.
 
-        ``fn`` should take and return an identically-shaped
+        `fn` should take and return an identically-shaped
         NxD numpy array of N D-dimensional coordinates.
 
         Parameters

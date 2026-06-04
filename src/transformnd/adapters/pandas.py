@@ -16,7 +16,7 @@ class PandasAdapter(BaseAdapter[pd.DataFrame, np.ndarray]):
         Parameters
         ----------
         columns
-            Keys for columns containing coordinates, e.g. ``["x", "y", "z"]``
+            Keys for columns containing coordinates, e.g. `["x", "y", "z"]`
         """
         self.columns = columns
 

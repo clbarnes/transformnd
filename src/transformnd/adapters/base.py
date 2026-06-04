@@ -89,7 +89,7 @@ class AttrAdapter(BaseAdapter[ObjectT, ArrayT]):
     **kwargs
         Keys are attribute names, values are adapters with which
         to apply the transform to those attributes.
-        ``None`` is shorthand for ``NullAdapter()``;
+        `None` is shorthand for `NullAdapter()`;
         i.e. the attribute is an array and can be transformed
         without being adapted.
     """
