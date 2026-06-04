@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.0 - 2026-06-04
+
 ### Added
 
 - `TransformGraph.add_transform` method
