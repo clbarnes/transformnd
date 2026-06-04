@@ -14,22 +14,27 @@ ObjectT = TypeVar("ObjectT")
 
 
 class BaseAdapter[ObjectT, ArrayT](ABC):
+    """Base class for adapters that transform non-array objects."""
+
     @abstractmethod
     def apply(self, transform: Transform[ArrayT], obj: ObjectT) -> ObjectT:
         """Apply the given transformation to a non-array object.
 
         Parameters
         ----------
-        transform : Transform
-        obj : T
+        transform
+            The transformation to apply.
+        obj
+            The object to transform.
 
         Returns
         -------
-        T
+        ObjectT
+            The transformed object.
         """
         pass
 
-    def partial(self, *args, **kwargs) -> Callable[..., ObjectT]:
+    def partial(self, *args: Any, **kwargs: Any) -> Callable[..., ObjectT]:
         """Create a partial function with frozen arguments.
 
         Useful for applying the same transform to many objects,
@@ -37,9 +42,17 @@ class BaseAdapter[ObjectT, ArrayT](ABC):
         or for adapters with additional arguments,
         using the same config repeatedly.
 
+        Parameters
+        ----------
+        *args
+            Positional arguments to freeze.
+        **kwargs
+            Keyword arguments to freeze.
+
         Returns
         -------
-        Callable
+        Callable[..., ObjectT]
+            A partial function with the given arguments frozen.
         """
         return partial(self.apply, *args, **kwargs)
 
@@ -52,15 +65,16 @@ class NullAdapter(BaseAdapter[ArrayT, ArrayT]):
 
 
 class FnAdapter(BaseAdapter[ObjectT, ArrayT]):
-    def __init__(self, fn: Callable[[Transform[ArrayT], ObjectT], ObjectT]):
-        """Adapter which simply wraps a function, for typing purposes.
+    """Adapter which simply wraps a function, for typing purposes.
 
-        Parameters
-        ----------
-        fn : Callable[[Transform, T], T]
-            Function which takes the object,
-            and applies the transformation to it.
-        """
+    Parameters
+    ----------
+    fn
+        Function which takes the object,
+        and applies the transformation to it.
+    """
+
+    def __init__(self, fn: Callable[[Transform[ArrayT], ObjectT], ObjectT]):
         self.fn = fn
 
     def apply(self, transform: Transform[ArrayT], obj: ObjectT) -> ObjectT:
@@ -68,18 +82,19 @@ class FnAdapter(BaseAdapter[ObjectT, ArrayT]):
 
 
 class AttrAdapter(BaseAdapter[ObjectT, ArrayT]):
-    def __init__(self, **kwargs: BaseAdapter[Any, ArrayT] | None) -> None:
-        """Adapter which transforms an object by applying transforms to its attributes.
+    """Adapter which transforms an object by applying transforms to its attributes.
 
-        Parameters
-        ----------
-        adapters : Dict[str, Optional[BaseAdapter]]
-            Keys are attribute names, values are adapters with which
-            to apply the transform to those attributes.
-            `None` is shorthand for `NullAdapter()`;
-            i.e. the attribute is an array and can be transformed
-            without being adapted.
-        """
+    Parameters
+    ----------
+    **kwargs
+        Keys are attribute names, values are adapters with which
+        to apply the transform to those attributes.
+        `None` is shorthand for `NullAdapter()`;
+        i.e. the attribute is an array and can be transformed
+        without being adapted.
+    """
+
+    def __init__(self, **kwargs: BaseAdapter[Any, ArrayT] | None) -> None:
         self.adapters = {
             k: NullAdapter[ArrayT]() if v is None else v for k, v in kwargs.items()
         }
@@ -91,15 +106,23 @@ class AttrAdapter(BaseAdapter[ObjectT, ArrayT]):
 
         Parameters
         ----------
-        transform : Transform
-        obj : T
-        in_place : bool, optional
+        transform
+            The transformation to apply.
+        obj
+            The object to transform.
+        in_place
             Whether to mutate the given object in place,
             by default False (i.e. make a deep copy of it).
 
         Returns
         -------
-        T
+        ObjectT
+            The transformed object.
+
+        Raises
+        ------
+        TypeError
+            If the adapter does not support the in_place argument.
         """
         if not in_place:
             obj = deepcopy(obj)
@@ -147,7 +170,7 @@ class ReshapeAdapter(BaseAdapter[ArrayT, ArrayT]):
 
         Parameters
         ----------
-        dim_axis : int, optional
+        dim_axis
             Which axis contains the coordinates' dimensions,
             by default -1 (last)
         """

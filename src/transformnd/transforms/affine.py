@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 from typing import Container, Union, Self
+from types import ModuleType
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -39,11 +40,11 @@ class Affine(Transform[ArrayT]):
         """
         Parameters
         ----------
-        matrix : ArrayLike
+        matrix
             Affine transformation matrix,
             i.e. a 2D array-like with shape `(Di + 1, Do + 1)`,
             where the bottom row is all 0s except in the rightmost column, which is 1.
-        spaces : Spaces
+        spaces
             Optional source and target spaces
 
         Raises
@@ -128,11 +129,13 @@ class Affine(Transform[ArrayT]):
 
         Parameters
         ----------
-        rhs : Affine
+        rhs
+            The right-hand affine transform.
 
         Returns
         -------
-        Affine
+        Affine[ArrayT]
+            The composed affine transform.
 
         Raises
         ------
@@ -155,7 +158,7 @@ class Affine(Transform[ArrayT]):
             spaces=Spaces(rhs.spaces.source, self.spaces.target),
         )
 
-    def to_device(self, xp, device=None) -> "Affine[ArrayT]":
+    def to_device(self, xp: ModuleType, device: str | None = None) -> "Affine[ArrayT]":
         """Return a copy with the matrix placed on the given device/backend.
 
         Use this before a tight apply() loop to avoid per-call host-to-device
@@ -163,14 +166,14 @@ class Affine(Transform[ArrayT]):
 
         Parameters
         ----------
-        xp : array namespace
+        xp
             Target array namespace (e.g. jax.numpy, torch).
-        device : device object, optional
+        device
             Target device (e.g. from array_api_compat.device(array)).
 
         Returns
         -------
-        Affine
+        Affine[ArrayT]
             New instance with matrix on the target device.
         """
         result = copy(self)
@@ -190,16 +193,22 @@ class Affine(Transform[ArrayT]):
 
         Parameters
         ----------
-        linear_map : ArrayLike
+        linear_map
             Shape `(Di, Do)`
-        translation : ArrayLike, optional
+        translation
             Translation to add to the matrix, by default 0
-        spaces : Spaces
+        spaces
             Optional source and target spaces
 
         Returns
         -------
-        Affine
+        Affine[ArrayT]
+            The affine transform.
+
+        Raises
+        ------
+        ValueError
+            If shapes are inconsistent.
         """
         lin_map = as_floats(linear_map)
         if lin_map.ndim != 2:
@@ -229,13 +238,15 @@ class Affine(Transform[ArrayT]):
 
         Parameters
         ----------
-        ndim : int
-        spaces : Spaces
+        ndim
+            The dimensionality of the transform.
+        spaces
             Optional source and target spaces
 
         Returns
         -------
-        Affine
+        Affine[ArrayT]
+            The identity affine transform.
         """
         return cls(np.eye(ndim + 1), spaces=spaces)
 
@@ -250,14 +261,20 @@ class Affine(Transform[ArrayT]):
 
         Parameters
         ----------
-        translation : ArrayLike
+        translation
             D-length array of translation values.
-        spaces : Spaces
+        spaces
             Optional source and target spaces
 
         Returns
         -------
-        Affine
+        Affine[ArrayT]
+            The translation affine transform.
+
+        Raises
+        ------
+        ValueError
+            If translation array is not 1D.
         """
         t = as_floats(translation)
         if t.ndim != 1:
@@ -277,14 +294,20 @@ class Affine(Transform[ArrayT]):
 
         Parameters
         ----------
-        scale : ArrayLike
+        scale
             D-length array of scaling factors.
-        spaces : Spaces
+        spaces
             Optional source and target spaces
 
         Returns
         -------
-        Affine
+        Affine[ArrayT]
+            The scaling affine transform.
+
+        Raises
+        ------
+        ValueError
+            If scale array is not 1D.
         """
         s = as_floats(scale)
         if s.ndim != 1:
@@ -303,16 +326,17 @@ class Affine(Transform[ArrayT]):
 
         Parameters
         ----------
-        axis : Union[int, Container[int]]
+        axis
             A single axis or multiple to reflect in.
-        ndim : int
+        ndim
             How many dimensions to work in.
-        spaces : Spaces
+        spaces
             Optional source and target spaces
 
         Returns
         -------
-        Affine
+        Affine[ArrayT]
+            The reflection affine transform.
         """
         if isinstance(axis, (int, np.integer)):
             axis = [axis]
@@ -323,8 +347,8 @@ class Affine(Transform[ArrayT]):
     def rotation2(
         cls,
         rotation: float,
-        degrees=True,
-        clockwise=False,
+        degrees: bool = True,
+        clockwise: bool = False,
         *,
         spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
@@ -332,18 +356,19 @@ class Affine(Transform[ArrayT]):
 
         Parameters
         ----------
-        rotation : float
+        rotation
             Angle to rotate.
-        degrees : bool, optional
+        degrees
             Whether rotation is in degrees (rather than radians), by default True
-        clockwise : bool, optional
+        clockwise
             Whether rotation is clockwise, by default False
-        spaces : Spaces
+        spaces
             Optional source and target spaces
 
         Returns
         -------
-        Affine
+        Affine[ArrayT]
+            The rotation affine transform.
         """
         if degrees:
             rotation = math.radians(rotation)
@@ -356,9 +381,9 @@ class Affine(Transform[ArrayT]):
     def rotation3(
         cls,
         rotation: Union[float, tuple[float, float, float]],
-        degrees=True,
-        clockwise=False,
-        order=(0, 1, 2),
+        degrees: bool = True,
+        clockwise: bool = False,
+        order: tuple[int, int, int] = (0, 1, 2),
         *,
         spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
@@ -366,20 +391,21 @@ class Affine(Transform[ArrayT]):
 
         Parameters
         ----------
-        rotation : Union[float, Tuple[float, float, float]]
+        rotation
             Either a single rotation for all axes, or 1 for each.
-        degrees : bool, optional
+        degrees
             Whether rotation is in degrees (rather than radians), by default True
-        clockwise : bool, optional
+        clockwise
             Whether rotation is clockwise, by default False
-        order : tuple, optional
+        order
             What order to apply the rotations, by default (0, 1, 2)
-        spaces : Spaces
+        spaces
             Optional source and target spaces
 
         Returns
         -------
-        Affine
+        Affine[ArrayT]
+            The rotation affine transform.
 
         Raises
         ------
@@ -399,7 +425,6 @@ class Affine(Transform[ArrayT]):
         if len(order) != 3 or set(order) != {0, 1, 2}:
             raise ValueError("Order must contain only 0, 1, 2 in any order.")
 
-        order = list(order)
         c0, s0 = math.cos(r[0]), math.sin(r[0])
         c1, s1 = math.cos(r[1]), math.sin(r[1])
         c2, s2 = math.cos(r[2]), math.sin(r[2])
@@ -431,16 +456,17 @@ class Affine(Transform[ArrayT]):
 
         Parameters
         ----------
-        factor : Union[float, np.ndarray]
+        factor
             Shear scale factors; see above for more details.
-        ndim : int, optional
+        ndim
             If factor is scalar, broadcast to this many dimensions, by default None
-        spaces : Spaces
+        spaces
             Optional source and target spaces
 
         Returns
         -------
-        Affine
+        Affine[ArrayT]
+            The shearing affine transform.
 
         Raises
         ------

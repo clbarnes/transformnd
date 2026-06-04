@@ -15,7 +15,7 @@ class PandasAdapter(BaseAdapter[pd.DataFrame, np.ndarray]):
 
         Parameters
         ----------
-        columns : list of keys
+        columns
             Keys for columns containing coordinates, e.g. `["x", "y", "z"]`
         """
         self.columns = columns
@@ -27,16 +27,18 @@ class PandasAdapter(BaseAdapter[pd.DataFrame, np.ndarray]):
 
         Parameters
         ----------
-        transform : Transform
-        df : pd.DataFrame
-
-        in_place : bool, optional
+        transform
+            The transformation to apply.
+        df
+            The DataFrame to transform.
+        in_place
             Whether to mutate the dataframe in place,
             by default False (i.e. make a copy of it).
 
         Returns
         -------
-        pandas.DataFrame
+        pd.DataFrame
+            The transformed DataFrame.
         """
         coords = df[self.columns].to_numpy()
         transformed = transform.apply(coords)

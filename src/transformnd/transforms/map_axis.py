@@ -23,10 +23,15 @@ class MapAxis(Transform[ArrayT]):
 
         Parameters
         ----------
-        permutation: list[int]
+        permutation
             New order of column axis. For example, [1, 0] means x -> y and y -> x.
-        spaces : Spaces
+        spaces
             Optional source and target spaces
+
+        Raises
+        ------
+        ValueError
+            If permutation does not contain all dimensions [0, N) exactly once.
         """
         s_perm = sorted(permutation)
         if any(a != b for a, b in enumerate(s_perm)):

@@ -13,7 +13,7 @@ class PolarsAdapter(BaseAdapter[pl.DataFrame, np.ndarray]):
 
         Parameters
         ----------
-        columns : list of keys
+        columns
             Keys for columns containing coordinates, e.g. `["x", "y", "z"]`
         """
         self.columns = columns
@@ -25,16 +25,18 @@ class PolarsAdapter(BaseAdapter[pl.DataFrame, np.ndarray]):
 
         Parameters
         ----------
-        transform : Transform
-        df : pl.DataFrame
-
-        in_place : bool, optional
+        transform
+            The transformation to apply.
+        df
+            The DataFrame to transform.
+        in_place
             Whether to mutate the dataframe in place,
             by default False (i.e. make a copy of it).
 
         Returns
         -------
-        polars.DataFrame
+        pl.DataFrame
+            The transformed DataFrame.
         """
         coords = df[self.columns].to_numpy()
         transformed = transform.apply(coords)

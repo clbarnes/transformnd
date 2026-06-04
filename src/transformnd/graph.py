@@ -6,6 +6,7 @@ from functools import lru_cache
 from collections.abc import Iterable, Iterator
 import logging
 from itertools import chain, pairwise
+from types import ModuleType
 
 import networkx as nx
 
@@ -26,11 +27,13 @@ def split_sequence(seq: TransformSequence[ArrayT]) -> Iterator[Transform[ArrayT]
 
     Parameters
     ----------
-    seq : TransformSequence
+    seq
+        The TransformSequence to split.
 
     Yields
-    -------
-    Transform
+    ------
+    Transform[ArrayT]
+        Individual transforms or subsequences with defined spaces.
     """
     this_seq = []
     for t in seq.transforms:
@@ -89,7 +92,9 @@ class TransformGraph[ArrayT]:
     """
 
     def __init__(
-        self, transforms: Iterable[Transform[ArrayT]] | None = None, invert=True
+        self,
+        transforms: Iterable[Transform[ArrayT]] | None = None,
+        and_inverse: bool = True,
     ):
         """Create an transform graph, optionally with some starting transforms.
 
@@ -99,7 +104,7 @@ class TransformGraph[ArrayT]:
         self.graph = nx.DiGraph()
         self.space_ndims: dict[SpaceRef, int] = dict()
         if transforms is not None:
-            self.add_transforms(transforms, invert)
+            self.add_transforms(transforms, and_inverse)
 
     def _update_spaces(
         self,
@@ -130,7 +135,7 @@ class TransformGraph[ArrayT]:
         transform: Transform[ArrayT],
         source: SpaceRef | None,
         target: SpaceRef | None,
-        invert: bool,
+        and_inverse: bool,
     ) -> list[tuple[SpaceRef, SpaceRef]]:
         """Clearing the get_sequence cache and splitting sequences and bijections should be handled outside this method."""
         out = []
@@ -142,7 +147,7 @@ class TransformGraph[ArrayT]:
 
         self.graph.add_edge(src, tgt, transform=transform)
         out.append((src, tgt))
-        if invert:
+        if and_inverse:
             out.extend(self._add_inverse(transform, src, tgt))
         return out
 
@@ -179,7 +184,7 @@ class TransformGraph[ArrayT]:
         transform: Transform[ArrayT],
         source: SpaceRef | None = None,
         target: SpaceRef | None = None,
-        invert: bool = True,
+        and_inverse: bool = True,
     ) -> list[tuple[SpaceRef, SpaceRef]]:
         """Add a transform to the graph, optionally with its inverse.
 
@@ -188,7 +193,7 @@ class TransformGraph[ArrayT]:
 
         If the given transform is a `Bijection`,
         its forward component will be added as an independent edges;
-        if `invert=True`, the same will be done with the inverse component.
+        if `and_inverse=True`, the same will be done with the inverse component.
 
         This method will overwrite existing edges.
         Implicit inverses calculated from the given transform will not overwrite existing explicit edges,
@@ -196,13 +201,13 @@ class TransformGraph[ArrayT]:
 
         Parameters
         ----------
-        transform :
+        transform
             Transform to add to the graph as an edge.
-        source :
+        source
             May be omitted if `transform` has its source space defined.
-        target : SpaceRef | None, optional
+        target
             May be omitted if `transform` has its target space defined.
-        invert : bool, optional
+        and_inverse
             Try to add the reverse edge by inverting the transform if possible; default True
 
         Returns
@@ -216,7 +221,7 @@ class TransformGraph[ArrayT]:
             ts = split_sequence(transform)
             out.extend(
                 chain.from_iterable(
-                    self.add_transform(t, None, None, invert) for t in ts
+                    self.add_transform(t, None, None, and_inverse) for t in ts
                 )
             )
 
@@ -229,7 +234,7 @@ class TransformGraph[ArrayT]:
                     False,
                 )
             )
-            if invert:
+            if and_inverse:
                 out.extend(
                     self.add_transform(
                         transform.inverse,
@@ -240,7 +245,7 @@ class TransformGraph[ArrayT]:
                 )
 
         else:
-            out.extend(self._add_transform(transform, source, target, invert))
+            out.extend(self._add_transform(transform, source, target, and_inverse))
 
         if out:
             self.get_sequence.cache_clear()
@@ -250,7 +255,7 @@ class TransformGraph[ArrayT]:
     def add_transforms(
         self,
         transforms: Iterable[Transform[ArrayT]],
-        inverse: bool = True,
+        and_inverse: bool = True,
     ) -> list[tuple[SpaceRef, SpaceRef]]:
         """Bulk-add transformations to the graph.
 
@@ -260,9 +265,9 @@ class TransformGraph[ArrayT]:
         This method is preferred over `TransformGraph.add_transform`
         when some reverse edges are explicitly defined
         and you don't want them to be overridden by implicit reverse edges
-        when `inverse=True`.
+        when `and_inverse=True`.
 
-        `Bijection`s and `TransformSequence`s will be split out as documented in
+        `Bijection` s and `TransformSequence` s will be split out as documented in
         `TransformGraph.add_transform`.
 
         Note that a single `TransformSequence` is itself an `Iterable[Transform]`
@@ -270,20 +275,20 @@ class TransformGraph[ArrayT]:
         However, a `TransformSequence` does not require that all of its members
         have explicit source and target spaces,
         where the `transforms` argument here does,
-        so not all `TransformSequence`s can be used directly as the argument
+        so not all `TransformSequence` s can be used directly as the argument
         (wrap them in a list instead or use `TransformGraph.add_transform`).
 
         Parameters
         ----------
-        transforms : Iterable[Transform[ArrayT]]
+        transforms
             Transforms which must have a source and target space defined.
-        inverse:
+        and_inverse
             Invert the transformations and add them too.
 
-        Raises
-        ------
-        ValueError
-            Undefined source and target spaces.
+        Returns
+        -------
+        list[tuple[SpaceRef, SpaceRef]]
+            List of `(src, tgt)` edges added to the graph.
         """
         if isinstance(transforms, TransformSequence):
             logger.warning(
@@ -296,9 +301,9 @@ class TransformGraph[ArrayT]:
 
         forwards = []
         for t in transforms:
-            forwards.extend(self.add_transform(t, invert=False))
+            forwards.extend(self.add_transform(t, and_inverse=False))
 
-        if not inverse:
+        if not and_inverse:
             return forwards
 
         out = list(forwards)
@@ -321,15 +326,18 @@ class TransformGraph[ArrayT]:
 
         Parameters
         ----------
-        source_space : SpaceRef
-        target_space : SpaceRef
-        full : bool
+        source_space
+            The source coordinate space.
+        target_space
+            The target coordinate space.
+        full
             By default, simplifies consecutive affines and drops bijections' inverse form.
             If `full` is True, keeps each transformation as-is.
 
         Returns
         -------
         TransformSequence[ArrayT]
+            The shortest transform sequence between the spaces.
         """
         path = nx.shortest_path(self.graph, source_space, target_space)
         if len(path) <= 1:
@@ -357,13 +365,17 @@ class TransformGraph[ArrayT]:
 
         Parameters
         ----------
-        source_space : SpaceRef
-        target_space : SpaceRef
-        coords : ArrayT
+        source_space
+            The source coordinate space.
+        target_space
+            The target coordinate space.
+        coords
+            The coordinates to transform.
 
         Returns
         -------
         ArrayT
+            The transformed coordinates.
         """
         t = self.get_sequence(source_space, target_space)
         return t.apply(coords)
@@ -373,12 +385,13 @@ class TransformGraph[ArrayT]:
 
         Includes inferred reverse transforms.
 
-        N.B. the `__iter__` method of some popular graph libraries like networkx iterate through nodes,
-        where this effectively iterates through edges.
+        N.B. the `__iter__` method of some popular graph libraries like networkx
+        iterate through nodes, where this effectively iterates through edges.
 
         Yields
-        -------
+        ------
         Transform[ArrayT]
+            The next transform in the graph.
 
         Examples
         --------
@@ -390,7 +403,9 @@ class TransformGraph[ArrayT]:
         for _, _, t in self.graph.edges.data("transform"):
             yield t
 
-    def to_device(self, xp, device=None) -> TransformGraph[ArrayT]:
+    def to_device(
+        self, xp: ModuleType, device: str | None = None
+    ) -> TransformGraph[ArrayT]:
         result: TransformGraph[ArrayT] = TransformGraph()
         for src, tgt, t in self.graph.edges.data("transform"):
             result.graph.add_edge(src, tgt, transform=t.to_device(xp, device))
