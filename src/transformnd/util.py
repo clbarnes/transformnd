@@ -39,9 +39,9 @@ def chain_or[T](*args: T | None, default: _NoDefault | T = NO_DEFAULT) -> T:
 
     Parameters
     ----------
-    args:
+    *args
         Optional arguments to check.
-    default : any, optional
+    default
         By default, raises a ValueError if *args are exhausted.
         If given, returns the given value instead.
 
@@ -71,15 +71,15 @@ def same_or_none[T](*args: T | None, default: T | _NoDefault = NO_DEFAULT) -> T:
 
     Parameters
     ----------
-    *args:
+    *args
         Arguments to check.
-    default : Any, optional
+    default
         If given, return this instead of an error
         if all *args are None.
 
     Returns
     -------
-    Any
+    T
         The non-None arg value.
 
     Raises
@@ -109,7 +109,7 @@ def format_dims(supported: set[int] | None) -> str:
 
     Parameters
     ----------
-    supported : Iterable[int]
+    supported
         The supported dimensions.
 
     Returns

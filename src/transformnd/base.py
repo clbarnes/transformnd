@@ -21,6 +21,7 @@ from .types import TransformSignature, Spaces, NDims
 
 if TYPE_CHECKING:
     from .transforms import Affine
+    from array_api_compat.common._typing import Device, Namespace
 
 
 class Transform[ArrayT](ABC):
@@ -35,6 +36,8 @@ class Transform[ArrayT](ABC):
         """
         Parameters
         ----------
+        ndims
+            Source and target dimensionality.
         spaces
             Optional source and target spaces
         """
@@ -50,7 +53,7 @@ class Transform[ArrayT](ABC):
 
         Returns
         -------
-        Transform | None:
+        Affine[ArrayT] | None
             The affine transformation, if conversion is possible.
             None otherwise.
         """
@@ -63,8 +66,13 @@ class Transform[ArrayT](ABC):
 
         Parameters
         ----------
-        coords : ArrayT
+        coords
             NxD array of N D-dimensional coordinates.
+
+        Returns
+        -------
+        ArrayT
+            The validated coordinates.
 
         Raises
         ------
@@ -87,7 +95,7 @@ class Transform[ArrayT](ABC):
 
         Parameters
         ----------
-        coords : ArrayT
+        coords
             NxD array of N D-dimensional coordinates.
 
         Returns
@@ -116,7 +124,7 @@ class Transform[ArrayT](ABC):
             return NotImplemented
         return t
 
-    def to_device(self, xp, device=None) -> Self:  # noqa: ARG002
+    def to_device(self, xp: Namespace, device: Device | None = None) -> Self:  # noqa: ARG002
         """Return a copy of this transform with array parameters placed on the given device.
 
         Useful for pre-allocating parameters on GPU before a tight apply() loop,
@@ -124,15 +132,15 @@ class Transform[ArrayT](ABC):
 
         Parameters
         ----------
-        xp : array namespace
+        xp
             The target array namespace (e.g. jax.numpy, torch).
-        device : device object, optional
+        device
             Target device (e.g. from array_api_compat.device(array)).
             If None, uses xp's default device.
 
         Returns
         -------
-        Transform
+        Self
             A new transform instance with parameters on the target device,
             or NotImplemented if the subclass does not support device placement.
         """
@@ -145,11 +153,13 @@ class Transform[ArrayT](ABC):
 
         Parameters
         ----------
-        other : Transform
+        other
+            The transform to compose with.
 
         Returns
         -------
-        TransformSequence
+        TransformSequence[ArrayT]
+            The composed transform sequence.
         """
         if not isinstance(other, Transform):
             return NotImplemented
@@ -166,11 +176,13 @@ class Transform[ArrayT](ABC):
 
         Parameters
         ----------
-        other : Transform
+        other
+            The transform to compose with.
 
         Returns
         -------
-        TransformSequence
+        TransformSequence[ArrayT]
+            The composed transform sequence.
         """
         if not isinstance(other, Transform):
             return NotImplemented
@@ -200,18 +212,18 @@ class TransformWrapper(Transform[ArrayT]):
     ):
         """Wrapper around an arbitrary function.
 
-        `fn` should take and return an identically-shaped
+        ``fn`` should take and return an identically-shaped
         NxD numpy array of N D-dimensional coordinates.
 
         Parameters
         ----------
-        fn : TransformSignature
+        fn
             Callable.
-        in_ndim : int
+        in_ndim
             Dimensionality of the input coordinates.
-        out_ndim : int
+        out_ndim
             Dimensionality of the output coordinates.
-        spaces : Spaces
+        spaces
             Optional source and target spaces
         """
         super().__init__(NDims(in_ndim, out_ndim), spaces=spaces)
@@ -335,22 +347,23 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             coords = t.apply(coords)
         return coords
 
-    def to_device(self, xp, device=None) -> Self:
+    def to_device(self, xp: Namespace, device: Device | None = None) -> Self:
         result = copy(self)
         result.transforms = [t.to_device(xp, device) for t in self.transforms]
         return result
 
-    def list_spaces(self, skip_none=False) -> list[SpaceRef]:
+    def list_spaces(self, skip_none: bool = False) -> list[SpaceRef]:
         """List spaces in this transform.
 
         Parameters
         ----------
-        skip_none : bool, optional
+        skip_none
             Whether to skip undefined spaces, default False.
 
         Returns
         -------
-        List[SpaceRef]
+        list[SpaceRef]
+            The list of spaces.
         """
         spaces = [self.spaces.source] + [t.spaces.target for t in self.transforms]
         if skip_none:

@@ -96,19 +96,25 @@ class GeometryAdapter(BaseAdapter[BaseGeometry, ArrayT]):
     ) -> BaseGeometry:
         """Transform the shapely geometry.
 
-        See the other `apply_*` methods if you already know what type of geometry you're working with;
-        this may be a bit faster.
+        See the other `apply_*` methods if you already know what type of geometry
+        you're working with; this may be a bit faster.
 
         Parameters
         ----------
-        transform : Transform
-        obj : BaseGeometry
+        transform
+            The transformation to apply.
+        obj
             Some shapely geometry in 2 or 3D
 
         Returns
         -------
         BaseGeometry
             An object of the same type as the input.
+
+        Raises
+        ------
+        ValueError
+            If the geometry type is not supported.
         """
         if isinstance(obj, BaseMultipartGeometry):
             return self.apply_multipart(transform, obj)

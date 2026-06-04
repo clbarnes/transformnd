@@ -25,12 +25,17 @@ class Bijection(Transform[ArrayT]):
 
         Parameters
         ----------
-        forward : Transform[ArrayT]
+        forward
             The forward transformation.
-        inverse : Transform[ArrayT]
+        inverse
             The inverse transformation.
-        spaces : Spaces
+        spaces
             Optional source and target spaces
+
+        Raises
+        ------
+        ValueError
+            If the forward and inverse dimensionalities don't match.
         """
         src = same_or_none(
             spaces.source, forward.spaces.source, inverse.spaces.target, default=None

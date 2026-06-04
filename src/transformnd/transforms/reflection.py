@@ -96,13 +96,13 @@ class Reflect(Transform[np.ndarray]):
         """
         Parameters
         ----------
-        normals : sequence of arrays
+        normals
             Normal vectors to the planes of reflection.
             Unitised internally.
-        point : float or array-like, optional
+        point
             Intersection point of all reflection planes
             (can be broadcast from scalar), by default 0 (i.e. the origin)
-        spaces : Spaces
+        spaces
             Optional source and target spaces
 
         Raises
@@ -143,19 +143,19 @@ class Reflect(Transform[np.ndarray]):
         points: ArrayLike,
         *,
         spaces: Spaces = Spaces(None, None),
-    ):
+    ) -> Self:
         """Infer a single plane of reflection from a minimal number of points on it.
 
         Parameters
         ----------
-        points : array-like
+        points
             NxD array of N points in D dimensions. N == D
-        spaces : Spaces
+        spaces
             Optional source and target spaces
 
         Returns
         -------
-        Reflection
+        Self
         """
         point, normals = get_hyperplanes(np.asarray(points), unitise=False)
         return cls(normals, point, spaces=spaces)
@@ -167,21 +167,21 @@ class Reflect(Transform[np.ndarray]):
         origin: ArrayLike,
         *,
         spaces: Spaces = Spaces(None, None),
-    ):
+    ) -> Self:
         """Reflect around hyperplane(s) parallel with axes.
 
         Parameters
         ----------
-        axis : int or sequence of int
+        axis
             Index (or indices) of axes in which to reflect.
-        origin : array-like
+        origin
             Point around which to reflect.
-        spaces : Spaces
+        spaces
             Optional source and target spaces
 
         Returns
         -------
-        Reflection
+        Self
 
         Raises
         ------
