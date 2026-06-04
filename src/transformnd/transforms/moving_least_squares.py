@@ -36,7 +36,7 @@ class MovingLeastSquares(Transform[np.ndarray]):
         target_control_points : np.ndarray
             NxD array of coordinates of the corresponding control points
             in the target (deformed) space.
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
         """
         s = as_floats(source_control_points)

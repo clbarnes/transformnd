@@ -40,7 +40,7 @@ class ThinPlateSplines(Transform[np.ndarray]):
             NxD array of control point coordinates in the source space.
         target_control_points : np.ndarray
             NxD array of control point coordinates in the target (deformed) space.
-        spaces : tuple[SpaceRef, SpaceRef]
+        spaces : Spaces
             Optional source and target spaces
 
         Raises

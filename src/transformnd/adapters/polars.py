@@ -34,7 +34,7 @@ class PolarsAdapter(BaseAdapter[pl.DataFrame, np.ndarray]):
 
         Returns
         -------
-        pandas.DataFrame
+        polars.DataFrame
         """
         coords = df[self.columns].to_numpy()
         transformed = transform.apply(coords)
