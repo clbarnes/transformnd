@@ -24,7 +24,7 @@ class GeometryAdapter(BaseAdapter[BaseGeometry, ArrayT]):
     N.B. some transforms may create invalid topologies
     (incorrect winding, self-intersections etc.).
 
-    N.B. shapely geometries' coordinates are in `XY(Z)(M)` order
+    N.B. shapely geometries' coordinates are in `XY(Z)` order
     """
 
     def apply[T: BaseGeometry](
