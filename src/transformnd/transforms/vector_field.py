@@ -81,6 +81,8 @@ class BaseVectorField(Transform[ArrayT], ABC):
         c = xp.transpose(coords)
         out = []
         for vf in self._vf_slices():
+            # TODO: in memory, could preallocate output and use scipy's output arg,
+            # and then do dask differently.
             out.append(
                 map_coordinates(
                     vf,
