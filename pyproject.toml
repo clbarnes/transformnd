@@ -41,6 +41,9 @@ shapely = ["shapely>=2.1.2"]
 polars = [
     "polars>=1.40.1",
 ]
+vectorfield = [
+    "scipy>=1.17.1",
+]
 
 [dependency-groups]
 dev = [

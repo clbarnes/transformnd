@@ -1,5 +1,8 @@
 """Utilities used elsewhere in the package."""
 
+import os
+import warnings
+
 from array_api_compat import array_namespace
 from numpy.typing import ArrayLike
 import numpy as np
@@ -167,3 +170,18 @@ def as_floats(arr: ArrayLike):
     if not np.issubdtype(arr.dtype, np.floating):
         arr = arr.astype(np.float64)
     return arr
+
+
+def set_scipy_array_api() -> bool:
+    curr = os.environ.get("SCIPY_ARRAY_API")
+    match curr:
+        case None:
+            os.environ["SCIPY_ARRAY_API"] = "1"
+            return True
+        case "1":
+            return True
+        case _:
+            warnings.warn(
+                "SCIPY_ARRAY_API environment set but not '1'; certain transforms may not work with certain array types"
+            )
+            return False

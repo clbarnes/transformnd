@@ -1613,6 +1613,9 @@ shapely = [
 thinplatesplines = [
     { name = "morphops" },
 ]
+vectorfield = [
+    { name = "scipy" },
+]
 
 [package.dev-dependencies]
 bench = [
@@ -1661,10 +1664,11 @@ requires-dist = [
     { name = "numpy", specifier = ">=2" },
     { name = "pandas", marker = "extra == 'pandas'", specifier = ">=3.0.2" },
     { name = "polars", marker = "extra == 'polars'", specifier = ">=1.40.1" },
+    { name = "scipy", marker = "extra == 'vectorfield'", specifier = ">=1.17.1" },
     { name = "shapely", marker = "extra == 'shapely'", specifier = ">=2.1.2" },
     { name = "typing-extensions", specifier = ">=4.15.0" },
 ]
-provides-extras = ["thinplatesplines", "movingleastsquares", "pandas", "shapely", "polars"]
+provides-extras = ["thinplatesplines", "movingleastsquares", "pandas", "shapely", "polars", "vectorfield"]
 
 [package.metadata.requires-dev]
 bench = [{ name = "pytest-benchmark", specifier = ">=5.2.3" }]
