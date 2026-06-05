@@ -78,19 +78,21 @@ class BaseVectorField(Transform[ArrayT], ABC):
         else:
             coords = self._validate_coords(coords)
         xp = get_namespace(coords)
-        sh = xp.shape(coords)
         c = xp.transpose(coords)
-        out = xp.zeros_like(coords, shape=(self.ndims.target, sh[0]))
-        for idx, vf in enumerate(self._vf_slices()):
-            map_coordinates(
-                vf,
-                c,
-                order=self._order,
-                mode=self._mode,
-                cval=self._cval,
-                output=out[idx, :],
+        out = []
+        for vf in self._vf_slices():
+            out.append(
+                map_coordinates(
+                    vf,
+                    c,
+                    order=self._order,
+                    mode=self._mode,
+                    cval=self._cval,
+                    # can't be used with dask
+                    # output=out[idx, :],
+                )
             )
-        return xp.transpose(out)
+        return xp.transpose(xp.stack(out))
 
     def to_device(self, xp: ModuleType, device: str | None = None) -> Self:
         coords = xp.asarray(self.vector_field, device)

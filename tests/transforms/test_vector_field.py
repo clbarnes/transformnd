@@ -1,4 +1,5 @@
 import numpy as np
+import dask.array as da
 
 import pytest
 
@@ -41,6 +42,31 @@ def test_coord_random(rng):
     rng.shuffle(coords)
     assert coords.shape == (np.prod(sh), len(sh))
     out = t.apply(coords)
+    assert out.shape == (np.prod(sh), nd)
+    expected = []
+    for coord in coords:
+        idx = tuple(coord.astype(int))
+        expected.append(vf[idx])
+    assert out == pytest.approx(as_floats(expected))
+
+
+def test_coord_dask(rng):
+    # 10x20 array of 2D vectors
+    sh = (10, 20)
+    nd = 2
+
+    vf = da.from_array(rng.random(sh + (nd,)), chunks=5)  # type:ignore
+    t = Coordinates(vf, interpolation_order=1)
+    coords = (
+        np.dstack(np.meshgrid(*(np.arange(s, dtype=int) for s in sh)))
+        .reshape(-1, len(sh))
+        .astype(float)
+    )
+
+    rng.shuffle(coords)
+    assert coords.shape == (np.prod(sh), len(sh))
+    da_coords = da.from_array(coords)
+    out = t.apply(da_coords).compute()
     assert out.shape == (np.prod(sh), nd)
     expected = []
     for coord in coords:
