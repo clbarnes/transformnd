@@ -125,7 +125,6 @@ class Coordinates(BaseVectorField[ArrayT]):
         ----------
         vector_field
             Array with `Di + 1` dimensions, where `Di` is the input dimensionality.
-            The last dimension's length is the output dimensionality.
         index_transform
             Transform the source coordinates into an array index
         interpolation_order
@@ -170,7 +169,6 @@ class Displacements(BaseVectorField[ArrayT]):
         ----------
         vector_field
             Array with `Di + 1` dimensions, where `Di` is the input dimensionality.
-            The last dimension's length is the output dimensionality.
         index_transform
             Transformation from source coordinate to array indices.
         interpolation_order
