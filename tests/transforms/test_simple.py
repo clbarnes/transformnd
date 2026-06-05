@@ -5,13 +5,13 @@ from transformnd.types import Spaces
 
 
 def test_identity_spaces():
-    t = Identity[np.ndarray](1, spaces=Spaces(1, 1))
+    t = Identity(1, spaces=Spaces(1, 1))
     assert t.spaces.target == 1
 
 
 def test_translate_3d(coords5x3):
     trans = [1, 2, 3]
-    t = Translate[np.ndarray](np.array(trans))
+    t = Translate(np.array(trans))
     assert np.allclose(t.apply(coords5x3), coords5x3 + trans)
 
 
@@ -22,7 +22,7 @@ def test_translate_neg(coords5x3):
 
 def test_scale_3d(coords5x3):
     scale = [2, 3, 4]
-    t = Scale[np.ndarray](np.array(scale))
+    t = Scale(np.array(scale))
     assert np.allclose(t.apply(coords5x3), coords5x3 * scale)
 
 

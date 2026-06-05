@@ -78,7 +78,7 @@ def test_add():
 
 
 def test_maths():
-    t1 = Translate[np.ndarray]([1] * 3)
+    t1 = Translate([1] * 3)
     coords = np.zeros((5, 3))
 
     assert np.allclose((t1 | ~t1).apply(coords), coords)
