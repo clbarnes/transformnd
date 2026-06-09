@@ -1,14 +1,21 @@
 """Utilities used elsewhere in the package."""
 
 import os
+from types import ModuleType
 import warnings
+import logging
 
-from array_api_compat import array_namespace
-from numpy.typing import ArrayLike
+from array_api_compat import (
+    array_namespace,
+    is_dask_namespace,
+    is_jax_namespace,
+)
 import numpy as np
 
 from .types import SpaceRef, ArrayT
 from .constants import UNSPECIFIED_SPACE_NAME
+
+logger = logging.getLogger(__name__)
 
 
 def none_eq[T](a: T | None, b: T | None) -> bool:
@@ -164,12 +171,44 @@ def to_single_ndim(ndim: None | int = None, ndims: None | set[int] = None) -> in
     raise ValueError(f"dimensionality conflict: {ndim} not in {ndims}")
 
 
-def as_floats(arr: ArrayLike):
-    """Get array-like as a numpy array, casting to float if integral."""
-    arr = np.asarray(arr)
-    if not np.issubdtype(arr.dtype, np.floating):
-        arr = arr.astype(np.float64)
-    return arr
+def as_floats(arr, *, namespace: ModuleType | None = None, device: str | None = None):
+    """Get array-like as an array of floats.
+
+    Convert to a particular array namespace if given;
+    default to keeping the same namespace one exists,
+    or numpy otherwise.
+
+    Cast to a float if integral.
+    """
+    try:
+        orig_namespace = array_namespace(arr)
+    except TypeError:
+        orig_namespace = None
+
+    if namespace is None:
+        namespace = orig_namespace or np
+
+    kwargs = dict()
+    if is_dask_namespace(namespace):
+        if isinstance(device, str) and device != "cpu":
+            logger.warning(f"Ignoring unsupported dask device: {device}")
+    elif device is not None:
+        kwargs["device"] = device
+
+    arr = namespace.asarray(arr, **kwargs)  # type: ignore
+
+    # dask does not have isdtype
+    isdtype = getattr(namespace, "isdtype", np.isdtype)
+
+    if not isdtype(arr.dtype, "real floating"):  # type:ignore
+        if is_jax_namespace(namespace):
+            dt = "float32"
+        else:
+            dt = "float64"
+        # N.B. a dask array wrapping over jax arrays will warn here
+        arr = arr.astype(dt, **kwargs)  # type:ignore
+
+    return arr  # type:ignore
 
 
 def set_scipy_array_api() -> bool:

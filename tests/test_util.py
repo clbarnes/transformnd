@@ -1,6 +1,12 @@
+from types import ModuleType
 import pytest
 
-from transformnd.util import chain_or, none_eq, same_or_none
+from array_api_compat import is_array_api_obj
+
+from transformnd.util import chain_or, none_eq, same_or_none, as_floats
+import jax.numpy
+import dask.array
+import numpy
 
 
 def test_same_or_none():
@@ -26,3 +32,15 @@ def test_chain_or():
     with pytest.raises(ValueError):
         chain_or(None)
     assert chain_or(None, default=1) == 1
+
+
+@pytest.mark.parametrize("to_ns", [numpy, dask.array, jax.numpy])
+@pytest.mark.parametrize("from_ns", [None, numpy, dask.array, jax.numpy])
+def test_as_floats(from_ns: ModuleType | None, to_ns: ModuleType):
+    data = [[1, 2], [3, 4]]
+    if from_ns is not None:
+        data = from_ns.asarray(data)
+    array = as_floats(data, namespace=to_ns)
+    assert is_array_api_obj(array)
+    # assert array_namespace(array) == to_ns
+    assert array == pytest.approx(numpy.array(data))

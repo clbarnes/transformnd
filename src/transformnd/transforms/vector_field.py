@@ -3,13 +3,12 @@ from collections.abc import Iterable
 from types import ModuleType
 from typing import Self
 
-from scipy.ndimage import map_coordinates
 import numpy as np
-from array_api_compat import get_namespace
+from array_api_compat import array_namespace, is_dask_array
 
 from ..types import NDims, Spaces
 from ..base import Transform, ArrayT
-from ..util import set_scipy_array_api
+from ..util import set_scipy_array_api, as_floats
 
 set_scipy_array_api()
 
@@ -46,7 +45,8 @@ class BaseVectorField(Transform[ArrayT], ABC):
         ValueError
             If index_transform's output dimensionality is not exactly one less than the vector field's number of dimensions.
         """
-        xp = get_namespace(vector_field)
+        self.vector_field: ArrayT = as_floats(vector_field)  # type: ignore
+        xp = array_namespace(vector_field)
         sh = xp.shape(vector_field)
         in_ndim = len(sh) - 1
         tgt_ndim = sh[vector_axis]
@@ -72,29 +72,54 @@ class BaseVectorField(Transform[ArrayT], ABC):
             slicing[self.vector_axis] = v_idx
             yield self.vector_field[tuple(slicing)]  # type: ignore
 
+    def _get_vectors_inner_dask(self, index_coords_t: ArrayT) -> ArrayT:
+        import dask.array as da
+        from dask_image.ndinterp import map_coordinates
+
+        out = []
+        for vf in self._vf_slices():
+            out.append(
+                map_coordinates(
+                    vf,
+                    index_coords_t,
+                    order=self._order,
+                    mode=self._mode,
+                    cval=self._cval,
+                )
+            )
+        stacked = da.stack(out)
+        return da.transpose(stacked)
+
+    def _get_vectors_inner_scipy(self, index_coords_t: ArrayT) -> ArrayT:
+        from scipy.ndimage import map_coordinates
+
+        set_scipy_array_api()
+        xp = array_namespace(index_coords_t)
+        out = xp.zeros_like(
+            self.vector_field, shape=(self.ndims.target, xp.shape(index_coords_t)[1])
+        )
+        for idx, vf in enumerate(self._vf_slices()):
+            map_coordinates(
+                vf,
+                index_coords_t,
+                order=self._order,
+                mode=self._mode,
+                cval=self._cval,
+                output=out[idx, :],
+            )
+        return xp.transpose(out)
+
     def _get_vectors(self, coords: ArrayT) -> ArrayT:
         if self.index_transform is not None:
             coords = self.index_transform.apply(coords)
         else:
             coords = self._validate_coords(coords)
-        xp = get_namespace(coords)
+        xp = array_namespace(coords)
         c = xp.transpose(coords)
-        out = []
-        for vf in self._vf_slices():
-            # TODO: in memory, could preallocate output and use scipy's output arg,
-            # and then do dask differently.
-            out.append(
-                map_coordinates(
-                    vf,
-                    c,
-                    order=self._order,
-                    mode=self._mode,
-                    cval=self._cval,
-                    # can't be used with dask
-                    # output=out[idx, :],
-                )
-            )
-        return xp.transpose(xp.stack(out))
+        if is_dask_array(self.vector_field):
+            return self._get_vectors_inner_dask(c)
+        else:
+            return self._get_vectors_inner_scipy(c)
 
     def to_device(self, xp: ModuleType, device: str | None = None) -> Self:
         coords = xp.asarray(self.vector_field, device)
