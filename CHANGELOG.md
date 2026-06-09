@@ -4,6 +4,10 @@
 
 ## 0.4.0 - 2026-06-09
 
+### Added
+
+- Vector fields transforms `Displacements` and `Coordinates`
+
 ## 0.3.0 - 2026-06-04
 
 ### Added
