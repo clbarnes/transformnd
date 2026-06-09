@@ -1,7 +1,6 @@
 """Bridging transforms between known spaces."""
 
 from __future__ import annotations
-from dataclasses import dataclass
 from functools import lru_cache
 from collections.abc import Iterable, Iterator
 import logging
@@ -45,41 +44,6 @@ def split_sequence(seq: TransformSequence[ArrayT]) -> Iterator[Transform[ArrayT]
         if t.spaces.target is not None:
             yield TransformSequence(this_seq)
             this_seq = []
-
-
-@dataclass(frozen=True, eq=True)
-class SimplifyConfig:
-    ndim: int | None = None
-    """Force specific dimensionality, allowing conversion to affines."""
-
-    drop_inverse: bool = False
-    """Drop explicit inverses in bijection transformations."""
-
-
-class NDimRegistries:
-    def __init__(self, perm: dict[SpaceRef, int]) -> None:
-        self.perm = perm
-        self.temp: dict[SpaceRef, int] = dict()
-
-    def _check_inner(
-        self, space: SpaceRef, ndim: int, reg: dict[SpaceRef, int], add: bool = False
-    ):
-        val = reg.get(space)
-        if val is None:
-            if add:
-                reg[space] = ndim
-            return None
-        if val != ndim:
-            raise ValueError(
-                f"New transform implies space {space} is {ndim}D, but it is already registered as {val}D"
-            )
-
-    def merge(self):
-        self.perm.update(self.temp)
-
-    def check(self, space: SpaceRef, ndim: int):
-        self._check_inner(space, ndim, self.perm)
-        self._check_inner(space, ndim, self.temp, True)
 
 
 class TransformGraph[ArrayT]:

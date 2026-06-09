@@ -33,18 +33,21 @@ Open it with `uv run --group tutorial marimo edit examples/tutorial.py`.
 
 ## Implemented transforms
 
-- Identity (`transformnd.transforms.Identity`)
-- Translation (`transformnd.transforms.Translate`)
-- Scale (`transformnd.transforms.Scale`)
-- Reflection (`transformnd.transforms.Reflect`)
-- Affine (`transformnd.transforms.Affine`)
-  - Can be composed efficiently with `@` operator; the right hand operand is effectively applied first
-- MapAxis (`transformnd.transforms.MapAxis`): permute coordinate axes
-- ByDimension (`transformnd.transforms.ByDimension`): apply transformations to subsets of coordinate axes
-- Moving Least Squares, affine (`transformnd.transforms.moving_least_squares.MovingLeastSquares`)
-  - uses `movingleastsquares` extra
-- Thin Plate Splines (`transformnd.transforms.thinplate.ThinPlateSplines`)
-  - uses `thinplatesplines` extra
+All transforms are accessed under the `transformnd.transforms` subpackage.
+
+| Transform | Extra | Description |
+| --------- | ----- | ----------- |
+| `Identity` | | No-op transformation |
+| `Translation` | | Add a constant translation to the input coordinates |
+| `Scale` | | Multiply the input coordinates by constant scale factor |
+| `Reflection` | | Reflect coordinates about arbitrary planes |
+| `MapAxis` | | Rearrange axes of the input coordinates |
+| `Affine` | | Multiply augmented coordinates by an affine transformation matrix. Can represent all of the above transformations. Can be composed with matrix multiplication `aff2 @ aff1`. |
+| `ByDimension` | | Apply different transformations to subsets of the input coordinates' dimensions |
+| `moving_least_squares.MovingLeastSquares` | `movingleastsquares` | Landmark-based transformation. |
+| `thin_plate_splines.ThinPlateSplines` | `thinplatesplines` | Landmark-based transformation. |
+| `vector_field.Coordinates` | `vectorfield` | Look up output coordinates in a vector field indexed by the input coordinates |
+| `vector_field.Displacements` | `vectorfield` | Look up translations in a vector field indexed by the input coordinates, and add them to input coordinates |
 
 Arbitrary transforms can be composed into a `TransformSequence` with `transform1 | transform2`.
 A graph of transforms between defined spaces can be traversed using the `TransformGraph`.
@@ -97,12 +100,14 @@ Methods which SHOULD be implemented if applicable:
   - `just` to list commands.
 - Docs are generated with [`pdoc`](https://pdoc.dev/) (use `just doc`) and hosted on ReadTheDocs
 - `just bump` bumps the version, commits, and tags (but does not push); depends on [`schpet/changelog`](https://github.com/schpet/changelog)
+- `just repl` starts an IPython shell with all dependencies installed
 
 ## Thanks
 
 Thanks to contributors
 
 - [Francesca Drummer](https://github.com/FrancescaDr)
+- [Johannes Soltwedel](https://github.com/jo-mueller)
 - [Lorenzo Cerrone](https://github.com/lorenzocerrone)
 - [Maks Hess](https://github.com/MaksHess)
 - [Silvia Maria Macrì](https://github.com/SilviaMariaMacri)

@@ -51,8 +51,8 @@ def test_bijection_invert_map_axis():
 
 def test_bijection_roundtrip(coords5x3):
     ndim = 3
-    forward = Scale[np.ndarray]([3] * ndim)
-    inverse = Scale[np.ndarray]([1 / 3] * ndim)
+    forward = Scale([3] * ndim)
+    inverse = Scale([1 / 3] * ndim)
     bij = Bijection(forward, inverse)
     assert np.allclose((~bij).apply(bij.apply(coords5x3)), coords5x3)
 
