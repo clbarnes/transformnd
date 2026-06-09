@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.4.1 - 2026-06-09
+
 ### Added
 
 - Extras covering `transforms`, `adapters`, and `all`
