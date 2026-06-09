@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- Extras covering `transforms`, `adapters`, and `all`
+
+### Fixed
+
+- Move dask dependency into an extra
+
 ## 0.4.0 - 2026-06-09
 
 ### Added

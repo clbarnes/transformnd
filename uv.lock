@@ -1739,14 +1739,27 @@ version = "0.4.0"
 source = { editable = "." }
 dependencies = [
     { name = "array-api-compat" },
-    { name = "dask" },
-    { name = "dask-image" },
     { name = "networkx" },
     { name = "numpy" },
     { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
+adapters = [
+    { name = "pandas" },
+    { name = "polars" },
+    { name = "shapely" },
+]
+all = [
+    { name = "dask" },
+    { name = "dask-image" },
+    { name = "molesq" },
+    { name = "morphops" },
+    { name = "pandas" },
+    { name = "polars" },
+    { name = "scipy" },
+    { name = "shapely" },
+]
 movingleastsquares = [
     { name = "molesq" },
 ]
@@ -1762,8 +1775,19 @@ shapely = [
 thinplatesplines = [
     { name = "morphops" },
 ]
+transforms = [
+    { name = "dask" },
+    { name = "dask-image" },
+    { name = "molesq" },
+    { name = "morphops" },
+    { name = "scipy" },
+]
 vectorfield = [
     { name = "scipy" },
+]
+vectorfield-dask = [
+    { name = "dask" },
+    { name = "dask-image" },
 ]
 
 [package.dev-dependencies]
@@ -1809,8 +1833,8 @@ tutorial = [
 [package.metadata]
 requires-dist = [
     { name = "array-api-compat", specifier = ">=1.14" },
-    { name = "dask", extras = ["dask"], specifier = ">=2026.3.0" },
-    { name = "dask-image", extras = ["dask"], specifier = ">=2026.5.0" },
+    { name = "dask", marker = "extra == 'vectorfield-dask'", specifier = ">=2026.3.0" },
+    { name = "dask-image", marker = "extra == 'vectorfield-dask'", specifier = ">=2026.5.0" },
     { name = "molesq", marker = "extra == 'movingleastsquares'", specifier = ">=0.4.0" },
     { name = "morphops", marker = "extra == 'thinplatesplines'", specifier = ">=0.1.13" },
     { name = "networkx", specifier = ">=3" },
@@ -1819,9 +1843,18 @@ requires-dist = [
     { name = "polars", marker = "extra == 'polars'", specifier = ">=1.40.1" },
     { name = "scipy", marker = "extra == 'vectorfield'", specifier = ">=1.17.1" },
     { name = "shapely", marker = "extra == 'shapely'", specifier = ">=2.1.2" },
+    { name = "transformnd", extras = ["adapters"], marker = "extra == 'all'" },
+    { name = "transformnd", extras = ["movingleastsquares"], marker = "extra == 'transforms'" },
+    { name = "transformnd", extras = ["pandas"], marker = "extra == 'adapters'" },
+    { name = "transformnd", extras = ["polars"], marker = "extra == 'adapters'" },
+    { name = "transformnd", extras = ["shapely"], marker = "extra == 'adapters'" },
+    { name = "transformnd", extras = ["thinplatesplines"], marker = "extra == 'transforms'" },
+    { name = "transformnd", extras = ["transforms"], marker = "extra == 'all'" },
+    { name = "transformnd", extras = ["vectorfield"], marker = "extra == 'transforms'" },
+    { name = "transformnd", extras = ["vectorfield-dask"], marker = "extra == 'transforms'" },
     { name = "typing-extensions", specifier = ">=4.15.0" },
 ]
-provides-extras = ["thinplatesplines", "movingleastsquares", "pandas", "shapely", "polars", "vectorfield"]
+provides-extras = ["thinplatesplines", "movingleastsquares", "pandas", "shapely", "polars", "vectorfield", "vectorfield-dask", "transforms", "adapters", "all"]
 
 [package.metadata.requires-dev]
 bench = [{ name = "pytest-benchmark", specifier = ">=5.2.3" }]

@@ -10,8 +10,6 @@ dependencies = [
     "networkx>=3",
     "array_api_compat>=1.14",
     "typing-extensions>=4.15.0",
-    "dask[dask]>=2026.3.0",
-    "dask-image[dask]>=2026.5.0",
 ]
 license = "MIT"
 classifiers = [
@@ -46,6 +44,18 @@ polars = [
 vectorfield = [
     "scipy>=1.17.1",
 ]
+vectorfield-dask = [
+    "dask>=2026.3.0",
+    "dask-image>=2026.5.0",
+]
+transforms = [
+    "transformnd[thinplatesplines]",
+    "transformnd[movingleastsquares]",
+    "transformnd[vectorfield]",
+    "transformnd[vectorfield-dask]",
+]
+adapters = ["transformnd[pandas]", "transformnd[shapely]", "transformnd[polars]"]
+all = ["transformnd[transforms]", "transformnd[adapters]"]
 
 [dependency-groups]
 dev = [

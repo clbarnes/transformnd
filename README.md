@@ -46,8 +46,8 @@ All transforms are accessed under the `transformnd.transforms` subpackage.
 | `ByDimension` | | Apply different transformations to subsets of the input coordinates' dimensions |
 | `moving_least_squares.MovingLeastSquares` | `movingleastsquares` | Landmark-based transformation. |
 | `thin_plate_splines.ThinPlateSplines` | `thinplatesplines` | Landmark-based transformation. |
-| `vector_field.Coordinates` | `vectorfield` | Look up output coordinates in a vector field indexed by the input coordinates |
-| `vector_field.Displacements` | `vectorfield` | Look up translations in a vector field indexed by the input coordinates, and add them to input coordinates |
+| `vector_field.Coordinates` | `vectorfield` for in-memory, `vectorfield-dask` for chunked | Look up output coordinates in a vector field indexed by the input coordinates |
+| `vector_field.Displacements` | `vectorfield`, `vectorfield-dask` for chunked | Look up translations in a vector field indexed by the input coordinates, and add them to input coordinates |
 
 Arbitrary transforms can be composed into a `TransformSequence` with `transform1 | transform2`.
 A graph of transforms between defined spaces can be traversed using the `TransformGraph`.
