@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Affine up/downprojection
+
 ## 0.4.1 - 2026-06-09
 
 ### Added
