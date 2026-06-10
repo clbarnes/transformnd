@@ -15,7 +15,7 @@ from copy import copy
 
 from array_api_compat import array_namespace, device as xp_device
 from ..base import Transform, ArrayT
-from ..util import as_floats, none_eq
+from ..util import as_floats, none_eq, is_square
 from ..types import NDims, Spaces
 
 
@@ -69,7 +69,7 @@ class Affine(Transform[ArrayT]):
         self.matrix: np.ndarray = m
 
         self._linear_map: np.ndarray | None = m[:-1, :-1]
-        if np.allclose(
+        if is_square(self._linear_map) and np.allclose(
             self._linear_map, np.eye(self._linear_map.shape[0], dtype=self.matrix.dtype)
         ):
             self._linear_map = None
