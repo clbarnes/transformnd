@@ -4,6 +4,7 @@ import pytest
 from transformnd.base import TransformSequence
 from transformnd.transforms.affine import Affine
 from transformnd.transforms.simple import Scale, Translate
+from transformnd.util import as_floats
 
 
 def test_identity():
@@ -133,6 +134,29 @@ def test_inversion(rng):
     coords = rng.random((5, 2))
 
     assert inv_aff.apply(aff.apply(coords)) == pytest.approx(coords)
+
+
+def test_upprojection():
+    lin_map = as_floats(
+        [
+            [1, 0, 0],
+            [0, 1, 0],
+        ]
+    )
+    t = Affine.from_linear_map(lin_map)
+    assert t.ndims.target > t.ndims.source
+
+
+def test_downprojection():
+    lin_map = as_floats(
+        [
+            [1, 0],
+            [0, 1],
+            [0, 0],
+        ]
+    )
+    t = Affine.from_linear_map(lin_map)
+    assert t.ndims.source > t.ndims.target
 
 
 # def test_reflection():
