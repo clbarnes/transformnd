@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Added
+
+- allow `TransformGraph` to have parallel edges, with arbitrary data for weights
+- `TransformGraph.get_sequence(... , *, weight)` argument for path selection
+
+### Removed
+
+- remove `transforms` argument of `TransformGraph` constructor
+- remove `and_inverse` argument of `TransformGraph.add_transform`
+- remove `TransformGraph.add_transforms` method
+
 ## 0.4.2 - 2026-06-10
 
 ### Fixed
