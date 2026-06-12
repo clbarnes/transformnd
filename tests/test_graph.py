@@ -14,7 +14,7 @@ from transformnd.util import as_floats
 
 
 def test_add_transforms():
-    t = TransformGraph()
+    t: TransformGraph = TransformGraph()
     t.add_transform(Scale([2, 2], spaces=Spaces("a", "b")))
     t.add_transform(Translate([10, 20], spaces=Spaces("b", "c")))
 
@@ -23,7 +23,7 @@ def test_path():
     t1 = Scale([2, 3], spaces=Spaces("a", "b"))
     t2 = Translate([10, 20], spaces=Spaces("b", "c"))
     transforms = [t1, t2]
-    g = TransformGraph()
+    g: TransformGraph = TransformGraph()
     g.add_transform(t1)
     g.add_transform(t2)
     spaces = ("a", "c")
@@ -67,7 +67,7 @@ def test_multigraph():
     transforms.append(orig)
     transforms.extend(deepcopy(other) for _ in range(n))
 
-    tgraph = TransformGraph()
+    tgraph: TransformGraph = TransformGraph()
     for t in transforms:
         if t is orig:
             weight = 1
