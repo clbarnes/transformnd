@@ -401,7 +401,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         """Flatten nested sequences."""
         from .transforms.bijection import Bijection
 
-        out = []
+        out: list[Transform[ArrayT]] = []
 
         for t in self.transforms:
             if drop_inverse and isinstance(t, Bijection):
