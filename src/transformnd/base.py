@@ -408,7 +408,8 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
                 t = t.forward
             if isinstance(t, TransformSequence):
                 out.extend(t.flatten())
-            out.append(t)
+            else:
+                out.append(t)
         return TransformSequence(out, spaces=self.spaces)  # type:ignore
 
     def simplify(self, drop_inverse: bool = True):
