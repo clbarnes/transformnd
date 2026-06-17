@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.5.0 - 2026-06-17
+
 ### Added
 
 - allow `TransformGraph` to have parallel edges, with arbitrary data for weights
