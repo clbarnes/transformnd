@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Added
+
+- allow `TransformGraph` to have parallel edges, with arbitrary data for weights
+- `TransformGraph.get_sequence(... , *, weight)` argument for path selection
+- `TransformSequence.flatten()` method for flattening nested sequences
+- `TransformSequence.split()` method for splitting sequences with known intermediate spaces
+
+### Removed
+
+- remove `transforms` argument of `TransformGraph` constructor
+- remove `and_inverse` argument of `TransformGraph.add_transform` (must be added explicitly)
+- sequence-splitting behaviour when graphs are added (must be split explicitly)
+- remove `TransformGraph.add_transforms` method
+
 ## 0.4.2 - 2026-06-10
 
 ### Fixed

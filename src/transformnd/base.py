@@ -370,6 +370,20 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             spaces = [s for s in spaces if s is not None]
         return spaces
 
+    def split(self) -> Iterator[Transform[ArrayT]]:
+        """Split the sequence where an intermediate space is known."""
+        this_seq = []
+
+        for t in self.transforms:
+            if t.spaces.source is not None and t.spaces.target is not None:
+                yield t
+                continue
+
+            this_seq.append(t)
+            if t.spaces.target is not None:
+                yield type(self)(this_seq)
+                this_seq = []
+
     def __str__(self) -> str:
         cls_name = type(self).__name__
         spaces_str = "->".join(space_str(s) for s in self.list_spaces())
@@ -382,6 +396,21 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
 
     def is_identity(self) -> bool:
         return all(t.is_identity() for t in self)
+
+    def flatten(self, drop_inverse: bool = True) -> Self:
+        """Flatten nested sequences."""
+        from .transforms.bijection import Bijection
+
+        out: list[Transform[ArrayT]] = []
+
+        for t in self.transforms:
+            if drop_inverse and isinstance(t, Bijection):
+                t = t.forward
+            if isinstance(t, TransformSequence):
+                out.extend(t.flatten())
+            else:
+                out.append(t)
+        return TransformSequence(out, spaces=self.spaces)  # type:ignore
 
     def simplify(self, drop_inverse: bool = True):
         """Reduce the number of transformations in this sequence if possible.
@@ -396,14 +425,13 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         Does not check whether transforms invert each other,
         e.g. `Translation(1) | Translation(-1)`.
         """
-        from .transforms.bijection import Bijection
         from .transforms import Identity
 
         out: list[Transform[ArrayT]] = []
         affine = None
-        for t in self.transforms:
-            if drop_inverse and isinstance(t, Bijection):
-                t = t.forward
+        for t in self.flatten(drop_inverse):
+            if t.is_identity():
+                continue
 
             new_affine = t.to_affine()
 
