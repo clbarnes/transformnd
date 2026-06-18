@@ -10,8 +10,6 @@ from ..types import NDims, Spaces
 from ..base import Transform, ArrayT
 from ..util import set_scipy_array_api, as_floats
 
-set_scipy_array_api()
-
 __all__ = ["Coordinates", "Displacements"]
 
 
@@ -95,6 +93,8 @@ class BaseVectorField(Transform[ArrayT], ABC):
 
         set_scipy_array_api()
         xp = array_namespace(index_coords_t)
+
+        # make columnar output array so that each dimension can be written contiguously
         out = xp.zeros_like(
             self.vector_field, shape=(self.ndims.target, xp.shape(index_coords_t)[1])
         )
@@ -133,6 +133,9 @@ class Coordinates(BaseVectorField[ArrayT]):
     the output coordinate is `vector_field[a, b, c, :].
 
     Input coordinates outside the vector field return NaN.
+
+    REQUIRES: `vectorfield` extra for in-memory,
+    or `vectorfield-dask` extra for lazy chunked vector fields.
     """
 
     def __init__(
@@ -182,6 +185,9 @@ class Displacements(BaseVectorField[ArrayT]):
     the output coordinate is `(a, b, c) + vector_field[a, b, c, :].
 
     Input coordinates outside the vector field return NaN.
+
+    REQUIRES: `vectorfield` extra for in-memory,
+    or `vectorfield-dask` extra for lazy chunked vector fields.
     """
 
     def __init__(

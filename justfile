@@ -47,5 +47,8 @@ bump level:
     git commit -m "Bump to v$(uv version --short)"
     git tag -a "v$(uv version --short)" -m "$(changelog entry latest)"
 
+pre-commit:
+    uv run --group dev prek run --all-files
+
 repl:
     uv run --all-groups --all-extras --with ipython ipython

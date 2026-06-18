@@ -17,27 +17,25 @@ def test_identity():
 
 @pytest.mark.parametrize(["ndim"], [[d] for d in range(1, 6)])
 def test_translation(ndim, rng):
-    t = 1
+    t_arr = np.arange(ndim) + 1
 
     coords = rng.random((5, ndim)) - 0.5
-    t_arr = [t] * ndim
     trans_arr = Affine.translation(t_arr)
-    assert np.allclose(trans_arr.apply(coords), coords + t)
-    assert np.allclose((~trans_arr).apply(coords), coords - t)
+    assert np.allclose(trans_arr.apply(coords), coords + t_arr)
+    assert np.allclose((~trans_arr).apply(coords), coords - t_arr)
 
 
 @pytest.mark.parametrize(["ndim"], [[d] for d in range(2, 6)])
 def test_scaling(ndim, rng):
-    s = 2
-    s_arr = [s] * ndim
+    s_arr = np.arange(ndim) + 2
 
     coords = rng.random((5, ndim)) - 0.5
     trans = Affine.scaling(s_arr)
-    assert np.allclose(trans.apply(coords), coords * s)
-    assert np.allclose((~trans).apply(coords), coords / s)
+    assert np.allclose(trans.apply(coords), coords * s_arr)
+    assert np.allclose((~trans).apply(coords), coords / s_arr)
 
     trans_arr = Affine.scaling(s_arr)
-    assert np.allclose(trans_arr.apply(coords), coords * s)
+    assert np.allclose(trans_arr.apply(coords), coords * s_arr)
 
 
 def test_rotation2():
@@ -136,7 +134,7 @@ def test_inversion(rng):
     assert inv_aff.apply(aff.apply(coords)) == pytest.approx(coords)
 
 
-def test_upprojection():
+def test_downprojection():
     lin_map = as_floats(
         [
             [1, 0, 0],
@@ -144,10 +142,15 @@ def test_upprojection():
         ]
     )
     t = Affine.from_linear_map(lin_map)
-    assert t.ndims.target > t.ndims.source
+    assert t.ndims.source == 3
+    assert t.ndims.target == 2
+
+    coords = as_floats([[1, 2, 3], [4, 5, 6]])
+    out = t.apply(coords)
+    assert out == pytest.approx(as_floats([[1, 2], [4, 5]]))
 
 
-def test_downprojection():
+def test_upprojection():
     lin_map = as_floats(
         [
             [1, 0],
@@ -156,7 +159,28 @@ def test_downprojection():
         ]
     )
     t = Affine.from_linear_map(lin_map)
-    assert t.ndims.source > t.ndims.target
+    assert t.ndims.source == 2
+    assert t.ndims.target == 3
+
+    coords = as_floats([[1, 2], [3, 4], [5, 6]])
+    out = t.apply(coords)
+    assert out == pytest.approx(as_floats([[1, 2, 0], [3, 4, 0], [5, 6, 0]]))
+
+
+def test_transpose_commutation():
+    mx_dim = 10
+
+    rng = np.random.default_rng(1991)
+    for _ in range(100):
+        lhs_shape = rng.integers(1, mx_dim, 2, endpoint=True)
+        lhs = rng.random(tuple(lhs_shape))
+        rhs_shape = (lhs_shape[1], rng.integers(mx_dim, endpoint=True))
+        rhs = rng.random(rhs_shape)
+
+        lr = lhs @ rhs
+        rtlt_t = (rhs.T @ lhs.T).T
+
+        assert lr == pytest.approx(rtlt_t)
 
 
 # def test_reflection():

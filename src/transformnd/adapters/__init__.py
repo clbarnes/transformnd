@@ -12,7 +12,6 @@ Implement your own adapter by inheriting from `BaseAdapter`.
 
 See `.pandas.DataFrameAdapter` for an example of creating an adapter
 for an external type.
-
 """
 
 from .base import (
@@ -23,6 +22,9 @@ from .base import (
     ReshapeAdapter,
     SimpleAdapter,
 )
+from .pandas import PandasAdapter
+from .polars import PolarsAdapter
+from .shapely import ShapelyAdapter
 
 __all__ = [
     "BaseAdapter",
@@ -31,4 +33,7 @@ __all__ = [
     "FnAdapter",
     "AttrAdapter",
     "ReshapeAdapter",
+    "PandasAdapter",
+    "PolarsAdapter",
+    "ShapelyAdapter",
 ]

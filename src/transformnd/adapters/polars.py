@@ -1,13 +1,16 @@
 """Adapt polars DataFrames for transformation."""
 
-import polars as pl
+from typing import TYPE_CHECKING
 import numpy as np
 
 from ..base import Transform
 from .base import BaseAdapter
 
+if TYPE_CHECKING:
+    import polars as pl
 
-class PolarsAdapter(BaseAdapter[pl.DataFrame, np.ndarray]):
+
+class PolarsAdapter(BaseAdapter["pl.DataFrame", np.ndarray]):
     def __init__(self, columns: list[str]):
         """Adapt transformation for coordinates stored in a polars DataFrame.
 
@@ -19,8 +22,8 @@ class PolarsAdapter(BaseAdapter[pl.DataFrame, np.ndarray]):
         self.columns = columns
 
     def apply(
-        self, transform: Transform, df: pl.DataFrame, in_place: bool = False
-    ) -> pl.DataFrame:
+        self, transform: Transform, df: "pl.DataFrame", in_place: bool = False
+    ) -> "pl.DataFrame":
         """Transform the dataframe, optionally in-place.
 
         Parameters

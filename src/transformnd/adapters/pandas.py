@@ -1,15 +1,18 @@
 """Adapt pandas DataFrames for transformation."""
 
 from collections.abc import Hashable
+from typing import TYPE_CHECKING
 
-import pandas as pd
 import numpy as np
 
 from ..base import Transform
 from .base import BaseAdapter
 
+if TYPE_CHECKING:
+    import pandas as pd
 
-class PandasAdapter(BaseAdapter[pd.DataFrame, np.ndarray]):
+
+class PandasAdapter(BaseAdapter["pd.DataFrame", np.ndarray]):
     def __init__(self, columns: list[Hashable]):
         """Adapt transformation for coordinates stored in a pandas DataFrame.
 
@@ -21,8 +24,8 @@ class PandasAdapter(BaseAdapter[pd.DataFrame, np.ndarray]):
         self.columns = columns
 
     def apply(
-        self, transform: Transform, df: pd.DataFrame, in_place: bool = False
-    ) -> pd.DataFrame:
+        self, transform: Transform, df: "pd.DataFrame", in_place: bool = False
+    ) -> "pd.DataFrame":
         """Transform the dataframe, optionally in-place.
 
         Parameters

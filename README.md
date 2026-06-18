@@ -44,10 +44,10 @@ All transforms are accessed under the `transformnd.transforms` subpackage.
 | `MapAxis` | | Rearrange axes of the input coordinates |
 | `Affine` | | Multiply augmented coordinates by an affine transformation matrix. Can represent all of the above transformations. Can be composed with matrix multiplication `aff2 @ aff1`. |
 | `ByDimension` | | Apply different transformations to subsets of the input coordinates' dimensions |
-| `moving_least_squares.MovingLeastSquares` | `movingleastsquares` | Landmark-based transformation. |
-| `thin_plate_splines.ThinPlateSplines` | `thinplatesplines` | Landmark-based transformation. |
-| `vector_field.Coordinates` | `vectorfield` for in-memory, `vectorfield-dask` for chunked | Look up output coordinates in a vector field indexed by the input coordinates |
-| `vector_field.Displacements` | `vectorfield`, `vectorfield-dask` for chunked | Look up translations in a vector field indexed by the input coordinates, and add them to input coordinates |
+| `MovingLeastSquares` | `movingleastsquares` | Landmark-based transformation. |
+| `ThinPlateSplines` | `thinplatesplines` | Landmark-based transformation. |
+| `Coordinates` | `vectorfield` for in-memory, `vectorfield-dask` for chunked | Look up output coordinates in a vector field indexed by the input coordinates |
+| `Displacements` | `vectorfield`, `vectorfield-dask` for chunked | Look up translations in a vector field indexed by the input coordinates, and add them to input coordinates |
 
 Arbitrary transforms can be composed into a `TransformSequence` with `transform1 | transform2`.
 A graph of transforms between defined spaces can be traversed using the `TransformGraph`.
@@ -55,13 +55,12 @@ A graph of transforms between defined spaces can be traversed using the `Transfo
 ## Implemented adapters
 
 - Numpy arrays of shape `(..., D, ...)` (`transformnd.adapters.ReshapeAdapter`)
-- `meshio.Mesh` (`transformnd.adapters.meshio.MeshAdapter`)
 - `pandas.DataFrame` (`transformnd.adapters.pandas.PandasAdapter`)
   - Takes a subset of columns as a coordinate array
 - `polars.DataFrame` (`transformnd.adapters.polars.PolarsAdapter`)
   - Similar to the pandas adapter
   - Currently, only scalar columns are supported (e.g. not a single struct column with fields `x`, `y`, `z`)
-- Geometries from `shapely` (`transformnd.adapters.shapely.GeometryAdapter`)
+- Geometries from `shapely` (`transformnd.adapters.shapely.ShapelyAdapter`)
 - Objects composed of transformable attributes (`transformnd.adapters.AttrAdapter`).
 
 ## Additional transforms and adapters
