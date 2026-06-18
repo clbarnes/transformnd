@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Fixed
+
+- Rectangular affines now have the correct input and output dimensions
+
+### Added
+
+- ProjectAxis transformation for adding and dropping axes
+
 ## 0.5.0 - 2026-06-17
 
 ### Added

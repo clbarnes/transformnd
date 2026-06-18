@@ -5,11 +5,13 @@ from .reflection import Reflect
 from .simple import Identity, Scale, Translate
 from .map_axis import MapAxis
 from .bijection import Bijection
+from .project_axis import ProjectAxis
 from .by_dimension import ByDimension
 
 __all__ = [
     "Affine",
     "Identity",
+    "ProjectAxis",
     "Reflect",
     "Scale",
     "Translate",

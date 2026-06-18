@@ -42,7 +42,7 @@ class Affine(Transform[ArrayT]):
         ----------
         matrix
             Affine transformation matrix,
-            i.e. a 2D array-like with shape `(Di + 1, Do + 1)`,
+            i.e. a 2D array-like with shape `(Do + 1, Di + 1)`,
             where the bottom row is all 0s except in the rightmost column, which is 1.
         spaces
             Optional source and target spaces
@@ -64,7 +64,7 @@ class Affine(Transform[ArrayT]):
                 f"Transformation matrix is not affine (expected bottom row {expected}, got {bottom_row})."
             )
 
-        super().__init__(NDims(m.shape[0] - 1, m.shape[1] - 1), spaces=spaces)
+        super().__init__(NDims(m.shape[1] - 1, m.shape[0] - 1), spaces=spaces)
 
         self.matrix: np.ndarray = m
 
