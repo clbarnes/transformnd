@@ -9,7 +9,7 @@ from shapely import (
     GeometryCollection,
 )
 
-from transformnd.adapters.shapely import GeometryAdapter
+from transformnd.adapters.shapely import ShapelyAdapter
 from transformnd.transforms import Scale
 
 import pytest
@@ -141,7 +141,7 @@ import pytest
     ],
 )
 def test_geom(original, expected):
-    adapter = GeometryAdapter()
+    adapter = ShapelyAdapter()
     transform = Scale([2, 3])
     out = adapter.apply(transform, original)
 

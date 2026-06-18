@@ -1,21 +1,24 @@
 import logging
+from typing import TYPE_CHECKING
 
 import numpy as np
-import shapely
-from shapely.geometry.base import BaseGeometry
-from shapely.coords import CoordinateSequence
 
 from ..base import Transform, ArrayT
 from .base import BaseAdapter
 
+if TYPE_CHECKING:
+    from shapely.geometry.base import BaseGeometry
+    from shapely.coords import CoordinateSequence
+
+
 logger = logging.getLogger(__name__)
 
 
-def as_numpy(coords: CoordinateSequence) -> np.ndarray:
+def as_numpy(coords: "CoordinateSequence") -> np.ndarray:
     return np.asarray(coords)
 
 
-class GeometryAdapter(BaseAdapter[BaseGeometry, ArrayT]):
+class ShapelyAdapter(BaseAdapter["BaseGeometry", ArrayT]):
     """Transform shapely geometries.
 
     As well as the generic `apply()`,
@@ -27,7 +30,7 @@ class GeometryAdapter(BaseAdapter[BaseGeometry, ArrayT]):
     N.B. shapely geometries' coordinates are in `XY(Z)` order
     """
 
-    def apply[T: BaseGeometry](
+    def apply[T: "BaseGeometry"](
         self,
         transform: Transform,
         obj: T,
@@ -51,6 +54,7 @@ class GeometryAdapter(BaseAdapter[BaseGeometry, ArrayT]):
         T
             An object of the same type as the input.
         """
+        import shapely
 
         def fn(coords: np.ndarray) -> np.ndarray:
             c = coords.copy()

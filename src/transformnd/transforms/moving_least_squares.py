@@ -7,7 +7,6 @@ Requires the `movingleastsquares` extra.
 from array_api_compat import array_namespace
 import numpy as np
 from typing import Self
-from molesq.transform import Transformer as _Transformer
 
 from ..base import Transform
 from ..types import NDims, Spaces
@@ -18,6 +17,8 @@ class MovingLeastSquares(Transform[np.ndarray]):
     """Moving least squares transformation.
 
     Deform based on a matched pairs of source and target control points; see <https://dl.acm.org/doi/10.1145/1141911.1141920>
+
+    REQUIRES: `movingleastsquares` extra.
     """
 
     def __init__(
@@ -39,9 +40,11 @@ class MovingLeastSquares(Transform[np.ndarray]):
         spaces
             Optional source and target spaces
         """
+        from molesq.transform import Transformer
+
         s = as_floats(source_control_points)
         t = as_floats(target_control_points)
-        self._transformer = _Transformer(s, t)
+        self._transformer = Transformer(s, t)
         super().__init__(
             NDims(
                 s.shape[1],

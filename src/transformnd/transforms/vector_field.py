@@ -133,6 +133,9 @@ class Coordinates(BaseVectorField[ArrayT]):
     the output coordinate is `vector_field[a, b, c, :].
 
     Input coordinates outside the vector field return NaN.
+
+    REQUIRES: `vectorfield` extra for in-memory,
+    or `vectorfield-dask` extra for lazy chunked vector fields.
     """
 
     def __init__(
@@ -182,6 +185,9 @@ class Displacements(BaseVectorField[ArrayT]):
     the output coordinate is `(a, b, c) + vector_field[a, b, c, :].
 
     Input coordinates outside the vector field return NaN.
+
+    REQUIRES: `vectorfield` extra for in-memory,
+    or `vectorfield-dask` extra for lazy chunked vector fields.
     """
 
     def __init__(

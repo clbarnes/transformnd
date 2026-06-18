@@ -30,7 +30,7 @@ class BaseOperation(ABC):
 
 @dataclass(frozen=True, eq=True)
 class Insert(BaseOperation):
-    """Insert a new axis."""
+    """Component of the `ProjectAxis` transform which inserts a new axis."""
 
     def check(self, ndim: int) -> int:
         if self.idx > ndim or self.idx <= -ndim:
@@ -45,7 +45,7 @@ class Insert(BaseOperation):
 
 @dataclass(frozen=True, eq=True)
 class Remove(BaseOperation):
-    """Remove an existing axis."""
+    """Component of the `ProjectAxis` transform which removes an existing axis."""
 
     def check(self, ndim: int) -> int:
         if self.idx >= ndim or self.idx <= -ndim:
@@ -78,7 +78,7 @@ class ProjectAxis(Transform):
         *,
         spaces: Spaces = Spaces(None, None),
     ):
-        """Create a ProjectAxis transform for adding and dropping axes.
+        """Create a transform for adding and dropping axes.
 
         At least one of source_ndim and target_ndim must be given.
 

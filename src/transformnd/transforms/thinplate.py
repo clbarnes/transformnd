@@ -6,7 +6,6 @@ Requires the `thinplatesplines` extra.
 
 import logging
 
-import morphops as mops
 import numpy as np
 
 from ..base import Transform
@@ -20,6 +19,8 @@ class ThinPlateSplines(Transform[np.ndarray]):
     """Thin plate splines transforms.
 
     Deform based on matched pairs of control points.
+
+    REQUIRES: `thinplatesplines` extra.
     """
 
     def __init__(
@@ -48,6 +49,8 @@ class ThinPlateSplines(Transform[np.ndarray]):
         ValueError
             Invalid control points.
         """
+        import morphops
+
         self.source_control_points = as_floats(source_control_points)
         self.target_control_points = as_floats(target_control_points)
 
@@ -59,7 +62,7 @@ class ThinPlateSplines(Transform[np.ndarray]):
 
         ndim = self.source_control_points.shape[1]
 
-        self.W, self.A = mops.tps_coefs(
+        self.W, self.A = morphops.tps_coefs(
             self.source_control_points,
             self.target_control_points,
         )
@@ -73,8 +76,10 @@ class ThinPlateSplines(Transform[np.ndarray]):
         )
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
+        import morphops
+
         coords = self._validate_coords(coords)
-        U = mops.K_matrix(coords, self.source_control_points)
-        P = mops.P_matrix(coords)
+        U = morphops.K_matrix(coords, self.source_control_points)
+        P = morphops.P_matrix(coords)
         # The warped pts are the affine part + the non-uniform part
         return P @ self.A + U @ self.W

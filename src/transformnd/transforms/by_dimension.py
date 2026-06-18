@@ -8,7 +8,10 @@ from ..types import NDims, Spaces
 
 
 class SubTransform[ArrayT]:
-    """Transformation to apply to subsets of the input dimensions and which output dimensions they calculate."""
+    """Component of the `ByDimension` transformation.
+
+    Transformation to apply to subsets of the input dimensions and which output dimensions they calculate.
+    """
 
     def __init__(
         self,
@@ -16,6 +19,24 @@ class SubTransform[ArrayT]:
         input_axes: list[int],
         output_axes: list[int] | None = None,
     ):
+        """
+        Parameters
+        ----------
+        transform
+            Transformation to apply to the subset of axes.
+        input_axes
+            Which axes to apply the transformation to, in order.
+            The length must match the input dimensionality of `transform`.
+        output_axes
+            Which axes to apply the transformation to, in order.
+            The length must match the input dimensionality of `transform`.
+            If None, re-use the input axes.
+
+        Raises
+        ------
+        ValueError
+            `transform`'s dimensionality does not match the input/output axes.
+        """
 
         self.input_axes = input_axes
         if output_axes is None:

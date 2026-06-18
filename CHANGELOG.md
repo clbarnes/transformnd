@@ -10,6 +10,11 @@
 
 - ProjectAxis transformation for adding and dropping axes
 
+### Changed
+
+- Expose all transforms under `.transforms`, even if they are optional
+- BREAKING: Rename `GeometryAdapter` to `ShapelyAdapter`
+
 ## 0.5.0 - 2026-06-17
 
 ### Added
