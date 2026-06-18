@@ -25,7 +25,7 @@ class BaseOperation(ABC):
     def check(self, ndim: int) -> int: ...
 
     @abstractmethod
-    def invert(self) -> Self: ...
+    def invert(self) -> BaseOperation: ...
 
 
 @dataclass(frozen=True, eq=True)
@@ -139,13 +139,13 @@ class ProjectAxis(Transform):
         coords = self._validate_coords(coords)
         if self._has_inserts:
             xp = array_namespace(coords)
-            out = xp.zeros_like(coords, shape=(coords.shape[0], self.ndims.target))
+            out = xp.zeros_like(coords, shape=(xp.shape(coords)[0], self.ndims.target))
             for idx, orig_idx in enumerate(self._idxs):
                 if orig_idx is not None:
-                    out[:, idx] = coords[:, orig_idx]
+                    out[:, idx] = coords[:, orig_idx]  # type:ignore
 
         else:
-            out = coords[:, self._idxs]
+            out = coords[:, self._idxs]  # type:ignore
         return out
 
     def is_identity(self) -> bool:

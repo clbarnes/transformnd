@@ -1,6 +1,6 @@
 from random import Random
 from transformnd.transforms import ProjectAxis
-from transformnd.transforms.project_axis import Insert, Remove
+from transformnd.transforms.project_axis import Insert, Remove, Operation
 from transformnd.util import as_floats
 import pytest
 
@@ -30,18 +30,13 @@ def random_ops(ndim: int, n_ops: int, seed=1991) -> ProjectAxis:
     ops = []
     source_ndim = ndim
     for _ in range(n_ops):
-        if ndim == 0:
-            Cls = Insert
+        op: Operation
+        if ndim == 0 or rng.randint(0, 1):
+            op = Insert(rng.randint(0, ndim))
         else:
-            Cls = rng.choice([Insert, Remove])
-        if Cls == Remove:
-            mx = ndim - 1
-        else:
-            mx = ndim
-        idx = rng.randint(0, mx)
-        op = Cls(idx)
+            op = Remove(rng.randint(0, ndim - 1))
         ndim = op.check(ndim)
-        ops.append(Cls(idx))
+        ops.append(op)
 
     return ProjectAxis(ops, source_ndim)
 
