@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import Self
+from typing import Self, Sequence
 
 import numpy as np
 from array_api_compat import array_namespace
@@ -72,7 +72,7 @@ class ProjectAxis(Transform):
 
     def __init__(
         self,
-        operations: list[Operation],
+        operations: Sequence[Operation],
         source_ndim: int | None = None,
         target_ndim: int | None = None,
         *,
@@ -130,9 +130,8 @@ class ProjectAxis(Transform):
                 idxs.insert(op.idx, None)
             elif isinstance(op, Remove):
                 idxs.pop(op.idx)
+            self.operations.append(op)
         self._idxs = idxs
-
-        self.operations = operations
 
         super().__init__(NDims(source_ndim, target_ndim), spaces=spaces)
 
