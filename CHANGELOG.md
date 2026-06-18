@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.6.0 - 2026-06-18
+
 ### Fixed
 
 - Rectangular affines now have the correct input and output dimensions
