@@ -42,7 +42,9 @@ All transforms are accessed under the `transformnd.transforms` subpackage.
 | `Scale` | | Multiply the input coordinates by constant scale factor |
 | `Reflection` | | Reflect coordinates about arbitrary planes |
 | `MapAxis` | | Rearrange axes of the input coordinates |
+| `ProjectAxis` | | Insert or remove axes |
 | `Affine` | | Multiply augmented coordinates by an affine transformation matrix. Can represent all of the above transformations. Can be composed with matrix multiplication `aff2 @ aff1`. |
+| `GridInterpolation` | | Apply an arbitrary callable (e.g. a `scipy.interpolate` interpolator) to each dimension. |
 | `ByDimension` | | Apply different transformations to subsets of the input coordinates' dimensions |
 | `MovingLeastSquares` | `movingleastsquares` | Landmark-based transformation. |
 | `ThinPlateSplines` | `thinplatesplines` | Landmark-based transformation. |

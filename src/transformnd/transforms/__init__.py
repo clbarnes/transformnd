@@ -10,6 +10,7 @@ from .by_dimension import ByDimension, SubTransform
 from .vector_field import Coordinates, Displacements
 from .moving_least_squares import MovingLeastSquares
 from .thinplate import ThinPlateSplines
+from .grid import GridInterpolation
 
 __all__ = [
     "Affine",
@@ -18,6 +19,7 @@ __all__ = [
     "Insert",
     "Remove",
     "Reflect",
+    "GridInterpolation",
     "Scale",
     "Translate",
     "MapAxis",

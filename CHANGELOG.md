@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- GridInterpolation transformation for xarray-esque rectilinear grids
+
 ## 0.6.0 - 2026-06-18
 
 ### Fixed

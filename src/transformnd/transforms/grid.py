@@ -10,10 +10,28 @@ class Interpolator(Protocol, Generic[ArrayT]):
     def __call__(self, x: ArrayT) -> ArrayT: ...
 
 
-class GridInterpolation(Transform):
+class GridInterpolation(Transform[ArrayT]):
+    """Coordinate transformation which applies a callable to each dimension.
+
+    Intended for use with instances of `scipy.interpolate` interpolators,
+    but any callable which takes and returns an array of floats would work.
+    """
+
     def __init__(
-        self, interpolators: list[Interpolator], *, spaces: Spaces = Spaces(None, None)
+        self,
+        interpolators: list[Interpolator[ArrayT]],
+        *,
+        spaces: Spaces = Spaces(None, None),
     ):
+        """
+        Parameters
+        ----------
+        interpolators
+            One callable per dimension, in order.
+            Each one should take and return an array of floats.
+        spaces
+            Source and target space identifiers
+        """
         self.interpolators = interpolators
         nd = len(interpolators)
         super().__init__(NDims(nd, nd), spaces=spaces)
