@@ -22,7 +22,7 @@ def _():
 
 
 @app.cell
-def _(b):
+def _():
     from skimage.data import cells3d
 
     # ZCYX, (0.29um, membrane/nuclei channels, 0.26um, 0.26um)

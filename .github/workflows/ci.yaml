@@ -22,6 +22,7 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --all-extras
+      - uses: extractions/setup-just@v3
       - run: just example-test
 
   lint:
