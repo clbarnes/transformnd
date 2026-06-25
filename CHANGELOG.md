@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.7.0 - 2026-06-25
+
 ### Added
 
 - Image transformation tutorial
