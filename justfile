@@ -33,7 +33,11 @@ format:
 test:
     uv run --all-groups --all-extras pytest -v
 
-examples:
+example-edit example:
+    uv run --group examples marimo edit examples/{{example}}.py
+
+example example:
+    uv run --group examples marimo run examples/{{example}}.py
 
 # Run benchmarks.
 bench:
