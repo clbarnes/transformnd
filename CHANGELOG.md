@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- Image transformation tutorial
+- Examples are now uploaded with docs
+
+### Changed
+
+- BREAKING: ProjectAxis is now more intuitive to instantiate
+
 ## 0.6.0 - 2026-06-18
 
 ### Fixed
