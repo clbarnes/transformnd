@@ -39,8 +39,8 @@ test:
 example-edit example:
     uv run --group examples marimo edit examples/{{example}}.py
 
-example example:
-    uv run --group examples marimo run examples/{{example}}.py
+example-test:
+    uv run --group examples marimo export session examples --force-overwrite
 
 # Run benchmarks.
 bench:

@@ -22,7 +22,7 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --all-extras
-      - run: uv run --group examples marimo check --strict --ignore-scripts examples/*.py
+      - run: just example-test
 
   lint:
     runs-on: ubuntu-latest
