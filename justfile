@@ -11,6 +11,9 @@ doc docdir='doc/html':
         --docformat numpy \
         --search \
         transformnd
+    mkdir -p {{docdir}}/examples
+    uv run --group examples marimo export html examples/tutorial.py -o {{docdir}}/examples/tutorial.html
+    uv run --group examples marimo export html examples/image.py -o {{docdir}}/examples/image.html
 
 # Run linters and type checkers.
 lint:
