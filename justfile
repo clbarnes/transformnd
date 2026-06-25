@@ -11,13 +11,16 @@ doc docdir='doc/html':
         --docformat numpy \
         --search \
         transformnd
+    mkdir -p {{docdir}}/examples
+    uv run --group examples marimo export html examples/tutorial.py -o {{docdir}}/examples/tutorial.html
+    uv run --group examples marimo export html examples/image.py -o {{docdir}}/examples/image.html
 
 # Run linters and type checkers.
 lint:
     uv run --group lint ruff check src tests examples bench
     uv run --group lint mypy src tests bench
     uv run --group lint ruff format --check src tests examples bench
-    uv run --group tutorial marimo check --strict --ignore-scripts examples/*.py
+    uv run --group examples marimo check --strict --ignore-scripts examples/*.py
     uv run --group lint pydoclint src
 
 # Auto-fix format and lints where possible.
@@ -33,7 +36,11 @@ format:
 test:
     uv run --all-groups --all-extras pytest -v
 
-examples:
+example-edit example:
+    uv run --group examples marimo edit examples/{{example}}.py
+
+example example:
+    uv run --group examples marimo run examples/{{example}}.py
 
 # Run benchmarks.
 bench:
