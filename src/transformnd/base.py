@@ -304,6 +304,14 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         if not ts:
             raise ValueError("Empty transform sequence")
 
+        for idx, (t1, t2) in enumerate(pairwise(ts)):
+            if t1.ndims.target != t2.ndims.source:
+                raise ValueError(
+                    "Incompatible dimensionality: "
+                    f"transform {idx}'s target is {t1.ndims.target}D "
+                    f"and the next source is {t2.ndims.source}D"
+                )
+
         spaces = Spaces(ts[0].spaces.source, ts[-1].spaces.target)
         ndims = NDims(ts[0].ndims.source, ts[-1].ndims.target)
 

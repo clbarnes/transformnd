@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.1"
+__generated_with = "0.23.4"
 app = marimo.App()
 
 
@@ -218,11 +218,16 @@ def _(Scale, Translate):
     bc = Translate([0.5, 1], spaces=Spaces("b", "c"))
     bd = Translate([1, 0.5], spaces=Spaces("b", "d"))
 
-    g.add_transforms([ab, bc, bd])
+    g.add_transform(ab)
+    g.add_transform(ab.invert())
+    g.add_transform(bc)
+    g.add_transform(bc.invert())
+    g.add_transform(bd)
+    g.add_transform(bd.invert())
 
     print("Transform sequence from a to c:", g.get_sequence("a", "c"))
     print("Transform sequence from d to a:", g.get_sequence("d", "a"))
-    return
+    return (Spaces,)
 
 
 @app.cell
@@ -245,7 +250,7 @@ def _(mo):
 
 
 @app.cell
-def _(np, Spaces):
+def _(Spaces, np):
     from transformnd import Transform, NDims
 
     class IsotropicScale2d(Transform):

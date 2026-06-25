@@ -1,5 +1,11 @@
 """
 .. include:: ../../README.md
+
+You can find some examples here:
+
+- [Tutorial](./examples/tutorial.html)
+- [Image transformation](./examples/image.html)
+
 """
 
 from .base import Transform, TransformSequence, TransformWrapper
