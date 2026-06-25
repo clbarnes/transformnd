@@ -50,9 +50,6 @@ class ProjectAxis(Transform):
         self.dropped = dropped or set()
         self.created = created or set()
 
-        self.operations = []
-        self._has_inserts = False
-
         if source_ndim is not None:
             nd = source_ndim - len(self.dropped) + len(self.created)
             if target_ndim is None:
