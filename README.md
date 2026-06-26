@@ -29,7 +29,7 @@ and implements these adapters for a few common types.
 
 See the [tutorial here](https://github.com/clbarnes/transformnd/blob/main/examples/tutorial.py).
 It is a [marimo](https://marimo.io) notebook.
-Open it with `uv run --group tutorial marimo edit examples/tutorial.py`.
+Open it with `uv run --group examples marimo edit examples/tutorial.py`.
 
 ## Implemented transforms
 

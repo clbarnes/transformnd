@@ -5,7 +5,7 @@ from .reflection import Reflect
 from .simple import Identity, Scale, Translate
 from .map_axis import MapAxis
 from .bijection import Bijection
-from .project_axis import ProjectAxis, Insert, Remove
+from .project_axis import ProjectAxis
 from .by_dimension import ByDimension, SubTransform
 from .vector_field import Coordinates, Displacements
 from .moving_least_squares import MovingLeastSquares
@@ -16,8 +16,6 @@ __all__ = [
     "Affine",
     "Identity",
     "ProjectAxis",
-    "Insert",
-    "Remove",
     "Reflect",
     "GridInterpolation",
     "Scale",

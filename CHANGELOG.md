@@ -6,6 +6,21 @@
 
 - GridInterpolation transformation for xarray-esque rectilinear grids
 
+## 0.7.2 - 2026-06-25
+
+## 0.7.1 - 2026-06-25
+
+## 0.7.0 - 2026-06-25
+
+### Added
+
+- Image transformation tutorial
+- Examples are now uploaded with docs
+
+### Changed
+
+- BREAKING: ProjectAxis is now more intuitive to instantiate
+
 ## 0.6.0 - 2026-06-18
 
 ### Fixed

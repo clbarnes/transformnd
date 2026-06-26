@@ -1,6 +1,6 @@
 [project]
 name = "transformnd"
-version = "0.6.0"
+version = "0.7.2"
 description = "ND coordinate transformations"
 readme = "README.md"
 authors = [{ name = "Chris Barnes", email = "chris.barnes@gerbi-gmb.de" }]
@@ -62,7 +62,7 @@ dev = [
     {include-group = "test"},
     {include-group = "lint"},
     {include-group = "doc"},
-    {include-group = "tutorial"},
+    {include-group = "examples"},
     {include-group = "bench"},
 ]
 test = [
@@ -80,10 +80,12 @@ lint = [
 doc = [
     "pdoc>=16.0.0",
 ]
-tutorial = [
+examples = [
     "marimo>=0.9",
     "matplotlib>=3.10.8",
     "pandas>=3.0.2",
+    "pooch>=1.9.0",
+    "scikit-image>=0.26.0",
 ]
 bench = [
     "pytest-benchmark>=5.2.3",
