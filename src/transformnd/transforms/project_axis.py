@@ -4,7 +4,7 @@ from typing import Self
 import numpy as np
 from array_api_compat import array_namespace
 from transformnd.transforms import Affine
-from transformnd.types import NDims, Spaces
+from transformnd.types import NDims
 from ..base import Transform
 from ..types import ArrayT
 
@@ -21,8 +21,6 @@ class ProjectAxis(Transform):
         created: set[int] | None = None,
         source_ndim: int | None = None,
         target_ndim: int | None = None,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """Create a transform for adding and dropping axes.
 
@@ -38,8 +36,6 @@ class ProjectAxis(Transform):
             If omitted, can be inferred from `target_ndim`.
         target_ndim
             If omitted, can be inferred from `source_ndim`.
-        spaces
-            Identifiers for source and target spaces, by default Spaces(None, None)
 
         Raises
         ------
@@ -74,7 +70,7 @@ class ProjectAxis(Transform):
             idxs.insert(create, None)
         self._idxs = idxs
 
-        super().__init__(NDims(source_ndim, target_ndim), spaces=spaces)
+        super().__init__(NDims(source_ndim, target_ndim))
 
     def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
@@ -103,5 +99,4 @@ class ProjectAxis(Transform):
             self.dropped,
             source_ndim=self.ndims.target,
             target_ndim=self.ndims.source,
-            spaces=self.spaces.invert(),
         )

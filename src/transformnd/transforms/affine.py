@@ -15,7 +15,7 @@ from copy import copy
 
 from array_api_compat import array_namespace, device as xp_device
 from ..base import Transform, ArrayT
-from ..util import as_floats, none_eq, is_square
+from ..util import as_floats, is_square
 from ..types import NDims, Spaces
 
 
@@ -34,8 +34,6 @@ class Affine(Transform[ArrayT]):
     def __init__(
         self,
         matrix: ArrayLike,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """
         Parameters
@@ -44,8 +42,6 @@ class Affine(Transform[ArrayT]):
             Affine transformation matrix,
             i.e. a 2D array-like with shape `(Do + 1, Di + 1)`,
             where the bottom row is all 0s except in the rightmost column, which is 1.
-        spaces
-            Optional source and target spaces
 
         Raises
         ------
@@ -64,7 +60,7 @@ class Affine(Transform[ArrayT]):
                 f"Transformation matrix is not affine (expected bottom row {expected}, got {bottom_row})."
             )
 
-        super().__init__(NDims(m.shape[1] - 1, m.shape[0] - 1), spaces=spaces)
+        super().__init__(NDims(m.shape[1] - 1, m.shape[0] - 1))
 
         self.matrix: np.ndarray = m
 
@@ -117,10 +113,7 @@ class Affine(Transform[ArrayT]):
         except np.linalg.LinAlgError:
             return None
 
-        return type(self)(
-            inv,
-            spaces=self.spaces.invert(),
-        )
+        return type(self)(inv)
 
     def __matmul__(self, rhs: Affine[ArrayT]) -> Affine[ArrayT]:
         """Compose two affine transforms by matrix multiplication.
@@ -151,11 +144,8 @@ class Affine(Transform[ArrayT]):
 
         # this ordering looks wrong but this is the way affine transforms get combined;
         # the sequence transform A followed by transform B is expressed B @ A
-        if not none_eq(self.spaces.source, rhs.spaces.target):
-            raise ValueError("Affine transforms do not share a space")
         return Affine(
             self.matrix @ rhs.matrix,
-            spaces=Spaces(rhs.spaces.source, self.spaces.target),
         )
 
     def to_device(self, xp: ModuleType, device: str | None = None) -> "Affine[ArrayT]":
@@ -225,7 +215,7 @@ class Affine(Transform[ArrayT]):
                     "Translation array must be the same length as linear map columns"
                 )
             matrix[:-1, -1] = translation
-        return cls(matrix, spaces=spaces)
+        return cls(matrix)
 
     @classmethod
     def identity(
@@ -248,7 +238,7 @@ class Affine(Transform[ArrayT]):
         Affine[ArrayT]
             The identity affine transform.
         """
-        return cls(np.eye(ndim + 1), spaces=spaces)
+        return cls(np.eye(ndim + 1))
 
     @classmethod
     def translation(
@@ -281,7 +271,7 @@ class Affine(Transform[ArrayT]):
             raise ValueError(f"Translation array must be 1D; got shape {t.shape}")
         m = np.eye(len(t) + 1, dtype=t.dtype)
         m[:-1, -1] = t
-        return cls(m, spaces=spaces)
+        return cls(m)
 
     @classmethod
     def scaling(
@@ -496,7 +486,7 @@ class Affine(Transform[ArrayT]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Affine):
             return NotImplemented
-        return np.array_equal(self.matrix, other.matrix) and self.spaces == other.spaces
+        return np.array_equal(self.matrix, other.matrix)
 
     def is_identity(self) -> bool:
         xp = array_namespace(self.matrix)

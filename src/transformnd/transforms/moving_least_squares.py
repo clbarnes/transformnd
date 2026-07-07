@@ -50,7 +50,6 @@ class MovingLeastSquares(Transform[np.ndarray]):
                 s.shape[1],
                 t.shape[1],
             ),
-            spaces=spaces,
         )
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
@@ -70,5 +69,4 @@ class MovingLeastSquares(Transform[np.ndarray]):
         return type(self)(
             self._transformer.deformed_control_points,
             self._transformer.control_points,
-            spaces=self.spaces.invert(),
         )

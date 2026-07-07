@@ -118,7 +118,7 @@ class ByDimension(Transform[ArrayT]):
         if sorted_out != list(range(len(sorted_out))):
             raise ValueError("N-length output axes must go from 0 to N-1")
 
-        super().__init__(NDims(len(sorted_in), len(sorted_out)), spaces=spaces)
+        super().__init__(NDims(len(sorted_in), len(sorted_out)))
         self.subtransforms = subtransforms
 
     def apply(self, coords: ArrayT) -> ArrayT:
@@ -147,7 +147,6 @@ class ByDimension(Transform[ArrayT]):
 
         return type(self)(
             subtransforms=inverted_transforms,
-            spaces=self.spaces.invert(),
         )
 
     def is_identity(self) -> bool:

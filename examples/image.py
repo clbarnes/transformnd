@@ -60,7 +60,6 @@ def _(CELLS_SPACE, VIEWPORT_SPACE, WORLD_SPACE):
             # Scale the space axes
             Scale([1, 0.29, 0.26, 0.26]),
         ],
-        spaces=tnd.Spaces(CELLS_SPACE, WORLD_SPACE),
     )
     print(cells_to_world)
 
@@ -75,7 +74,6 @@ def _(CELLS_SPACE, VIEWPORT_SPACE, WORLD_SPACE):
             # Choose a spatial sampling frequency (here 0.2um isotropic)
             Scale([1, 0.2, 0.2, 0.2]),
         ],
-        spaces=tnd.Spaces(VIEWPORT_SPACE, WORLD_SPACE),
     )
     print(viewport_to_world)
     return cells_to_world, viewport_to_world

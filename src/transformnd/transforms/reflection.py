@@ -90,8 +90,6 @@ class Reflect(Transform[np.ndarray]):
         self,
         normals: ArrayLike,
         point: float | ArrayLike = 0.0,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """
         Parameters
@@ -102,8 +100,6 @@ class Reflect(Transform[np.ndarray]):
         point
             Intersection point of all reflection planes
             (can be broadcast from scalar), by default 0 (i.e. the origin)
-        spaces
-            Optional source and target spaces
 
         Raises
         ------
@@ -125,7 +121,7 @@ class Reflect(Transform[np.ndarray]):
         self.ndim = {len(n1)}
         self.normals = [unitise(n) for n in normals]
         # todo: matmul is associative, so turn this into an affine in 2/3D?
-        super().__init__(NDims(len(n1), len(n1)), spaces=spaces)
+        super().__init__(NDims(len(n1), len(n1)))
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
         coords = self._validate_coords(coords)
@@ -158,7 +154,7 @@ class Reflect(Transform[np.ndarray]):
         Self
         """
         point, normals = get_hyperplanes(np.asarray(points), unitise=False)
-        return cls(normals, point, spaces=spaces)
+        return cls(normals, point)
 
     @classmethod
     def from_axis(
@@ -204,7 +200,7 @@ class Reflect(Transform[np.ndarray]):
                 v[i] += 1
                 normals.append(v)
 
-        return cls(normals, origin, spaces=spaces)
+        return cls(normals, origin)
 
     def invert(self) -> Self | None:
         return copy(self)
