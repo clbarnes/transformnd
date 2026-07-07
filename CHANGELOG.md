@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Removed
+
+- BREAKING: Transforms no longer have their own `spaces`; this concept only exist on the graph
+
 ## 0.7.2 - 2026-06-25
 
 ## 0.7.1 - 2026-06-25

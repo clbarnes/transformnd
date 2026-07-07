@@ -14,8 +14,8 @@ from transformnd.transforms.simple import Identity
 
 from .transforms.bijection import Bijection
 from .base import Transform, TransformSequence
-from .util import ArrayT, same_or_none
-from .types import Spaces, SpaceRef
+from .util import ArrayT
+from .types import SpaceRef
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ def normalise_edge_weight_fn(w: str | WeightFn | None) -> WeightFn:
         return w
 
 
-class TransformGraph[ArrayT]:
+class TransformGraph[ArrayT, SpaceRef]:
     """Transform between any number of arbitrary spaces/ coordinate systems.
 
     Finds the shortest path for transforming one space
@@ -52,25 +52,12 @@ class TransformGraph[ArrayT]:
         self.graph = nx.MultiDiGraph()
         self.space_ndims: dict[SpaceRef, int] = dict()
 
-    def _update_spaces(
-        self,
-        transform: Transform[ArrayT],
-        source: SpaceRef,
-        target: SpaceRef,
-    ) -> Spaces:
-        """Check that the transform's spaces do not conflict with those given explicitly,
-        that the source and target space is defined somewhere,
-        and that the dimensionality of the spaces (inferred from the transforms)
-        does not conflict with known spaces.
-        """
-        # if the node already exists, make sure the dimensionality does not conflict
-        self.space_ndims[source] = same_or_none(
-            self.space_ndims.get(source), transform.ndims.source
-        )
-        self.space_ndims[target] = same_or_none(
-            self.space_ndims.get(target), transform.ndims.target
-        )
-        return Spaces(source, target)
+    def _add_space(self, space: SpaceRef, ndim: int):
+        curr_ndim = self.space_ndims.get(space)
+        if curr_ndim is None:
+            self.space_ndims[space] = ndim
+        elif curr_ndim != ndim:
+            raise ValueError(f"Space {space} is {curr_ndim}D, got {ndim}D")
 
     def _add_transform(
         self,
@@ -81,8 +68,8 @@ class TransformGraph[ArrayT]:
     ) -> list[tuple[SpaceRef, SpaceRef]]:
         """Clearing the get_sequence cache and splitting sequences and bijections should be handled outside this method."""
         out = []
-
-        src, tgt = self._update_spaces(transform, source, target)
+        self._add_space(source, transform.ndims.source)
+        self._add_space(target, transform.ndims.target)
 
         if edge_data is None:
             edge_data = dict()
@@ -91,8 +78,8 @@ class TransformGraph[ArrayT]:
             raise ValueError(f"Must not use the key '{TRANSFORM_KEY}' in edge_data")
 
         d = {TRANSFORM_KEY: transform, **edge_data}
-        self.graph.add_edge(src, tgt, **d)
-        out.append((src, tgt))
+        self.graph.add_edge(source, target, **d)
+        out.append((source, target))
         return out
 
     def add_transform(
@@ -197,9 +184,7 @@ class TransformGraph[ArrayT]:
                     min(edges.values(), key=lambda d: wfn(src, tgt, d))[TRANSFORM_KEY]
                 )
 
-        seq = TransformSequence(
-            transforms,
-        )
+        seq = TransformSequence(transforms)
         if not full:
             seq = seq.simplify(drop_inverse=True)
         return seq
@@ -250,20 +235,16 @@ class TransformGraph[ArrayT]:
         Transform[ArrayT]
             The next transform in the graph.
 
-        Examples
-        --------
-        Create a new transform graph using another
-
-        >>> new_tgraph = TransformGraph([extra_transform, *old_tgraph])
-
         """
         for _, _, t in self.graph.edges.data(TRANSFORM_KEY):
             yield t
 
-    def to_device(
+    def to_device[ArrayT2](
         self, xp: ModuleType, device: str | None = None
-    ) -> TransformGraph[ArrayT]:
-        result: TransformGraph[ArrayT] = TransformGraph()
-        for src, tgt, t in self.graph.edges.data(TRANSFORM_KEY):
-            result.graph.add_edge(src, tgt, transform=t.to_device(xp, device))
+    ) -> TransformGraph[ArrayT2, SpaceRef]:
+        result: TransformGraph[ArrayT2, SpaceRef] = TransformGraph()
+        for src, tgt, d in self.graph.edges.data():
+            t: Transform[ArrayT] = d.pop(TRANSFORM_KEY)
+            t2: Transform[ArrayT2] = t.to_device(xp, device)  # type: ignore
+            result.add_transform(t2, src, tgt, edge_data=d)
         return result
