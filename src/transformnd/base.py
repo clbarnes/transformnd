@@ -133,10 +133,9 @@ class Transform[ArrayT](ABC):
         Returns
         -------
         Self
-            A new transform instance with parameters on the target device,
-            or NotImplemented if the subclass does not support device placement.
+            A new transform instance with parameters on the target device
         """
-        return NotImplemented
+        return self
 
     def __or__(self, other: Transform[ArrayT]) -> TransformSequence[ArrayT]:
         """Compose transformations into a sequence.
