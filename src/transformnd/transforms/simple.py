@@ -11,7 +11,7 @@ from numpy.typing import ArrayLike
 from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
 from ..base import Transform
-from ..types import NDims, Spaces
+from ..types import NDims
 from ..util import ArrayT, as_floats
 from ..transforms.affine import Affine
 
@@ -49,8 +49,6 @@ class Translate(Transform[ArrayT]):
     def __init__(
         self,
         translation: ArrayLike,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """Simple translation.
 
@@ -58,8 +56,6 @@ class Translate(Transform[ArrayT]):
         ----------
         translation
             Translation to apply in all dimensions, or each dimension.
-        spaces
-            Optional source and target spaces
 
         Raises
         ------
@@ -97,8 +93,6 @@ class Scale(Transform[ArrayT]):
     def __init__(
         self,
         scale: ArrayLike,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """Simple scale transform.
 
@@ -108,8 +102,6 @@ class Scale(Transform[ArrayT]):
         ----------
         scale
             Scaling to apply in all dimensions, or each dimension.
-        spaces
-            Optional source and target spaces
 
         Raises
         ------

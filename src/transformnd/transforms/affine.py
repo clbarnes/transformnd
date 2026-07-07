@@ -16,7 +16,7 @@ from copy import copy
 from array_api_compat import array_namespace, device as xp_device
 from ..base import Transform, ArrayT
 from ..util import as_floats, is_square
-from ..types import NDims, Spaces
+from ..types import NDims
 
 
 class Affine(Transform[ArrayT]):
@@ -175,8 +175,6 @@ class Affine(Transform[ArrayT]):
         cls,
         linear_map: ArrayLike,
         translation: ArrayLike | None = None,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an augmented affine matrix from a linear map,
         with an optional translation.
@@ -187,8 +185,6 @@ class Affine(Transform[ArrayT]):
             Shape `(Di, Do)`
         translation
             Translation to add to the matrix, by default 0
-        spaces
-            Optional source and target spaces
 
         Returns
         -------
@@ -221,8 +217,6 @@ class Affine(Transform[ArrayT]):
     def identity(
         cls,
         ndim: int,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an identity affine transformation.
 
@@ -230,8 +224,6 @@ class Affine(Transform[ArrayT]):
         ----------
         ndim
             The dimensionality of the transform.
-        spaces
-            Optional source and target spaces
 
         Returns
         -------
@@ -244,8 +236,6 @@ class Affine(Transform[ArrayT]):
     def translation(
         cls,
         translation: ArrayLike,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an affine translation.
 
@@ -253,8 +243,6 @@ class Affine(Transform[ArrayT]):
         ----------
         translation
             D-length array of translation values.
-        spaces
-            Optional source and target spaces
 
         Returns
         -------
@@ -277,8 +265,6 @@ class Affine(Transform[ArrayT]):
     def scaling(
         cls,
         scale: ArrayLike,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an affine scaling.
 
@@ -286,8 +272,6 @@ class Affine(Transform[ArrayT]):
         ----------
         scale
             D-length array of scaling factors.
-        spaces
-            Optional source and target spaces
 
         Returns
         -------
@@ -302,15 +286,13 @@ class Affine(Transform[ArrayT]):
         s = as_floats(scale)
         if s.ndim != 1:
             raise ValueError(f"Scale array must be 1D; got shape {s.shape}")
-        return cls.from_linear_map(np.diag(s), spaces=spaces)
+        return cls.from_linear_map(np.diag(s))
 
     @classmethod
     def reflection(
         cls,
         axis: Union[int, Container[int]],
         ndim: int,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an affine reflection.
 
@@ -320,8 +302,6 @@ class Affine(Transform[ArrayT]):
             A single axis or multiple to reflect in.
         ndim
             How many dimensions to work in.
-        spaces
-            Optional source and target spaces
 
         Returns
         -------
@@ -331,7 +311,7 @@ class Affine(Transform[ArrayT]):
         if isinstance(axis, (int, np.integer)):
             axis = [axis]
         values = np.asarray([-1 if idx in axis else 1 for idx in range(ndim)])
-        return cls.from_linear_map(np.diag(values.astype(float)), spaces=spaces)
+        return cls.from_linear_map(np.diag(values.astype(float)))
 
     @classmethod
     def rotation2(
@@ -339,8 +319,6 @@ class Affine(Transform[ArrayT]):
         rotation: float,
         degrees: bool = True,
         clockwise: bool = False,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create a 2D affine rotation.
 
@@ -352,8 +330,6 @@ class Affine(Transform[ArrayT]):
             Whether rotation is in degrees (rather than radians), by default True
         clockwise
             Whether rotation is clockwise, by default False
-        spaces
-            Optional source and target spaces
 
         Returns
         -------
@@ -365,7 +341,7 @@ class Affine(Transform[ArrayT]):
         if clockwise:
             rotation *= -1
         c, s = math.cos(rotation), math.sin(rotation)
-        return cls.from_linear_map(np.array([[c, -s], [s, c]]), spaces=spaces)
+        return cls.from_linear_map(np.array([[c, -s], [s, c]]))
 
     @classmethod
     def rotation3(
@@ -374,8 +350,6 @@ class Affine(Transform[ArrayT]):
         degrees: bool = True,
         clockwise: bool = False,
         order: tuple[int, int, int] = (0, 1, 2),
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create a 3D affine rotation.
 
@@ -389,8 +363,6 @@ class Affine(Transform[ArrayT]):
             Whether rotation is clockwise, by default False
         order
             What order to apply the rotations, by default (0, 1, 2)
-        spaces
-            Optional source and target spaces
 
         Returns
         -------
@@ -425,15 +397,13 @@ class Affine(Transform[ArrayT]):
             np.array([[c2, -s2, 0], [s2, c2, 0], [0, 0, 1]]),
         ]
         rot = rots[order[0]] @ rots[order[1]] @ rots[order[2]]
-        return cls.from_linear_map(rot, spaces=spaces)
+        return cls.from_linear_map(rot)
 
     @classmethod
     def shearing(
         cls,
         factor: Union[float, np.ndarray],
         ndim: int | None = None,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Affine[ArrayT]:
         """Create an affine shear.
 
@@ -450,8 +420,6 @@ class Affine(Transform[ArrayT]):
             Shear scale factors; see above for more details.
         ndim
             If factor is scalar, broadcast to this many dimensions, by default None
-        spaces
-            Optional source and target spaces
 
         Returns
         -------
@@ -481,7 +449,7 @@ class Affine(Transform[ArrayT]):
             for row_idx in range(m.shape[0] - 1):
                 if m[row_idx, col_idx] == 0:
                     m[row_idx, col_idx] = next(it)
-        return cls.from_linear_map(m, spaces=spaces)
+        return cls.from_linear_map(m)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Affine):

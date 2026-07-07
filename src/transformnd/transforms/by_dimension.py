@@ -4,7 +4,7 @@ from .simple import Identity
 
 from ..base import Transform
 from ..util import ArrayT
-from ..types import NDims, Spaces
+from ..types import NDims
 
 
 class SubTransform[ArrayT]:
@@ -69,8 +69,6 @@ class ByDimension(Transform[ArrayT]):
         self,
         subtransforms: list[SubTransform[ArrayT]],
         fill_identity: int | None = None,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """
         Parameters
@@ -80,8 +78,6 @@ class ByDimension(Transform[ArrayT]):
         fill_identity
             If not None, fill any missing input and output axes with identity transforms in order, up to a maximum number of dimensions.
             e.g. if you have XYT imates which you only want to transform in XY, provide the XY subtransformations and `fill_identity=3`.
-        spaces
-            Optional source and target spaces
 
         Raises
         ------

@@ -14,8 +14,8 @@ from transformnd.transforms.simple import Identity
 
 from .transforms.bijection import Bijection
 from .base import Transform, TransformSequence
-from .util import SpaceRef, ArrayT, same_or_none
-from .types import Spaces
+from .util import ArrayT, same_or_none
+from .types import Spaces, SpaceRef
 
 logger = logging.getLogger(__name__)
 
