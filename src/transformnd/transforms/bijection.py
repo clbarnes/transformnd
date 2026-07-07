@@ -5,8 +5,6 @@ from array_api_compat import array_namespace
 from transformnd.transforms.affine import Affine
 
 from ..base import Transform, ArrayT
-from ..types import Spaces
-from ..util import same_or_none
 
 
 class Bijection(Transform[ArrayT]):
@@ -18,8 +16,6 @@ class Bijection(Transform[ArrayT]):
         self,
         forward: Transform[ArrayT],
         inverse: Transform[ArrayT],
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """Base class for transformations.
 
@@ -29,34 +25,25 @@ class Bijection(Transform[ArrayT]):
             The forward transformation.
         inverse
             The inverse transformation.
-        spaces
-            Optional source and target spaces
 
         Raises
         ------
         ValueError
             If the forward and inverse dimensionalities don't match.
         """
-        src = same_or_none(
-            spaces.source, forward.spaces.source, inverse.spaces.target, default=None
-        )
-        tgt = same_or_none(
-            spaces.target, forward.spaces.target, inverse.spaces.source, default=None
-        )
-
         self.forward = forward
         self.inverse = inverse
         if forward.ndims != inverse.ndims.invert():
             raise ValueError(
                 f"Bijection dimensionalities mismatch: fwd:{forward.ndims}, inv:{inverse.ndims}"
             )
-        super().__init__(self.forward.ndims, spaces=Spaces(src, tgt))
+        super().__init__(self.forward.ndims)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         return self.forward.apply(coords)
 
     def invert(self) -> Self | None:
-        return type(self)(self.inverse, self.forward, spaces=self.spaces.invert())
+        return type(self)(self.inverse, self.forward)
 
     def is_identity(self) -> bool:
         return self.forward.is_identity() and self.inverse.is_identity()

@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 from transformnd.base import TransformSequence, TransformWrapper
-from transformnd.types import Spaces
 from transformnd.transforms.simple import Translate, Scale
 from transformnd.transforms.affine import Affine
 from itertools import pairwise
@@ -17,7 +16,7 @@ def noop(arg):
 
 
 def test_transform(coords5x3):
-    t = TransformWrapper(noop, 3, 3, spaces=Spaces(1, 2))
+    t = TransformWrapper(noop, 3, 3)
 
     assert np.allclose(t.apply(coords5x3), coords5x3)
 
@@ -26,22 +25,10 @@ def test_sequence(coords5x3):
     ts = []
     last = 3
     for a, b in pairwise(range(last + 1)):
-        ts.append(TransformWrapper(noop, 3, 3, spaces=Spaces(a, b)))
+        ts.append(TransformWrapper(noop, 3, 3))
 
     t = TransformSequence(ts)
     assert np.allclose(t.apply(coords5x3), coords5x3)
-    assert t.spaces.source == 0
-    assert t.spaces.target == last
-
-
-def test_sequence_errors():
-    with pytest.raises(ValueError):
-        TransformSequence(
-            [
-                TransformWrapper(noop, 3, 3, spaces=Spaces(1, 2)),
-                TransformWrapper(noop, 3, 3, spaces=Spaces(3, 4)),
-            ]
-        )
 
 
 def test_sequence_does_not_split():
@@ -50,16 +37,6 @@ def test_sequence_does_not_split():
     seq2 = TransformSequence([copy(t), seq1, copy(t)])
     assert len(seq2) == 3
     assert seq2[1] is seq1
-
-
-def test_sequence_infers():
-    t = TransformSequence(
-        [
-            TransformWrapper(noop, 3, 3, spaces=Spaces(0, None)),
-            TransformWrapper(noop, 3, 3, spaces=Spaces(1, 2)),
-        ]
-    )
-    assert t[0].spaces.target == 1
 
 
 def test_add():

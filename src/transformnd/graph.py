@@ -23,35 +23,6 @@ TRANSFORM_KEY = "_transform"
 WeightFn = Callable[[SpaceRef, SpaceRef, dict[str, Any]], int]
 
 
-def split_sequence(seq: TransformSequence[ArrayT]) -> Iterator[Transform[ArrayT]]:
-    """Split a TransformSequence into Transforms with spaces defined.
-
-    If a component Transform has its spaces defined,
-    it will be yielded as-is.
-    A chain of Transforms without spaces defined are yielded as a TransformSequence.
-
-    Parameters
-    ----------
-    seq
-        The TransformSequence to split.
-
-    Yields
-    ------
-    Transform[ArrayT]
-        Individual transforms or subsequences with defined spaces.
-    """
-    this_seq = []
-    for t in seq.transforms:
-        if t.spaces.source is not None and t.spaces.target is not None:
-            yield t
-            continue
-
-        this_seq.append(t)
-        if t.spaces.target is not None:
-            yield TransformSequence(this_seq)
-            this_seq = []
-
-
 def normalise_edge_weight_fn(w: str | WeightFn | None) -> WeightFn:
     if w is None:
         return lambda _s, _t, _d: 1
@@ -84,32 +55,28 @@ class TransformGraph[ArrayT]:
     def _update_spaces(
         self,
         transform: Transform[ArrayT],
-        source: SpaceRef | None,
-        target: SpaceRef | None,
+        source: SpaceRef,
+        target: SpaceRef,
     ) -> Spaces:
         """Check that the transform's spaces do not conflict with those given explicitly,
         that the source and target space is defined somewhere,
         and that the dimensionality of the spaces (inferred from the transforms)
         does not conflict with known spaces.
         """
-        # check explicit spaces do not conflict with transform's spaces
-        src = same_or_none(transform.spaces.source, source)
-        tgt = same_or_none(transform.spaces.target, target)
-
         # if the node already exists, make sure the dimensionality does not conflict
-        self.space_ndims[src] = same_or_none(
-            self.space_ndims.get(src), transform.ndims.source
+        self.space_ndims[source] = same_or_none(
+            self.space_ndims.get(source), transform.ndims.source
         )
-        self.space_ndims[tgt] = same_or_none(
-            self.space_ndims.get(tgt), transform.ndims.target
+        self.space_ndims[target] = same_or_none(
+            self.space_ndims.get(target), transform.ndims.target
         )
-        return Spaces(src, tgt)
+        return Spaces(source, target)
 
     def _add_transform(
         self,
         transform: Transform[ArrayT],
-        source: SpaceRef | None,
-        target: SpaceRef | None,
+        source: SpaceRef,
+        target: SpaceRef,
         edge_data: dict[str, Any] | None,
     ) -> list[tuple[SpaceRef, SpaceRef]]:
         """Clearing the get_sequence cache and splitting sequences and bijections should be handled outside this method."""
@@ -131,8 +98,8 @@ class TransformGraph[ArrayT]:
     def add_transform(
         self,
         transform: Transform[ArrayT],
-        source: SpaceRef | None = None,
-        target: SpaceRef | None = None,
+        source: SpaceRef,
+        target: SpaceRef,
         *,
         edge_data: dict[str, Any] | None = None,
     ) -> list[tuple[SpaceRef, SpaceRef]]:
@@ -154,9 +121,9 @@ class TransformGraph[ArrayT]:
         transform
             Transform to add to the graph as an edge.
         source
-            May be omitted if `transform` has its source space defined.
+            Identifier for the source space.
         target
-            May be omitted if `transform` has its target space defined.
+            Identifier for the target space.
         edge_data
             Dict of string keys to arbitrary values to associate with an edge.
             Used during path-finding.
@@ -232,7 +199,6 @@ class TransformGraph[ArrayT]:
 
         seq = TransformSequence(
             transforms,
-            spaces=Spaces(source_space, target_space),
         )
         if not full:
             seq = seq.simplify(drop_inverse=True)

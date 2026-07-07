@@ -267,7 +267,6 @@ def _(Spaces, np):
         def invert(self):
             return type(self)(
                 1 / self.factor,
-                spaces=self.spaces.invert(),
             )
 
     return

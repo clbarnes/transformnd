@@ -66,13 +66,12 @@ class ThinPlateSplines(Transform[np.ndarray]):
             self.source_control_points,
             self.target_control_points,
         )
-        super().__init__(NDims(ndim, ndim), spaces=spaces)
+        super().__init__(NDims(ndim, ndim))
 
     def invert(self) -> Transform[np.ndarray] | None:
         return type(self)(
             self.target_control_points,
             self.source_control_points,
-            spaces=self.spaces.invert(),
         )
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
