@@ -10,6 +10,8 @@ from typing import Any
 
 import networkx as nx
 
+from transformnd.transforms.simple import Identity
+
 from .transforms.bijection import Bijection
 from .base import Transform, TransformSequence
 from .util import SpaceRef, ArrayT, same_or_none
@@ -216,13 +218,17 @@ class TransformGraph[ArrayT]:
         """
         path = nx.shortest_path(self.graph, source_space, target_space, weight)  # type:ignore
         transforms = []
-        wfn = normalise_edge_weight_fn(weight)
+        if len(path) == 1:
+            # source == target
+            transforms.append(Identity[ArrayT](self.space_ndims[source_space]))
+        else:
+            wfn = normalise_edge_weight_fn(weight)
 
-        for src, tgt in pairwise(path):
-            edges = self.graph[src][tgt]
-            transforms.append(
-                min(edges.values(), key=lambda d: wfn(src, tgt, d))[TRANSFORM_KEY]
-            )
+            for src, tgt in pairwise(path):
+                edges = self.graph[src][tgt]
+                transforms.append(
+                    min(edges.values(), key=lambda d: wfn(src, tgt, d))[TRANSFORM_KEY]
+                )
 
         seq = TransformSequence(
             transforms,
