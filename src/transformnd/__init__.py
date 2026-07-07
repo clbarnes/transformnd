@@ -9,7 +9,7 @@ You can find some examples here:
 """
 
 from .base import Transform, TransformSequence, TransformWrapper
-from .types import Spaces, TransformSignature, NDims, SpaceRef
+from .types import TransformSignature, NDims, SpaceRef
 from . import transforms
 from . import adapters
 from .graph import TransformGraph
@@ -26,6 +26,5 @@ __all__ = [
     "SpaceRef",
     "transforms",
     "adapters",
-    "Spaces",
     "NDims",
 ]

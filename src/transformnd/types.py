@@ -3,14 +3,12 @@ from typing import Callable, Hashable, NamedTuple, Self
 from typing_extensions import TypeVar
 import numpy as np
 
-from .constants import UNSPECIFIED_SPACE_NAME
-
 ArrayT = TypeVar("ArrayT", default=np.ndarray)
 
 type TransformSignature[ArrayT] = Callable[[ArrayT], ArrayT]
 """Type annotation of a function which can be used as a transform."""
 
-type SpaceRef = Hashable
+SpaceRef = TypeVar("SpaceRef", default=Hashable)
 """Type annotation of identifiers which can be used to refer to spaces"""
 
 
@@ -31,15 +29,6 @@ class SrcTgt[T](NamedTuple):
 
     def __str__(self) -> str:
         return f"{self.source}->{self.target}"
-
-
-class Spaces(SrcTgt[SpaceRef | None]):
-    """Source-target tuple for space identifiers."""
-
-    def __str__(self) -> str:
-        s = UNSPECIFIED_SPACE_NAME if self.source is None else self.source
-        t = UNSPECIFIED_SPACE_NAME if self.target is None else self.source
-        return f"{s}->{t}"
 
 
 class NDims(SrcTgt[int]):
