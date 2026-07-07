@@ -8,7 +8,7 @@ from numpy.typing import ArrayLike
 from transformnd.transforms import Affine
 
 from ..base import Transform
-from ..types import NDims, Spaces
+from ..types import NDims
 from ..util import is_square
 
 
@@ -137,8 +137,6 @@ class Reflect(Transform[np.ndarray]):
     def from_points(
         cls,
         points: ArrayLike,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Self:
         """Infer a single plane of reflection from a minimal number of points on it.
 
@@ -146,8 +144,6 @@ class Reflect(Transform[np.ndarray]):
         ----------
         points
             NxD array of N points in D dimensions. N == D
-        spaces
-            Optional source and target spaces
 
         Returns
         -------
@@ -161,8 +157,6 @@ class Reflect(Transform[np.ndarray]):
         cls,
         axis: int | Sequence[int],
         origin: ArrayLike,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Self:
         """Reflect around hyperplane(s) parallel with axes.
 
@@ -172,8 +166,6 @@ class Reflect(Transform[np.ndarray]):
             Index (or indices) of axes in which to reflect.
         origin
             Point around which to reflect.
-        spaces
-            Optional source and target spaces
 
         Returns
         -------

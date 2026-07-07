@@ -9,8 +9,7 @@ You can find some examples here:
 """
 
 from .base import Transform, TransformSequence, TransformWrapper
-from .util import SpaceRef
-from .types import Spaces, TransformSignature, NDims
+from .types import Spaces, TransformSignature, NDims, SpaceRef
 from . import transforms
 from . import adapters
 from .graph import TransformGraph

@@ -9,7 +9,7 @@ import numpy as np
 from typing import Self
 
 from ..base import Transform
-from ..types import NDims, Spaces
+from ..types import NDims
 from ..util import as_floats
 
 
@@ -25,8 +25,6 @@ class MovingLeastSquares(Transform[np.ndarray]):
         self,
         source_control_points: np.ndarray,
         target_control_points: np.ndarray,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """Non-rigid transforms powered by molesq package.
 
@@ -37,8 +35,6 @@ class MovingLeastSquares(Transform[np.ndarray]):
         target_control_points
             NxD array of coordinates of the corresponding control points
             in the target (deformed) space.
-        spaces
-            Optional source and target spaces
         """
         from molesq.transform import Transformer
 

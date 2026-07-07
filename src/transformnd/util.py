@@ -12,8 +12,7 @@ from array_api_compat import (
 )
 import numpy as np
 
-from .types import SpaceRef, ArrayT
-from .constants import UNSPECIFIED_SPACE_NAME
+from .types import ArrayT
 
 logger = logging.getLogger(__name__)
 
@@ -132,13 +131,6 @@ def format_dims(supported: set[int] | None) -> str:
     if not len(supported):
         return "nullD"
     return "/".join(f"{d}D" for d in sorted(supported))
-
-
-def space_str(space: SpaceRef | None) -> str:
-    if space is None:
-        return UNSPECIFIED_SPACE_NAME
-    else:
-        return str(space)
 
 
 def is_square(arr: ArrayT) -> bool:
