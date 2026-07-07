@@ -19,6 +19,12 @@ def test_add_transforms():
     t.add_transform(Translate([10, 20], spaces=Spaces("b", "c")))
 
 
+def test_noop_path():
+    t: TransformGraph = TransformGraph()
+    t.add_transform(Scale([2, 2], spaces=Spaces("a", "b")))
+    t.get_sequence("a", "a")
+
+
 def test_path():
     t1 = Scale([2, 3], spaces=Spaces("a", "b"))
     t2 = Translate([10, 20], spaces=Spaces("b", "c"))
