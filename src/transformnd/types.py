@@ -8,7 +8,7 @@ ArrayT = TypeVar("ArrayT", default=np.ndarray)
 type TransformSignature[ArrayT] = Callable[[ArrayT], ArrayT]
 """Type annotation of a function which can be used as a transform."""
 
-SpaceRef = TypeVar("SpaceRef", default=Hashable)
+SpaceRef = TypeVar("SpaceRef", bound=Hashable, default=Hashable)
 """Type annotation of identifiers which can be used to refer to spaces"""
 
 
