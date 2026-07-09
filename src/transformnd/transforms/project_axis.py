@@ -100,3 +100,13 @@ class ProjectAxis(Transform):
             source_ndim=self.ndims.target,
             target_ndim=self.ndims.source,
         )
+
+    def __str__(self) -> str:
+        op_str = ""
+        if self.dropped:
+            op_str += f"-[{','.join(str(s) for s in sorted(self.dropped))}]"
+            if self.created:
+                op_str += ","
+        if self.created:
+            op_str += f"+[{','.join(str(s) for s in sorted(self.created))}]"
+        return f"{super().__str__()}({op_str})"

@@ -8,7 +8,7 @@ from array_api_compat import array_namespace, is_dask_array
 
 from ..types import NDims
 from ..base import Transform, ArrayT
-from ..util import set_scipy_array_api, as_floats
+from ..util import join_strs, set_scipy_array_api, as_floats
 
 __all__ = ["Coordinates", "Displacements"]
 
@@ -120,6 +120,16 @@ class BaseVectorField(Transform[ArrayT], ABC):
     def to_device(self, xp: ModuleType, device: str | None = None) -> Self:
         coords = xp.asarray(self.vector_field, device)
         return type(self)(coords)
+
+    def __str__(self) -> str:
+        if self.index_transform is not None:
+            idx = f"idx={self.index_transform},"
+
+        xp = array_namespace(self.vector_field)
+        sh = list(xp.shape(self.vector_field))
+        sh.pop(self.vector_axis)
+        sh_str = join_strs(sh, "x")
+        return f"{super().__str__()}({idx},{sh_str})"
 
 
 class Coordinates(BaseVectorField[ArrayT]):

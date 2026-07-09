@@ -2,6 +2,7 @@ from typing import Any, Protocol, Generic
 
 from array_api_compat import array_namespace
 from transformnd.types import NDims
+from transformnd.util import join_strs
 from ..base import Transform
 from ..types import ArrayT
 
@@ -41,3 +42,6 @@ class GridInterpolation(Transform[ArrayT]):
             out_col[:] = interp(in_col)
 
         return xp.transpose(out_coords_t)
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}({join_strs(self.interpolators)})"

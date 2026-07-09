@@ -12,6 +12,7 @@ from array_api_compat import array_namespace
 
 from .util import (
     ArrayT,
+    join_strs,
 )
 from itertools import pairwise
 
@@ -181,9 +182,8 @@ class Transform[ArrayT](ABC):
             transforms,
         )
 
-    # def __str__(self) -> str:
-    #     cls_name = type(self).__name__
-    #     return f"{cls_name}"
+    def __str__(self) -> str:
+        return f"{type(self).__qualname__}@{hex(id(self))}[{self.ndims}]"
 
 
 class TransformWrapper(Transform[ArrayT]):
@@ -215,6 +215,9 @@ class TransformWrapper(Transform[ArrayT]):
     def apply(self, coords: ArrayT) -> ArrayT:
         self._validate_coords(coords)
         return self.fn(coords)
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}({self.fn})"
 
 
 def as_transform_list(t: Transform[ArrayT]) -> list[Transform[ArrayT]]:
@@ -303,9 +306,8 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         return result
 
     def __str__(self) -> str:
-        cls_name = type(self).__name__
-        spaces_str = "|".join(str(t) for t in self.transforms)
-        return f"{cls_name}[{spaces_str}]"
+        spaces_str = join_strs(self.transforms, "|")
+        return f"{super().__str__()}({spaces_str})"
 
     def __getitem__(self, idx: slice | int):
         if isinstance(idx, int):

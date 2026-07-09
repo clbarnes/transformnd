@@ -213,7 +213,6 @@ class TransformGraph[ArrayT, SpaceRef]:
             or a function to determine a weight from the args `src_space, tgt_space, edge_data`,
             or None (all weights are 1).
 
-
         Returns
         -------
         ArrayT
@@ -222,22 +221,18 @@ class TransformGraph[ArrayT, SpaceRef]:
         t = self.get_sequence(source_space, target_space, weight=weight)
         return t.apply(coords)
 
-    def __iter__(self) -> Iterator[Transform[ArrayT]]:
+    def __iter__(self) -> Iterator[tuple[SpaceRef, SpaceRef, Transform[ArrayT]]]:
         """Iterate through the transforms present in the graph.
-
-        Includes inferred reverse transforms.
 
         N.B. the `__iter__` method of some popular graph libraries like networkx
         iterate through nodes, where this effectively iterates through edges.
 
         Yields
         ------
-        Transform[ArrayT]
-            The next transform in the graph.
-
+        tuple[SpaceRef, SpaceRef, Transform[ArrayT]]
+            The source space, target space, and transform.
         """
-        for _, _, t in self.graph.edges.data(TRANSFORM_KEY):
-            yield t
+        yield from self.graph.edges.data(TRANSFORM_KEY)
 
     def to_device[ArrayT2](
         self, xp: ModuleType, device: str | None = None

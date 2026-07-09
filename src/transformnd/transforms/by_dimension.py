@@ -3,7 +3,7 @@ from array_api_compat import array_namespace
 from .simple import Identity
 
 from ..base import Transform
-from ..util import ArrayT
+from ..util import ArrayT, join_strs
 from ..types import NDims
 
 
@@ -57,6 +57,9 @@ class SubTransform[ArrayT]:
             )
 
         self.transform = transform
+
+    def __str__(self) -> str:
+        return f"{join_strs(self.input_axes, surround='[]')}>{self.transform}>{join_strs(self.output_axes, surround='[]')}"
 
 
 class ByDimension(Transform[ArrayT]):
@@ -150,3 +153,6 @@ class ByDimension(Transform[ArrayT]):
             if t.input_axes != t.output_axes or not t.transform.is_identity():
                 return False
         return True
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}({join_strs(self.subtransforms)})"

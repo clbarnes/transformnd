@@ -65,3 +65,6 @@ class Bijection(Transform[ArrayT]):
             return fwd
 
         return None
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}({self.forward},{self.inverse})"
