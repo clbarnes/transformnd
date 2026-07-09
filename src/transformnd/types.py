@@ -28,8 +28,13 @@ class SrcTgt[T](NamedTuple):
         return cls(sequence[0], sequence[1])
 
     def __str__(self) -> str:
+        if self.source == self.target:
+            return str(self.source)
         return f"{self.source}->{self.target}"
 
 
 class NDims(SrcTgt[int]):
     """Source-target tuple for numbers of dimensions."""
+
+    def __str__(self) -> str:
+        return super().__str__() + "D"

@@ -12,7 +12,7 @@ from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
 from ..base import Transform
 from ..types import NDims
-from ..util import ArrayT, as_floats
+from ..util import ArrayT, as_floats, join_strs
 from ..transforms.affine import Affine
 
 
@@ -41,6 +41,9 @@ class Identity(Transform[ArrayT]):
 
     def apply(self, coords: ArrayT) -> ArrayT:
         return coords
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}({self.ndims.source})"
 
 
 class Translate(Transform[ArrayT]):
@@ -85,6 +88,9 @@ class Translate(Transform[ArrayT]):
         result = copy(self)
         result.translation = xp.asarray(self.translation, device=device)
         return result
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}({join_strs(self.translation)})"
 
 
 class Scale(Transform[ArrayT]):
@@ -131,3 +137,6 @@ class Scale(Transform[ArrayT]):
         result = copy(self)
         result.scale = xp.asarray(self.scale, device=device)
         return result
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}({join_strs(self.scale)})"

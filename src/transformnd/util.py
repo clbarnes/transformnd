@@ -1,5 +1,6 @@
 """Utilities used elsewhere in the package."""
 
+from collections.abc import Iterable
 import os
 from types import ModuleType
 import warnings
@@ -216,3 +217,7 @@ def set_scipy_array_api() -> bool:
                 "SCIPY_ARRAY_API environment set but not '1'; certain transforms may not work with certain array types"
             )
             return False
+
+
+def join_strs(elems: Iterable, sep: str = ",", surround=("", "")) -> str:
+    return surround[0] + sep.join(str(e) for e in elems) + surround[1]
