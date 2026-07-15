@@ -105,18 +105,18 @@ class Transform[ArrayT](ABC):
         """
         pass
 
-    def invert(self) -> Transform | None:
+    def invert(self) -> Transform[ArrayT] | None:
         """Invert the transformation, returning `None` if not possible."""
         return None
 
-    def __invert__(self) -> Transform:
+    def __invert__(self) -> Transform[ArrayT]:
         """Invert transformation if possible.
 
         Returns `NotImplemented` otherwise (will raise `NotImplementedError`).
 
         Returns
         -------
-        Transform
+        Transform[ArrayT]
             Inverted transformation.
         """
         t = self.invert()
