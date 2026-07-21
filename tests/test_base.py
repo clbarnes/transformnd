@@ -3,7 +3,7 @@ from copy import copy
 import numpy as np
 import pytest
 
-from transformnd.base import TransformSequence, TransformWrapper
+from transformnd.base import TransformSequence, TransformFnWrapper
 from transformnd.transforms.simple import Translate, Scale
 from transformnd.transforms.affine import Affine
 from itertools import pairwise
@@ -16,7 +16,7 @@ def noop(arg):
 
 
 def test_transform(coords5x3):
-    t = TransformWrapper(noop, 3, 3)
+    t = TransformFnWrapper(noop, 3, 3)
 
     assert np.allclose(t.apply(coords5x3), coords5x3)
 
@@ -25,14 +25,14 @@ def test_sequence(coords5x3):
     ts = []
     last = 3
     for a, b in pairwise(range(last + 1)):
-        ts.append(TransformWrapper(noop, 3, 3))
+        ts.append(TransformFnWrapper(noop, 3, 3))
 
     t = TransformSequence(ts)
     assert np.allclose(t.apply(coords5x3), coords5x3)
 
 
 def test_sequence_does_not_split():
-    t = TransformWrapper(noop, 3, 3)
+    t = TransformFnWrapper(noop, 3, 3)
     seq1 = t | copy(t)
     seq2 = TransformSequence([copy(t), seq1, copy(t)])
     assert len(seq2) == 3
@@ -40,7 +40,7 @@ def test_sequence_does_not_split():
 
 
 def test_add():
-    t = [TransformWrapper(noop, 3, 3) for _ in range(5)]
+    t = [TransformFnWrapper(noop, 3, 3) for _ in range(5)]
     t12 = t[1] | t[2]
     assert isinstance(t12, TransformSequence)
     assert len(t12) == 2

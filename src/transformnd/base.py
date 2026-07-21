@@ -186,7 +186,7 @@ class Transform[ArrayT](ABC):
         return f"{type(self).__qualname__}@{hex(id(self))}[{self.ndims}]"
 
 
-class TransformWrapper(Transform[ArrayT]):
+class TransformFnWrapper(Transform[ArrayT]):
     """Wrapper around an arbitrary function which transforms coordinates."""
 
     def __init__(

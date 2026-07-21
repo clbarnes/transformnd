@@ -8,7 +8,7 @@ You can find some examples here:
 
 """
 
-from .base import Transform, TransformSequence, TransformWrapper
+from .base import Transform, TransformSequence, TransformFnWrapper
 from .types import TransformSignature, NDims, SpaceRef
 from . import transforms
 from . import adapters
@@ -21,7 +21,7 @@ __all__ = [
     "Transform",
     "TransformGraph",
     "TransformSequence",
-    "TransformWrapper",
+    "TransformFnWrapper",
     "TransformSignature",
     "SpaceRef",
     "transforms",
