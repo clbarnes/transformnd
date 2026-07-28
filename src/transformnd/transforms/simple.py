@@ -42,7 +42,7 @@ class Identity(Transform[ArrayT]):
     def invert(self) -> Transform[ArrayT]:
         return type(self)(self.ndims.source, spaces=self.spaces.invert())
 
-    def to_affine(self) -> Affine[ArrayT] | None:
+    def to_affine(self) -> Affine[ArrayT]:
         return Affine[ArrayT].identity(self.ndims.source, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
@@ -81,7 +81,7 @@ class Translate(Transform[ArrayT]):
             NDims(len(self.translation), len(self.translation)), spaces=spaces
         )
 
-    def to_affine(self) -> Affine[ArrayT] | None:
+    def to_affine(self) -> Affine[ArrayT]:
         return Affine[ArrayT].translation(self.translation, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
@@ -129,7 +129,7 @@ class Scale(Transform[ArrayT]):
             raise ValueError(f"Scale must be 1D, got shape {self.scale.shape}")
         super().__init__(NDims(len(self.scale), len(self.scale)), spaces=spaces)
 
-    def to_affine(self) -> Affine[ArrayT] | None:
+    def to_affine(self) -> Affine[ArrayT]:
         return Affine[ArrayT].scaling(self.scale, spaces=self.spaces)
 
     def apply(self, coords: ArrayT) -> ArrayT:
