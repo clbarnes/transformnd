@@ -4,6 +4,7 @@ from transformnd.base import Transform, TransformSequence
 from transformnd.graph import TransformGraph
 from transformnd.transforms.simple import Translate, Scale
 from transformnd.transforms.affine import Affine
+from transformnd import Spaced
 
 import pytest
 
@@ -14,14 +15,14 @@ from transformnd.util import as_floats
 
 def test_add_transforms():
     t: TransformGraph = TransformGraph()
-    t.add_transform(Scale([2, 2]), 1, 2)
-    t.add_transform(Translate([10, 20]), 2, 3)
+    t.add_transform(Spaced(Scale([2, 2]), 1, 2))
+    t.add_transform(Spaced(Translate([10, 20]), 2, 3))
 
 
 @pytest.mark.parametrize(("full",), [(True,), (False,)])
 def test_noop_path(coords5x3, full):
     t: TransformGraph = TransformGraph()
-    t.add_transform(Scale([2, 2]), 1, 2)
+    t.add_transform(Spaced(Scale([2, 2]), 1, 2))
     s = t.get_sequence(1, 1, full=full)
     assert s.apply(coords5x3) == pytest.approx(coords5x3)
 
@@ -31,8 +32,8 @@ def test_path():
     t2 = Translate([10, 20])
     transforms = [t1, t2]
     g: TransformGraph = TransformGraph()
-    g.add_transform(t1, 1, 2)
-    g.add_transform(t2, 2, 3)
+    g.add_transform(Spaced(t1, 1, 2))
+    g.add_transform(Spaced(t2, 2, 3))
     spaces = (1, 3)
     seq = g.get_sequence(*spaces, full=True)
     assert len(seq) == 2
@@ -47,9 +48,9 @@ def test_path():
 
 def test_graph_traversal():
     graph: TransformGraph = TransformGraph()
-    graph.add_transform(Translate([1, 2]), 1, 2)
-    graph.add_transform(Scale([2, 3]), 2, 3)
-    graph.add_transform(Affine(np.eye(3)), 3, 4)
+    graph.add_transform(Spaced(Translate([1, 2]), 1, 2))
+    graph.add_transform(Spaced(Scale([2, 3]), 2, 3))
+    graph.add_transform(Spaced(Affine(np.eye(3)), 3, 4))
 
     seq = graph.get_sequence(1, 4)
     assert isinstance(seq, TransformSequence)
@@ -78,7 +79,7 @@ def test_multigraph():
             weight = 1
         else:
             weight = 2
-        tgraph.add_transform(t, src, tgt, edge_data={"weight": weight})
+        tgraph.add_transform(Spaced(t, src, tgt), edge_data={"weight": weight})
 
     assert len(tgraph.graph.edges) == len(transforms)
     seq = tgraph.get_sequence(src, tgt, full=True, weight="weight")

@@ -6,7 +6,8 @@ from collections.abc import Callable, Iterator
 import logging
 from itertools import pairwise
 from types import ModuleType
-from typing import Any
+from typing import Any, Generic
+from .spaced import Spaced
 
 import networkx as nx
 
@@ -32,7 +33,7 @@ def normalise_edge_weight_fn(w: str | WeightFn | None) -> WeightFn:
         return w
 
 
-class TransformGraph[ArrayT, SpaceRef]:
+class TransformGraph(Generic[ArrayT, SpaceRef]):
     """Transform between any number of arbitrary spaces/ coordinate systems.
 
     Finds the shortest path for transforming one space
@@ -61,15 +62,18 @@ class TransformGraph[ArrayT, SpaceRef]:
 
     def _add_transform(
         self,
-        transform: Transform[ArrayT],
-        source: SpaceRef,
-        target: SpaceRef,
+        spaced: Spaced[ArrayT, SpaceRef],
         edge_data: dict[str, Any] | None,
     ) -> list[tuple[SpaceRef, SpaceRef]]:
         """Clearing the get_sequence cache and splitting sequences and bijections should be handled outside this method."""
         out = []
-        self._add_space(source, transform.ndims.source)
-        self._add_space(target, transform.ndims.target)
+        t, source, target = (
+            spaced.transform,
+            spaced.spaces.source,
+            spaced.spaces.target,
+        )
+        self._add_space(source, t.ndims.source)
+        self._add_space(target, t.ndims.target)
 
         if edge_data is None:
             edge_data = dict()
@@ -77,16 +81,14 @@ class TransformGraph[ArrayT, SpaceRef]:
         if TRANSFORM_KEY in edge_data:
             raise ValueError(f"Must not use the key '{TRANSFORM_KEY}' in edge_data")
 
-        d = {TRANSFORM_KEY: transform, **edge_data}
+        d = {TRANSFORM_KEY: t, **edge_data}
         self.graph.add_edge(source, target, **d)
         out.append((source, target))
         return out
 
     def add_transform(
         self,
-        transform: Transform[ArrayT],
-        source: SpaceRef,
-        target: SpaceRef,
+        spaced: Spaced[ArrayT, SpaceRef],
         *,
         edge_data: dict[str, Any] | None = None,
     ) -> list[tuple[SpaceRef, SpaceRef]]:
@@ -105,12 +107,8 @@ class TransformGraph[ArrayT, SpaceRef]:
 
         Parameters
         ----------
-        transform
-            Transform to add to the graph as an edge.
-        source
-            Identifier for the source space.
-        target
-            Identifier for the target space.
+        spaced
+            Spaced transform to add to the graph as an edge.
         edge_data
             Dict of string keys to arbitrary values to associate with an edge.
             Used during path-finding.
@@ -121,19 +119,23 @@ class TransformGraph[ArrayT, SpaceRef]:
         list[tuple[SpaceRef, SpaceRef]]
             List of `(src, tgt)` edges added to the graph.
         """
+
         out: list[tuple[SpaceRef, SpaceRef]] = []
-        if isinstance(transform, Bijection):
+        inner, src, tgt = (
+            spaced.transform,
+            spaced.spaces.source,
+            spaced.spaces.target,
+        )
+        if isinstance(inner, Bijection):
             out.extend(
                 self.add_transform(
-                    transform.forward,
-                    source,
-                    target,
+                    Spaced(inner.forward, src, tgt),
                     edge_data=edge_data,
                 )
             )
 
         else:
-            out.extend(self._add_transform(transform, source, target, edge_data))
+            out.extend(self._add_transform(spaced, edge_data))
 
         if out:
             self.get_sequence.cache_clear()
@@ -221,7 +223,7 @@ class TransformGraph[ArrayT, SpaceRef]:
         t = self.get_sequence(source_space, target_space, weight=weight)
         return t.apply(coords)
 
-    def __iter__(self) -> Iterator[tuple[SpaceRef, SpaceRef, Transform[ArrayT]]]:
+    def __iter__(self) -> Iterator[Spaced[ArrayT, SpaceRef]]:
         """Iterate through the transforms present in the graph.
 
         N.B. the `__iter__` method of some popular graph libraries like networkx
@@ -229,10 +231,11 @@ class TransformGraph[ArrayT, SpaceRef]:
 
         Yields
         ------
-        tuple[SpaceRef, SpaceRef, Transform[ArrayT]]
-            The source space, target space, and transform.
+        Spaced[ArrayT, SpaceRef]
+            The spaced transform.
         """
-        yield from self.graph.edges.data(TRANSFORM_KEY)
+        for src, tgt, t in self.graph.edges.data(TRANSFORM_KEY):
+            yield Spaced(t, src, tgt)
 
     def to_device[ArrayT2](
         self, xp: ModuleType, device: str | None = None
@@ -241,5 +244,5 @@ class TransformGraph[ArrayT, SpaceRef]:
         for src, tgt, d in self.graph.edges.data():
             t: Transform[ArrayT] = d.pop(TRANSFORM_KEY)
             t2: Transform[ArrayT2] = t.to_device(xp, device)  # type: ignore
-            result.add_transform(t2, src, tgt, edge_data=d)
+            result.add_transform(Spaced(t2, src, tgt), edge_data=d)
         return result

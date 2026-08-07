@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Callable, Hashable, NamedTuple, Self
+from typing import Callable, Generic, Hashable, NamedTuple, Self
 from typing_extensions import TypeVar
 import numpy as np
 
@@ -38,3 +38,7 @@ class NDims(SrcTgt[int]):
 
     def __str__(self) -> str:
         return super().__str__() + "D"
+
+
+class Spaces(SrcTgt[SpaceRef], Generic[SpaceRef]):
+    pass

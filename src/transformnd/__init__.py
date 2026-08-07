@@ -13,6 +13,7 @@ from .types import TransformSignature, NDims, SpaceRef
 from . import transforms
 from . import adapters
 from .graph import TransformGraph
+from .spaced import Spaced
 from importlib.metadata import version as _version
 
 __version__ = _version("transformnd")
@@ -27,4 +28,5 @@ __all__ = [
     "transforms",
     "adapters",
     "NDims",
+    "Spaced",
 ]
