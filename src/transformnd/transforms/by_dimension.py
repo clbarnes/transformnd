@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+from typing import Self
 from array_api_compat import array_namespace
 
 from .simple import Identity
@@ -119,6 +121,20 @@ class ByDimension(Transform[ArrayT]):
 
         super().__init__(NDims(len(sorted_in), len(sorted_out)))
         self.subtransforms = subtransforms
+
+    @classmethod
+    def from_dimensions(cls, transforms: Iterable[Transform[ArrayT]]) -> Self:
+        """Simple constructor taking transforms in the order of their input and output axes."""
+        next_src_idx = 0
+        next_tgt_idx = 0
+        subs = []
+        for t in transforms:
+            input_axes = list(range(next_src_idx, next_src_idx + t.ndims.source))
+            next_src_idx += t.ndims.source
+            output_axes = list(range(next_tgt_idx, next_tgt_idx + t.ndims.target))
+            next_tgt_idx += t.ndims.target
+            subs.append(SubTransform(t, input_axes, output_axes))
+        return cls(subs)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         """Apply transformation to subset of coordinates."""

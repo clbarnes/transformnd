@@ -219,6 +219,18 @@ class TransformFnWrapper(Transform[ArrayT]):
     def __str__(self) -> str:
         return f"{super().__str__()}({self.fn})"
 
+    @classmethod
+    def from_flat(cls, fn: TransformSignature[ArrayT]) -> Self:
+        """Create a 1D transform from a function which would take and return a 1D array."""
+
+        def fn2(arr: ArrayT) -> ArrayT:
+            xp = array_namespace(arr)
+            flat = xp.reshape(arr, (-1,))
+            transformed = fn(flat)
+            return xp.expand_dims(transformed, 1)
+
+        return cls(fn2, 1, 1)
+
 
 def as_transform_list(t: Transform[ArrayT]) -> list[Transform[ArrayT]]:
     if isinstance(t, TransformSequence):
