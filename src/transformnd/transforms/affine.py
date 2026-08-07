@@ -74,7 +74,7 @@ class Affine(Transform[ArrayT]):
         if np.allclose(np.zeros_like(self._translation), self._translation):
             self._translation = None
 
-    def to_affine(self) -> Self | None:
+    def to_affine(self) -> Self:
         return self
 
     def cast_matrix(self, namespace, device) -> ArrayT:

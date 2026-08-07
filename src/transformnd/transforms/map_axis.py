@@ -40,7 +40,7 @@ class MapAxis(Transform[ArrayT]):
     def is_identity(self) -> bool:
         return all(a == b for a, b in enumerate(self.permutation))
 
-    def to_affine(self) -> Affine[ArrayT] | None:
+    def to_affine(self) -> Affine[ArrayT]:
         m = np.eye(self.ndims.source)
         m = m[self.permutation, :]
         return Affine.from_linear_map(m)  # type: ignore

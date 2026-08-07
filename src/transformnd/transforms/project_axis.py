@@ -88,7 +88,7 @@ class ProjectAxis(Transform):
     def is_identity(self) -> bool:
         return not self.created and not self.dropped
 
-    def to_affine(self) -> Affine | None:
+    def to_affine(self) -> Affine:
         m = np.eye(self.ndims.source)
         out_m = self.apply(m)
         return Affine.from_linear_map(out_m.T)
