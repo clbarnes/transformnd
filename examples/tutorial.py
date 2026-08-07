@@ -202,19 +202,19 @@ def _(mo):
 
 @app.cell
 def _(Scale, Translate):
-    from transformnd.graph import TransformGraph
+    from transformnd import TransformGraph, Spaced
 
     g = TransformGraph()
     ab = Scale([2, 2])
     bc = Translate([0.5, 1])
     bd = Translate([1, 0.5])
 
-    g.add_transform(ab, "a", "b")
-    g.add_transform(ab.invert(), "b", "a")
-    g.add_transform(bc, "b", "c")
-    g.add_transform(bc.invert(), "c", "b")
-    g.add_transform(bd, "b", "d")
-    g.add_transform(bd.invert(), "d", "b")
+    g.add_transform(Spaced(ab, "a", "b"))
+    g.add_transform(Spaced(ab.invert(), "b", "a"))
+    g.add_transform(Spaced(bc, "b", "c"))
+    g.add_transform(Spaced(bc.invert(), "c", "b"))
+    g.add_transform(Spaced(bd, "b", "d"))
+    g.add_transform(Spaced(bd.invert(), "d", "b"))
 
     print("Transform sequence from a to c:", g.get_sequence("a", "c"))
     print("Transform sequence from d to a:", g.get_sequence("d", "a"))
