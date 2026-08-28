@@ -10,7 +10,7 @@ import numpy as np
 
 from ..base import Transform
 from ..util import as_floats
-from ..types import Spaces, NDims
+from ..types import NDims
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +27,6 @@ class ThinPlateSplines(Transform[np.ndarray]):
         self,
         source_control_points: np.ndarray,
         target_control_points: np.ndarray,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """Non-rigid control point based transforms in 2/3D.
 
@@ -41,8 +39,6 @@ class ThinPlateSplines(Transform[np.ndarray]):
             NxD array of control point coordinates in the source space.
         target_control_points
             NxD array of control point coordinates in the target (deformed) space.
-        spaces
-            Optional source and target spaces
 
         Raises
         ------
@@ -66,13 +62,12 @@ class ThinPlateSplines(Transform[np.ndarray]):
             self.source_control_points,
             self.target_control_points,
         )
-        super().__init__(NDims(ndim, ndim), spaces=spaces)
+        super().__init__(NDims(ndim, ndim))
 
     def invert(self) -> Transform[np.ndarray] | None:
         return type(self)(
             self.target_control_points,
             self.source_control_points,
-            spaces=self.spaces.invert(),
         )
 
     def apply(self, coords: np.ndarray) -> np.ndarray:

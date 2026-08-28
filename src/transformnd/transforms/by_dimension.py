@@ -1,10 +1,12 @@
+from collections.abc import Iterable
+from typing import Self
 from array_api_compat import array_namespace
 
 from .simple import Identity
 
 from ..base import Transform
-from ..util import ArrayT
-from ..types import NDims, Spaces
+from ..util import ArrayT, join_strs
+from ..types import NDims
 
 
 class SubTransform[ArrayT]:
@@ -58,6 +60,9 @@ class SubTransform[ArrayT]:
 
         self.transform = transform
 
+    def __str__(self) -> str:
+        return f"{join_strs(self.input_axes, surround='[]')}>{self.transform}>{join_strs(self.output_axes, surround='[]')}"
+
 
 class ByDimension(Transform[ArrayT]):
     """Apply transformations to subsets of the coordinates' dimensions.
@@ -69,8 +74,6 @@ class ByDimension(Transform[ArrayT]):
         self,
         subtransforms: list[SubTransform[ArrayT]],
         fill_identity: int | None = None,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """
         Parameters
@@ -80,8 +83,6 @@ class ByDimension(Transform[ArrayT]):
         fill_identity
             If not None, fill any missing input and output axes with identity transforms in order, up to a maximum number of dimensions.
             e.g. if you have XYT imates which you only want to transform in XY, provide the XY subtransformations and `fill_identity=3`.
-        spaces
-            Optional source and target spaces
 
         Raises
         ------
@@ -118,8 +119,22 @@ class ByDimension(Transform[ArrayT]):
         if sorted_out != list(range(len(sorted_out))):
             raise ValueError("N-length output axes must go from 0 to N-1")
 
-        super().__init__(NDims(len(sorted_in), len(sorted_out)), spaces=spaces)
+        super().__init__(NDims(len(sorted_in), len(sorted_out)))
         self.subtransforms = subtransforms
+
+    @classmethod
+    def from_dimensions(cls, transforms: Iterable[Transform[ArrayT]]) -> Self:
+        """Simple constructor taking transforms in the order of their input and output axes."""
+        next_src_idx = 0
+        next_tgt_idx = 0
+        subs = []
+        for t in transforms:
+            input_axes = list(range(next_src_idx, next_src_idx + t.ndims.source))
+            next_src_idx += t.ndims.source
+            output_axes = list(range(next_tgt_idx, next_tgt_idx + t.ndims.target))
+            next_tgt_idx += t.ndims.target
+            subs.append(SubTransform(t, input_axes, output_axes))
+        return cls(subs)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         """Apply transformation to subset of coordinates."""
@@ -147,7 +162,6 @@ class ByDimension(Transform[ArrayT]):
 
         return type(self)(
             subtransforms=inverted_transforms,
-            spaces=self.spaces.invert(),
         )
 
     def is_identity(self) -> bool:
@@ -155,3 +169,6 @@ class ByDimension(Transform[ArrayT]):
             if t.input_axes != t.output_axes or not t.transform.is_identity():
                 return False
         return True
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}({join_strs(self.subtransforms)})"

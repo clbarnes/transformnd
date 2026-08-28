@@ -11,14 +11,12 @@ from types import ModuleType
 from array_api_compat import array_namespace
 
 from .util import (
-    SpaceRef,
-    same_or_none,
-    space_str,
     ArrayT,
+    join_strs,
 )
 from itertools import pairwise
 
-from .types import TransformSignature, Spaces, NDims
+from .types import TransformSignature, NDims
 
 if TYPE_CHECKING:
     from .transforms import Affine
@@ -30,19 +28,14 @@ class Transform[ArrayT](ABC):
     def __init__(
         self,
         ndims: NDims,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """
         Parameters
         ----------
         ndims
             Source and target dimensionality.
-        spaces
-            Optional source and target spaces
         """
         self.ndims: NDims = ndims
-        self.spaces: Spaces = spaces
 
     def is_identity(self) -> bool:
         """Whether this is a no-op transformation."""
@@ -141,10 +134,9 @@ class Transform[ArrayT](ABC):
         Returns
         -------
         Self
-            A new transform instance with parameters on the target device,
-            or NotImplemented if the subclass does not support device placement.
+            A new transform instance with parameters on the target device
         """
-        return NotImplemented
+        return self
 
     def __or__(self, other: Transform[ArrayT]) -> TransformSequence[ArrayT]:
         """Compose transformations into a sequence.
@@ -166,7 +158,6 @@ class Transform[ArrayT](ABC):
         transforms = as_transform_list(self) + as_transform_list(other)
         return TransformSequence[ArrayT](
             transforms,
-            spaces=Spaces(self.spaces.source, other.spaces.target),
         )
 
     def __ror__(self, other: Transform[ArrayT]) -> TransformSequence[ArrayT]:
@@ -189,17 +180,13 @@ class Transform[ArrayT](ABC):
         transforms = as_transform_list(other) + as_transform_list(self)
         return TransformSequence(
             transforms,
-            spaces=Spaces(other.spaces.source, self.spaces.target),
         )
 
     def __str__(self) -> str:
-        cls_name = type(self).__name__
-        src = space_str(self.spaces.source)
-        tgt = space_str(self.spaces.target)
-        return f"{cls_name}[{src}->{tgt}]"
+        return f"{type(self).__qualname__}@{hex(id(self))}[{self.ndims}]"
 
 
-class TransformWrapper(Transform[ArrayT]):
+class TransformFnWrapper(Transform[ArrayT]):
     """Wrapper around an arbitrary function which transforms coordinates."""
 
     def __init__(
@@ -207,8 +194,6 @@ class TransformWrapper(Transform[ArrayT]):
         fn: TransformSignature[ArrayT],
         in_ndim: int,
         out_ndim: int,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """Wrapper around an arbitrary function.
 
@@ -223,46 +208,28 @@ class TransformWrapper(Transform[ArrayT]):
             Dimensionality of the input coordinates.
         out_ndim
             Dimensionality of the output coordinates.
-        spaces
-            Optional source and target spaces
         """
-        super().__init__(NDims(in_ndim, out_ndim), spaces=spaces)
+        super().__init__(NDims(in_ndim, out_ndim))
         self.fn = fn
 
     def apply(self, coords: ArrayT) -> ArrayT:
         self._validate_coords(coords)
         return self.fn(coords)
 
+    def __str__(self) -> str:
+        return f"{super().__str__()}({self.fn})"
 
-def _with_spaces(
-    t: Transform[ArrayT],
-    source_space: SpaceRef | None = None,
-    target_space: SpaceRef | None = None,
-) -> Transform[ArrayT]:
-    src_tgt = (t.spaces.source, t.spaces.target)
-    src = same_or_none(src_tgt[0], source_space, default=None)
-    tgt = same_or_none(src_tgt[1], target_space, default=None)
-    if (src, tgt) != src_tgt:
-        t = copy(t)
-        t.spaces = Spaces(src, tgt)
-    return t
+    @classmethod
+    def from_flat(cls, fn: TransformSignature[ArrayT]) -> Self:
+        """Create a 1D transform from a function which would take and return a 1D array."""
 
+        def fn2(arr: ArrayT) -> ArrayT:
+            xp = array_namespace(arr)
+            flat = xp.reshape(arr, (-1,))
+            transformed = fn(flat)
+            return xp.expand_dims(transformed, 1)
 
-def infer_spaces(
-    transforms: Sequence[Transform[ArrayT]], source_space=None, target_space=None
-) -> list[Transform[ArrayT]]:
-    prev_tgts = [source_space]
-    next_srcs = []
-    for t1, t2 in pairwise(transforms):
-        prev_tgts.append(t1.spaces.target)
-        next_srcs.append(t2.spaces.source)
-
-    next_srcs.append(target_space)
-
-    out = []
-    for t, next_src, prev_tgt in zip(transforms, next_srcs, prev_tgts):
-        out.append(_with_spaces(t, prev_tgt, next_src))
-    return out
+        return cls(fn2, 1, 1)
 
 
 def as_transform_list(t: Transform[ArrayT]) -> list[Transform[ArrayT]]:
@@ -278,8 +245,6 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
     def __init__(
         self,
         transforms: Sequence[Transform[ArrayT]],
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> None:
         """Combine transforms by chaining them.
 
@@ -291,16 +256,13 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         transforms :
             Items which are a TransformSequences
             will each still be treated as a single transform.
-        spaces :
-            Optional source and target spaces.
-            Can also be inferred from the first and last transforms.
 
         Raises
         ------
         ValueError
             If spaces are incompatible.
         """
-        ts = infer_spaces(transforms, *spaces)
+        ts = list(transforms)
         if not ts:
             raise ValueError("Empty transform sequence")
 
@@ -312,13 +274,9 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
                     f"and the next source is {t2.ndims.source}D"
                 )
 
-        spaces = Spaces(ts[0].spaces.source, ts[-1].spaces.target)
         ndims = NDims(ts[0].ndims.source, ts[-1].ndims.target)
 
-        super().__init__(
-            ndims,
-            spaces=spaces,
-        )
+        super().__init__(ndims)
 
         self.transforms: list[Transform[ArrayT]] = ts
 
@@ -347,7 +305,6 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             return None
         return type(self)(
             transforms,
-            spaces=self.spaces.invert(),
         )
 
     def apply(self, coords: ArrayT) -> ArrayT:
@@ -360,42 +317,9 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         result.transforms = [t.to_device(xp, device) for t in self.transforms]
         return result
 
-    def list_spaces(self, skip_none: bool = False) -> list[SpaceRef]:
-        """List spaces in this transform.
-
-        Parameters
-        ----------
-        skip_none
-            Whether to skip undefined spaces, default False.
-
-        Returns
-        -------
-        list[SpaceRef]
-            The list of spaces.
-        """
-        spaces = [self.spaces.source] + [t.spaces.target for t in self.transforms]
-        if skip_none:
-            spaces = [s for s in spaces if s is not None]
-        return spaces
-
-    def split(self) -> Iterator[Transform[ArrayT]]:
-        """Split the sequence where an intermediate space is known."""
-        this_seq = []
-
-        for t in self.transforms:
-            if t.spaces.source is not None and t.spaces.target is not None:
-                yield t
-                continue
-
-            this_seq.append(t)
-            if t.spaces.target is not None:
-                yield type(self)(this_seq)
-                this_seq = []
-
     def __str__(self) -> str:
-        cls_name = type(self).__name__
-        spaces_str = "->".join(space_str(s) for s in self.list_spaces())
-        return f"{cls_name}[{spaces_str}]"
+        spaces_str = join_strs(self.transforms, "|")
+        return f"{super().__str__()}({spaces_str})"
 
     def __getitem__(self, idx: slice | int):
         if isinstance(idx, int):
@@ -418,7 +342,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
                 out.extend(t.flatten())
             else:
                 out.append(t)
-        return TransformSequence(out, spaces=self.spaces)  # type:ignore
+        return TransformSequence(out)  # type:ignore
 
     def simplify(self, drop_inverse: bool = True):
         """Reduce the number of transformations in this sequence if possible.
@@ -461,7 +385,7 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         if not out:
             out.append(Identity(self.ndims.source))
 
-        return type(self)(out, spaces=self.spaces)
+        return type(self)(out)
 
     def to_affine(self) -> Affine[ArrayT] | None:
         simple = self.simplify(True)
@@ -475,6 +399,5 @@ def add_to_output(transform: Transform, lst: list[Transform]) -> bool:
         return False
 
     transform = copy(transform)
-    transform.spaces = Spaces(None, None)
     lst.append(transform)
     return True

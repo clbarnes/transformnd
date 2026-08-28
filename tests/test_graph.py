@@ -2,9 +2,9 @@ from copy import deepcopy
 
 from transformnd.base import Transform, TransformSequence
 from transformnd.graph import TransformGraph
-from transformnd.types import Spaces
 from transformnd.transforms.simple import Translate, Scale
 from transformnd.transforms.affine import Affine
+from transformnd import Spaced
 
 import pytest
 
@@ -15,50 +15,48 @@ from transformnd.util import as_floats
 
 def test_add_transforms():
     t: TransformGraph = TransformGraph()
-    t.add_transform(Scale([2, 2], spaces=Spaces("a", "b")))
-    t.add_transform(Translate([10, 20], spaces=Spaces("b", "c")))
+    t.add_transform(Spaced(Scale([2, 2]), 1, 2))
+    t.add_transform(Spaced(Translate([10, 20]), 2, 3))
 
 
 @pytest.mark.parametrize(("full",), [(True,), (False,)])
 def test_noop_path(coords5x3, full):
     t: TransformGraph = TransformGraph()
-    t.add_transform(Scale([2, 2], spaces=Spaces("a", "b")))
-    s = t.get_sequence("a", "a", full=full)
+    t.add_transform(Spaced(Scale([2, 2]), 1, 2))
+    s = t.get_sequence(1, 1, full=full)
     assert s.apply(coords5x3) == pytest.approx(coords5x3)
 
 
 def test_path():
-    t1 = Scale([2, 3], spaces=Spaces("a", "b"))
-    t2 = Translate([10, 20], spaces=Spaces("b", "c"))
+    t1 = Scale([2, 3])
+    t2 = Translate([10, 20])
     transforms = [t1, t2]
     g: TransformGraph = TransformGraph()
-    g.add_transform(t1)
-    g.add_transform(t2)
-    spaces = ("a", "c")
+    g.add_transform(Spaced(t1, 1, 2))
+    g.add_transform(Spaced(t2, 2, 3))
+    spaces = (1, 3)
     seq = g.get_sequence(*spaces, full=True)
     assert len(seq) == 2
     assert isinstance(seq[0], Scale)
     assert isinstance(seq[1], Translate)
 
     in_coords = as_floats([[0, 0], [1, 1], [2, 2]])
-    res = g.transform("a", "c", in_coords)
+    res = g.transform(1, 3, in_coords)
     expected = TransformSequence(transforms).apply(in_coords)
     assert res == pytest.approx(expected)
 
 
 def test_graph_traversal():
     graph: TransformGraph = TransformGraph()
-    graph.add_transform(Translate([1, 2], spaces=Spaces("A", "B")))
-    graph.add_transform(Scale([2, 3], spaces=Spaces("B", "C")))
-    graph.add_transform(Affine(np.eye(3), spaces=Spaces("C", "D")))
+    graph.add_transform(Spaced(Translate([1, 2]), 1, 2))
+    graph.add_transform(Spaced(Scale([2, 3]), 2, 3))
+    graph.add_transform(Spaced(Affine(np.eye(3)), 3, 4))
 
-    seq = graph.get_sequence("A", "D")
+    seq = graph.get_sequence(1, 4)
     assert isinstance(seq, TransformSequence)
     assert len(seq) == 1
 
     simplified_seq = seq.simplify()
-    assert simplified_seq.spaces.source == "A"
-    assert simplified_seq.spaces.target == "D"
 
     expected_affine = np.array([[2, 0, 2], [0, 3, 6], [0, 0, 1]])
     got_affine = simplified_seq.to_affine()
@@ -81,7 +79,7 @@ def test_multigraph():
             weight = 1
         else:
             weight = 2
-        tgraph.add_transform(t, src, tgt, edge_data={"weight": weight})
+        tgraph.add_transform(Spaced(t, src, tgt), edge_data={"weight": weight})
 
     assert len(tgraph.graph.edges) == len(transforms)
     seq = tgraph.get_sequence(src, tgt, full=True, weight="weight")

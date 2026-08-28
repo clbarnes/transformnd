@@ -17,6 +17,23 @@ def _():
     and image transformation is simply a case of finding which source pixel to use for each output pixel.
 
     Here we take a 2-channel fluorescence microscopy image of some cells in 3 dimensions, use scaling information to map those pixels into a real-world space, and then map the pixels of our viewport into the the same space.
+
+    We will refer to the following coordinate spaces and their axes:
+
+    - cells
+      - Z: 0.29um
+      - C: membrane/ nuclei label intensity
+      - Y: 0.26um
+      - X: 0.26um
+    - world
+      - C: membrane/ nuclei label intensity
+      - Z: 1um
+      - Y: 1um
+      - X: 1um
+    - viewport
+      - Y: 1px
+      - X: 1px
+      - C: red/green/blue intensity
     """)
     return
 
@@ -24,15 +41,6 @@ def _():
 @app.cell
 def _():
     from skimage.data import cells3d
-
-    # ZCYX, (0.29um, membrane/nuclei channels, 0.26um, 0.26um)
-    CELLS_SPACE = "cells"
-
-    # CZYX, (membrane/nuclei, um, um, um)
-    WORLD_SPACE = "world"
-
-    # YXC image with RGB channels
-    VIEWPORT_SPACE = "viewport"
 
     cells = cells3d()
     cells = cells.astype("float64")
@@ -43,11 +51,11 @@ def _():
     print(f"{cells.dtype=}")
     print(f"{cells.min()=}")
     print(f"{cells.max()=}")
-    return CELLS_SPACE, VIEWPORT_SPACE, WORLD_SPACE, cells
+    return (cells,)
 
 
 @app.cell
-def _(CELLS_SPACE, VIEWPORT_SPACE, WORLD_SPACE):
+def _():
     import transformnd as tnd
     from transformnd.transforms import ProjectAxis, MapAxis, Scale
 
@@ -60,7 +68,6 @@ def _(CELLS_SPACE, VIEWPORT_SPACE, WORLD_SPACE):
             # Scale the space axes
             Scale([1, 0.29, 0.26, 0.26]),
         ],
-        spaces=tnd.Spaces(CELLS_SPACE, WORLD_SPACE),
     )
     print(cells_to_world)
 
@@ -75,7 +82,6 @@ def _(CELLS_SPACE, VIEWPORT_SPACE, WORLD_SPACE):
             # Choose a spatial sampling frequency (here 0.2um isotropic)
             Scale([1, 0.2, 0.2, 0.2]),
         ],
-        spaces=tnd.Spaces(VIEWPORT_SPACE, WORLD_SPACE),
     )
     print(viewport_to_world)
     return cells_to_world, viewport_to_world

@@ -193,41 +193,32 @@ def _(mo):
 
     A common task in coordinate transformation is to convert coordinates in one space (e.g. a pixel index of an image) into some other space (e.g. a location in "world" space, using the image's resolution and offset).
 
-    All `Transform`s can take the keyword arguments `spaces` on instantiation, which is a tuple of two hashable values (e.g. a string or number).
-    If not `None`, these values act as a reference to the spaces the transform goes from and to respectively.
-    This makes it easier to reason about what space the coordinates start and end in.
-
-    `TransformSequence` instances check that consecutive transforms in the sequence refer to consistent spaces (if spaces are defined).
-    They will also use a transform with a defined target space to infer the source space of the next transform, if undefined.
-
-    Once you have a set of transforms between different defined spaces, you can do bridging transforms: calculating how to get from one space to another by applying some subset of those transforms in sequence.
+    Given a set of transforms between known spaces, you can do bridging transforms:
+    calculating how to get from one space to another by applying some subset of those transforms in sequence.
     This uses the `TransformGraph` class (requires `networkx`).
-
-    The `TransformGraph` will automatically unpack any transforms inside sequences (if they have spaces defined), and infer inverse transforms where possible.
     """)
     return
 
 
 @app.cell
 def _(Scale, Translate):
-    from transformnd.graph import TransformGraph
-    from transformnd import Spaces
+    from transformnd import TransformGraph, Spaced
 
     g = TransformGraph()
-    ab = Scale([2, 2], spaces=Spaces("a", "b"))
-    bc = Translate([0.5, 1], spaces=Spaces("b", "c"))
-    bd = Translate([1, 0.5], spaces=Spaces("b", "d"))
+    ab = Scale([2, 2])
+    bc = Translate([0.5, 1])
+    bd = Translate([1, 0.5])
 
-    g.add_transform(ab)
-    g.add_transform(ab.invert())
-    g.add_transform(bc)
-    g.add_transform(bc.invert())
-    g.add_transform(bd)
-    g.add_transform(bd.invert())
+    g.add_transform(Spaced(ab, "a", "b"))
+    g.add_transform(Spaced(ab.invert(), "b", "a"))
+    g.add_transform(Spaced(bc, "b", "c"))
+    g.add_transform(Spaced(bc.invert(), "c", "b"))
+    g.add_transform(Spaced(bd, "b", "d"))
+    g.add_transform(Spaced(bd.invert(), "d", "b"))
 
     print("Transform sequence from a to c:", g.get_sequence("a", "c"))
     print("Transform sequence from d to a:", g.get_sequence("d", "a"))
-    return (Spaces,)
+    return
 
 
 @app.cell
@@ -250,13 +241,13 @@ def _(mo):
 
 
 @app.cell
-def _(Spaces, np):
+def _(np):
     from transformnd import Transform, NDims
 
     class IsotropicScale2d(Transform):
-        def __init__(self, factor: float, *, spaces=Spaces(None, None)):
+        def __init__(self, factor: float):
             # ensure the spaces are handled properly
-            super().__init__(ndims=NDims(2, 2), spaces=spaces)
+            super().__init__(ndims=NDims(2, 2))
             self.factor = factor
 
         def apply(self, coords: np.ndarray) -> np.ndarray:
@@ -267,7 +258,6 @@ def _(Spaces, np):
         def invert(self):
             return type(self)(
                 1 / self.factor,
-                spaces=self.spaces.invert(),
             )
 
     return

@@ -8,12 +8,12 @@ You can find some examples here:
 
 """
 
-from .base import Transform, TransformSequence, TransformWrapper
-from .util import SpaceRef
-from .types import Spaces, TransformSignature, NDims
+from .base import Transform, TransformSequence, TransformFnWrapper
+from .types import TransformSignature, NDims, SpaceRef
 from . import transforms
 from . import adapters
 from .graph import TransformGraph
+from .spaced import Spaced
 from importlib.metadata import version as _version
 
 __version__ = _version("transformnd")
@@ -22,11 +22,11 @@ __all__ = [
     "Transform",
     "TransformGraph",
     "TransformSequence",
-    "TransformWrapper",
+    "TransformFnWrapper",
     "TransformSignature",
     "SpaceRef",
     "transforms",
     "adapters",
-    "Spaces",
     "NDims",
+    "Spaced",
 ]

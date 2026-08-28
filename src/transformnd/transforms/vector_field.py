@@ -6,9 +6,9 @@ from typing import Self
 import numpy as np
 from array_api_compat import array_namespace, is_dask_array
 
-from ..types import NDims, Spaces
+from ..types import NDims
 from ..base import Transform, ArrayT
-from ..util import set_scipy_array_api, as_floats
+from ..util import join_strs, set_scipy_array_api, as_floats
 
 __all__ = ["Coordinates", "Displacements"]
 
@@ -20,8 +20,6 @@ class BaseVectorField(Transform[ArrayT], ABC):
         index_transform: Transform[ArrayT] | None = None,
         interpolation_order: int = 3,
         vector_axis: int = -1,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """Look up a vector in array.
 
@@ -35,8 +33,6 @@ class BaseVectorField(Transform[ArrayT], ABC):
             Order of the spline interpolation used for coordinates which are not integer array indices.
         vector_axis
             Which axis of the `vector_field` contains the vector values; defaults to the last (`-1`).
-        spaces
-            References for source and target spaces
 
         Raises
         ------
@@ -62,7 +58,7 @@ class BaseVectorField(Transform[ArrayT], ABC):
         self._mode = "constant"
         self._cval = np.nan
         self._order = interpolation_order
-        super().__init__(NDims(source_ndim, tgt_ndim), spaces=spaces)
+        super().__init__(NDims(source_ndim, tgt_ndim))
 
     def _vf_slices(self) -> Iterable[ArrayT]:
         slicing: list[slice | int] = [slice(None)] * (self.ndims.source + 1)
@@ -123,7 +119,17 @@ class BaseVectorField(Transform[ArrayT], ABC):
 
     def to_device(self, xp: ModuleType, device: str | None = None) -> Self:
         coords = xp.asarray(self.vector_field, device)
-        return type(self)(coords, spaces=self.spaces)
+        return type(self)(coords)
+
+    def __str__(self) -> str:
+        if self.index_transform is not None:
+            idx = f"idx={self.index_transform},"
+
+        xp = array_namespace(self.vector_field)
+        sh = list(xp.shape(self.vector_field))
+        sh.pop(self.vector_axis)
+        sh_str = join_strs(sh, "x")
+        return f"{super().__str__()}({idx},{sh_str})"
 
 
 class Coordinates(BaseVectorField[ArrayT]):
@@ -144,8 +150,6 @@ class Coordinates(BaseVectorField[ArrayT]):
         index_transform: Transform[ArrayT] | None = None,
         interpolation_order: int = 3,
         vector_axis: int = -1,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """Use the input coordinates as array indices to look up output coordinates.
 
@@ -163,15 +167,12 @@ class Coordinates(BaseVectorField[ArrayT]):
             Order of the spline interpolation used for coordinates which are not integer array indices.
         vector_axis
             Which axis of the `vector_field` contains the vector values; defaults to the last (`-1`).
-        spaces
-            References for source and target spaces
         """
         super().__init__(
             vector_field,
             index_transform,
             interpolation_order,
             vector_axis,
-            spaces=spaces,
         )
 
     def apply(self, coords: ArrayT) -> ArrayT:
@@ -196,8 +197,6 @@ class Displacements(BaseVectorField[ArrayT]):
         index_transform: Transform[ArrayT] | None = None,
         interpolation_order: int = 3,
         vector_axis: int = -1,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """
         Parameters
@@ -210,8 +209,6 @@ class Displacements(BaseVectorField[ArrayT]):
             Order of the spline interpolation used for coordinates which are not integer array indices.
         vector_axis
             Which axis of the `vector_field` contains the vector values; defaults to the last (`-1`).
-        spaces
-            References for source and target spaces
 
         Raises
         ------
@@ -224,7 +221,6 @@ class Displacements(BaseVectorField[ArrayT]):
             index_transform,
             interpolation_order,
             vector_axis,
-            spaces=spaces,
         )
         if self.ndims.source != self.ndims.target:
             raise ValueError("Displacements cannot change dimensionality")

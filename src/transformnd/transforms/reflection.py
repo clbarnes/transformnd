@@ -8,7 +8,7 @@ from numpy.typing import ArrayLike
 from transformnd.transforms import Affine
 
 from ..base import Transform
-from ..types import NDims, Spaces
+from ..types import NDims
 from ..util import is_square
 
 
@@ -90,8 +90,6 @@ class Reflect(Transform[np.ndarray]):
         self,
         normals: ArrayLike,
         point: float | ArrayLike = 0.0,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """
         Parameters
@@ -102,8 +100,6 @@ class Reflect(Transform[np.ndarray]):
         point
             Intersection point of all reflection planes
             (can be broadcast from scalar), by default 0 (i.e. the origin)
-        spaces
-            Optional source and target spaces
 
         Raises
         ------
@@ -125,7 +121,7 @@ class Reflect(Transform[np.ndarray]):
         self.ndim = {len(n1)}
         self.normals = [unitise(n) for n in normals]
         # todo: matmul is associative, so turn this into an affine in 2/3D?
-        super().__init__(NDims(len(n1), len(n1)), spaces=spaces)
+        super().__init__(NDims(len(n1), len(n1)))
 
     def apply(self, coords: np.ndarray) -> np.ndarray:
         coords = self._validate_coords(coords)
@@ -141,8 +137,6 @@ class Reflect(Transform[np.ndarray]):
     def from_points(
         cls,
         points: ArrayLike,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Self:
         """Infer a single plane of reflection from a minimal number of points on it.
 
@@ -150,23 +144,19 @@ class Reflect(Transform[np.ndarray]):
         ----------
         points
             NxD array of N points in D dimensions. N == D
-        spaces
-            Optional source and target spaces
 
         Returns
         -------
         Self
         """
         point, normals = get_hyperplanes(np.asarray(points), unitise=False)
-        return cls(normals, point, spaces=spaces)
+        return cls(normals, point)
 
     @classmethod
     def from_axis(
         cls,
         axis: int | Sequence[int],
         origin: ArrayLike,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ) -> Self:
         """Reflect around hyperplane(s) parallel with axes.
 
@@ -176,8 +166,6 @@ class Reflect(Transform[np.ndarray]):
             Index (or indices) of axes in which to reflect.
         origin
             Point around which to reflect.
-        spaces
-            Optional source and target spaces
 
         Returns
         -------
@@ -204,7 +192,7 @@ class Reflect(Transform[np.ndarray]):
                 v[i] += 1
                 normals.append(v)
 
-        return cls(normals, origin, spaces=spaces)
+        return cls(normals, origin)
 
     def invert(self) -> Self | None:
         return copy(self)

@@ -1,5 +1,6 @@
 """Utilities used elsewhere in the package."""
 
+from collections.abc import Iterable
 import os
 from types import ModuleType
 import warnings
@@ -12,8 +13,7 @@ from array_api_compat import (
 )
 import numpy as np
 
-from .types import SpaceRef, ArrayT
-from .constants import UNSPECIFIED_SPACE_NAME
+from .types import ArrayT
 
 logger = logging.getLogger(__name__)
 
@@ -134,13 +134,6 @@ def format_dims(supported: set[int] | None) -> str:
     return "/".join(f"{d}D" for d in sorted(supported))
 
 
-def space_str(space: SpaceRef | None) -> str:
-    if space is None:
-        return UNSPECIFIED_SPACE_NAME
-    else:
-        return str(space)
-
-
 def is_square(arr: ArrayT) -> bool:
     """Check whether an array is 2D and has the same number of rows as columns"""
     xp = array_namespace(arr)
@@ -224,3 +217,7 @@ def set_scipy_array_api() -> bool:
                 "SCIPY_ARRAY_API environment set but not '1'; certain transforms may not work with certain array types"
             )
             return False
+
+
+def join_strs(elems: Iterable, sep: str = ",", surround=("", "")) -> str:
+    return surround[0] + sep.join(str(e) for e in elems) + surround[1]

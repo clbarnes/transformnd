@@ -1,16 +1,14 @@
 from collections.abc import Sequence
-from typing import Callable, Hashable, NamedTuple, Self
+from typing import Callable, Generic, Hashable, NamedTuple, Self
 from typing_extensions import TypeVar
 import numpy as np
-
-from .constants import UNSPECIFIED_SPACE_NAME
 
 ArrayT = TypeVar("ArrayT", default=np.ndarray)
 
 type TransformSignature[ArrayT] = Callable[[ArrayT], ArrayT]
 """Type annotation of a function which can be used as a transform."""
 
-type SpaceRef = Hashable
+SpaceRef = TypeVar("SpaceRef", bound=Hashable, default=Hashable)
 """Type annotation of identifiers which can be used to refer to spaces"""
 
 
@@ -30,17 +28,17 @@ class SrcTgt[T](NamedTuple):
         return cls(sequence[0], sequence[1])
 
     def __str__(self) -> str:
+        if self.source == self.target:
+            return str(self.source)
         return f"{self.source}->{self.target}"
-
-
-class Spaces(SrcTgt[SpaceRef | None]):
-    """Source-target tuple for space identifiers."""
-
-    def __str__(self) -> str:
-        s = UNSPECIFIED_SPACE_NAME if self.source is None else self.source
-        t = UNSPECIFIED_SPACE_NAME if self.target is None else self.source
-        return f"{s}->{t}"
 
 
 class NDims(SrcTgt[int]):
     """Source-target tuple for numbers of dimensions."""
+
+    def __str__(self) -> str:
+        return super().__str__() + "D"
+
+
+class Spaces(SrcTgt[SpaceRef], Generic[SpaceRef]):
+    pass

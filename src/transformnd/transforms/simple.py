@@ -11,8 +11,8 @@ from numpy.typing import ArrayLike
 from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
 from ..base import Transform
-from ..types import NDims, Spaces
-from ..util import ArrayT, chain_or, as_floats
+from ..types import NDims
+from ..util import ArrayT, as_floats, join_strs
 from ..transforms.affine import Affine
 
 
@@ -22,8 +22,6 @@ class Identity(Transform[ArrayT]):
     def __init__(
         self,
         ndim: int,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """
         Transform which does nothing.
@@ -32,21 +30,20 @@ class Identity(Transform[ArrayT]):
         ----------
         ndim:
             Number of dimensions of this transform.
-        spaces:
-            Optional source and target spaces
         """
-        src = chain_or(*spaces, default=None)
-        tgt = chain_or(*spaces[::-1], default=None)
-        super().__init__(NDims(ndim, ndim), spaces=Spaces(src, tgt))
+        super().__init__(NDims(ndim, ndim))
 
     def invert(self) -> Transform[ArrayT]:
-        return type(self)(self.ndims.source, spaces=self.spaces.invert())
+        return type(self)(self.ndims.source)
 
     def to_affine(self) -> Affine[ArrayT]:
-        return Affine[ArrayT].identity(self.ndims.source, spaces=self.spaces)
+        return Affine[ArrayT].identity(self.ndims.source)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         return coords
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}({self.ndims.source})"
 
 
 class Translate(Transform[ArrayT]):
@@ -55,8 +52,6 @@ class Translate(Transform[ArrayT]):
     def __init__(
         self,
         translation: ArrayLike,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """Simple translation.
 
@@ -64,8 +59,6 @@ class Translate(Transform[ArrayT]):
         ----------
         translation
             Translation to apply in all dimensions, or each dimension.
-        spaces
-            Optional source and target spaces
 
         Raises
         ------
@@ -77,12 +70,10 @@ class Translate(Transform[ArrayT]):
             raise ValueError(
                 f"Translation must be 1D, got shape {self.translation.shape}"
             )
-        super().__init__(
-            NDims(len(self.translation), len(self.translation)), spaces=spaces
-        )
+        super().__init__(NDims(len(self.translation), len(self.translation)))
 
     def to_affine(self) -> Affine[ArrayT]:
-        return Affine[ArrayT].translation(self.translation, spaces=self.spaces)
+        return Affine[ArrayT].translation(self.translation)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
@@ -91,12 +82,15 @@ class Translate(Transform[ArrayT]):
         return coords + xp.asarray(self.translation, device=d)
 
     def invert(self) -> Transform | None:
-        return type(self)(-self.translation, spaces=self.spaces.invert())
+        return type(self)(-self.translation)
 
     def to_device(self, xp: ModuleType, device: str | None = None) -> Self:
         result = copy(self)
         result.translation = xp.asarray(self.translation, device=device)
         return result
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}({join_strs(self.translation)})"
 
 
 class Scale(Transform[ArrayT]):
@@ -105,8 +99,6 @@ class Scale(Transform[ArrayT]):
     def __init__(
         self,
         scale: ArrayLike,
-        *,
-        spaces: Spaces = Spaces(None, None),
     ):
         """Simple scale transform.
 
@@ -116,8 +108,6 @@ class Scale(Transform[ArrayT]):
         ----------
         scale
             Scaling to apply in all dimensions, or each dimension.
-        spaces
-            Optional source and target spaces
 
         Raises
         ------
@@ -127,10 +117,10 @@ class Scale(Transform[ArrayT]):
         self.scale = as_floats(scale)
         if self.scale.ndim != 1:
             raise ValueError(f"Scale must be 1D, got shape {self.scale.shape}")
-        super().__init__(NDims(len(self.scale), len(self.scale)), spaces=spaces)
+        super().__init__(NDims(len(self.scale), len(self.scale)))
 
     def to_affine(self) -> Affine[ArrayT]:
-        return Affine[ArrayT].scaling(self.scale, spaces=self.spaces)
+        return Affine[ArrayT].scaling(self.scale)
 
     def apply(self, coords: ArrayT) -> ArrayT:
         coords = self._validate_coords(coords)
@@ -141,10 +131,12 @@ class Scale(Transform[ArrayT]):
     def invert(self) -> Self | None:
         return type(self)(
             1 / self.scale,
-            spaces=self.spaces.invert(),
         )
 
     def to_device(self, xp: ModuleType, device: str | None = None) -> Self:
         result = copy(self)
         result.scale = xp.asarray(self.scale, device=device)
         return result
+
+    def __str__(self) -> str:
+        return f"{super().__str__()}({join_strs(self.scale)})"
