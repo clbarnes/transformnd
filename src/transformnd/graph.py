@@ -109,7 +109,7 @@ class TransformGraph(Generic[ArrayT, SpaceRef]):
 
     def _add_space(self, space: SpaceRef, ndim: int):
         curr_ndim = self.ndim(space)
-        if ndim is None:
+        if curr_ndim is None:
             self.graph.add_node(space, ndim=ndim)
         elif curr_ndim != ndim:
             raise ValueError(f"Space {space} is {curr_ndim}D, got {ndim}D")
