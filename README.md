@@ -31,6 +31,11 @@ See the [tutorial here](https://github.com/clbarnes/transformnd/blob/main/exampl
 It is a [marimo](https://marimo.io) notebook.
 Open it with `uv run --group examples marimo edit examples/tutorial.py`.
 
+## Usage
+
+`transformnd` is pre-1.0 and the API is subject to change.
+Production users should pin the maximum dependency version at the next minor version, like `uv add --bounds minor`.
+
 ## Implemented transforms
 
 All transforms are accessed under the `transformnd.transforms` subpackage.
