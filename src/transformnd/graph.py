@@ -1,12 +1,14 @@
 """Bridging transforms between known spaces."""
 
 from __future__ import annotations
+from copy import copy, deepcopy
 from functools import lru_cache
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Mapping
 import logging
 from itertools import pairwise
 from types import ModuleType
-from typing import Any, Generic
+from typing import Any, Generic, Hashable, Self
+from typing_extensions import TypeVar
 from .spaced import Spaced
 
 import networkx as nx
@@ -21,7 +23,10 @@ from .types import SpaceRef
 logger = logging.getLogger(__name__)
 
 TRANSFORM_KEY = "_transform"
+NDIM_KEY = "ndim"
 WeightFn = Callable[[SpaceRef, SpaceRef, dict[str, Any]], int]
+
+SpaceRef2 = TypeVar("SpaceRef2", bound=Hashable, default=Hashable)
 
 
 def normalise_edge_weight_fn(w: str | WeightFn | None) -> WeightFn:
@@ -51,12 +56,61 @@ class TransformGraph(Generic[ArrayT, SpaceRef]):
         given transforms.
         """
         self.graph = nx.MultiDiGraph()
-        self.space_ndims: dict[SpaceRef, int] = dict()
+
+    def ndim(self, space: SpaceRef) -> int | None:
+        """Get the dimensionality of the given space, or None if missing."""
+        d = self.graph.nodes.get(space)
+        if d is None:
+            return None
+        return d["ndim"]
+
+    def copy(self, deep=False) -> Self:
+        """Take an (optionally deep) copy of the graph."""
+        if deep:
+            return deepcopy(self)
+        else:
+            return copy(self)
+
+    def relabel_spaces(
+        self, mapping: Mapping[SpaceRef, SpaceRef2] | Callable[[SpaceRef], SpaceRef2]
+    ) -> TransformGraph[ArrayT, SpaceRef2]:
+        """Relabel space references.
+
+        This is useful when e.g. merging graphs and wanting to make sure their spaces do not clash,
+        by appending different suffixes to spaces from each graph.
+
+        Edge data are shallow-copied.
+
+        Parameters
+        ----------
+        mapping
+            Mapping from the old space references to the new.
+            May be a mapping (e.g. a dict) or a callable (e.g. a function).
+            Outputs of the mapping may re-use labels from the inputs,
+            but no validation
+
+        Returns
+        -------
+        TransformGraph[ArrayT, SpaceRef2]
+            May use a different type for space references.
+        """
+        g = TransformGraph[ArrayT, SpaceRef2]()
+        if isinstance(mapping, Mapping):
+
+            def f(k: SpaceRef, /) -> SpaceRef2:
+                return mapping[k]
+        else:
+            f = mapping
+
+        for s, d in self:
+            mapped = Spaced(s.transform, f(s.spaces.source), f(s.spaces.target))
+            g.add_transform(mapped, edge_data=d)
+        return g
 
     def _add_space(self, space: SpaceRef, ndim: int):
-        curr_ndim = self.space_ndims.get(space)
+        curr_ndim = self.ndim(space)
         if curr_ndim is None:
-            self.space_ndims[space] = ndim
+            self.graph.add_node(space, ndim=ndim)
         elif curr_ndim != ndim:
             raise ValueError(f"Space {space} is {curr_ndim}D, got {ndim}D")
 
@@ -176,7 +230,9 @@ class TransformGraph(Generic[ArrayT, SpaceRef]):
         transforms = []
         if len(path) == 1:
             # source == target
-            transforms.append(Identity[ArrayT](self.space_ndims[source_space]))
+            ndim = self.ndim(source_space)
+            assert ndim is not None
+            transforms.append(Identity[ArrayT](ndim))
         else:
             wfn = normalise_edge_weight_fn(weight)
 
@@ -223,19 +279,26 @@ class TransformGraph(Generic[ArrayT, SpaceRef]):
         t = self.get_sequence(source_space, target_space, weight=weight)
         return t.apply(coords)
 
-    def __iter__(self) -> Iterator[Spaced[ArrayT, SpaceRef]]:
-        """Iterate through the transforms present in the graph.
+    def __iter__(self) -> Iterator[tuple[Spaced[ArrayT, SpaceRef], dict]]:
+        """Iterate through the transforms present in the graph,
+        and a shallow copy of the edge data.
 
         N.B. the `__iter__` method of some popular graph libraries like networkx
         iterate through nodes, where this effectively iterates through edges.
 
         Yields
         ------
-        Spaced[ArrayT, SpaceRef]
+        tuple[Spaced[ArrayT, SpaceRef], dict]
             The spaced transform.
         """
-        for src, tgt, t in self.graph.edges.data(TRANSFORM_KEY):
-            yield Spaced(t, src, tgt)
+        for src, tgt, data in self.graph.edges.data(True):
+            d2 = data.copy()
+            t = d2.pop(TRANSFORM_KEY)
+            yield (Spaced(t, src, tgt), d2)
+
+    def space_ndims(self) -> Iterable[tuple[SpaceRef, int]]:
+        """Get the keys and dimensionality of all spaces."""
+        return self.graph.nodes.data("ndim")
 
     def to_device[ArrayT2](
         self, xp: ModuleType, device: str | None = None
