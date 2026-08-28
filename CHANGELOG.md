@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.8.0 - 2026-08-28
+
 ### Added
 
 - `TransformGraph.relabel_spaces(mapping)` allows relabelling of spaces
