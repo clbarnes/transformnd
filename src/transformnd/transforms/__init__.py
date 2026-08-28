@@ -1,6 +1,7 @@
 """Implementations of some common transforms."""
 
 from .affine import Affine
+from .grid import GridInterpolation
 from .reflection import Reflect
 from .simple import Identity, Scale, Translate
 from .map_axis import MapAxis
@@ -13,6 +14,7 @@ from .thinplate import ThinPlateSplines
 
 __all__ = [
     "Affine",
+    "GridInterpolation",
     "Identity",
     "ProjectAxis",
     "Reflect",

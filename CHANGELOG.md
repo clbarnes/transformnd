@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Added
+
+- `TransformGraph.relabel_spaces(mapping)` allows relabelling of spaces
+- `TransformGraph.ndim(space_ref)` gets the dimensionality of a single space, if it exists
+- `TransformGraph.space_ndims()` iterates though all spaces and their dimensionalities
+- `GridInterpolation` transform to apply a 1D function to each dimension of the array
+  - Intended for use with e.g. `numpy.interp` or 1D `scipy.interpolate` routines,
+    and to bring transforms to xarray-like coordinate arrays.
+  - This was already possible with `ByDimension` plus some boilerplate
+
+### Changed
+
+- BREAKING: `TransformGraph.add_transform` now takes a `Spaced` (which wraps a transform and its spaces)
+- BREAKING: `TransformGraph.__iter__` now yields a tuple of the edge's `Spaced` and the edge data
+
 ### Removed
 
 - BREAKING: Transforms no longer have their own `spaces`; this concept only exist on the graph
