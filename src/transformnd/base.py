@@ -240,7 +240,11 @@ def as_transform_list(t: Transform[ArrayT]) -> list[Transform[ArrayT]]:
 
 
 class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
-    """Chain transforms, applying one after another."""
+    """Chain transforms, applying one after another.
+
+    The `TransformSequence()` constructor takes a sequence of transforms which must not be empty.
+    Empty sequences can be handled with `TransformSequence.empty(ndim: int)`.
+    """
 
     def __init__(
         self,
@@ -266,7 +270,9 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         """
         ts = list(transforms)
         if not ts:
-            raise ValueError("Empty transform sequence")
+            raise ValueError(
+                "Empty transform sequence; use TransformSequence.empty(ndim)"
+            )
 
         for idx, (t1, t2) in enumerate(pairwise(ts)):
             if t1.ndims.target != t2.ndims.source:
