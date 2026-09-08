@@ -87,6 +87,13 @@ def test_multigraph():
     assert isinstance(seq[0], Translate)
 
 
+def test_identity_sequence():
+    g = TransformGraph()
+    g.add_transform(Spaced(Translate([1, 2, 3]), "a", "b"))
+    seq = g.get_sequence("a", "a")
+    assert seq.is_identity()
+
+
 if __name__ == "__main__":
     test_graph_traversal()
     print("All tests passed!")

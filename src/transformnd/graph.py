@@ -225,7 +225,21 @@ class TransformGraph(Generic[ArrayT, SpaceRef]):
         -------
         TransformSequence[ArrayT]
             The shortest transform sequence between the spaces.
+
+        Raises
+        ------
+        ValueError
+            Unknown source or target space.
         """
+        src_ndim = self.ndim(source_space)
+        if src_ndim is None:
+            raise ValueError(f"Unknown source space {source_space}")
+        elif source_space == target_space:
+            return TransformSequence.empty(src_ndim)  # type:ignore
+
+        if self.ndim(target_space) is None:
+            raise ValueError(f"Unknown target space {source_space}")
+
         path = nx.shortest_path(self.graph, source_space, target_space, weight)  # type:ignore
         transforms = []
         if len(path) == 1:

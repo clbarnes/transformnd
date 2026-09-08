@@ -240,7 +240,11 @@ def as_transform_list(t: Transform[ArrayT]) -> list[Transform[ArrayT]]:
 
 
 class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
-    """Chain transforms, applying one after another."""
+    """Chain transforms, applying one after another.
+
+    The `TransformSequence()` constructor takes a sequence of transforms which must not be empty.
+    Empty sequences can be handled with `TransformSequence.empty(ndim: int)`.
+    """
 
     def __init__(
         self,
@@ -248,8 +252,10 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
     ) -> None:
         """Combine transforms by chaining them.
 
-        Also checks for consistent dimensionality and space references,
-        inferring if None.
+        Empty sequences raise an error;
+        use the `TransformSequence.empty(ndim)` constructor instead.
+
+        Also checks for consistent dimensionality.
 
         Parameters
         ----------
@@ -260,11 +266,13 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         Raises
         ------
         ValueError
-            If spaces are incompatible.
+            If spaces are incompatible, or no spaces are given.
         """
         ts = list(transforms)
         if not ts:
-            raise ValueError("Empty transform sequence")
+            raise ValueError(
+                "Empty transform sequence; use TransformSequence.empty(ndim)"
+            )
 
         for idx, (t1, t2) in enumerate(pairwise(ts)):
             if t1.ndims.target != t2.ndims.source:
@@ -279,6 +287,14 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         super().__init__(ndims)
 
         self.transforms: list[Transform[ArrayT]] = ts
+
+    @classmethod
+    def empty(cls, ndim: int) -> Self:
+        from .transforms import Identity
+
+        out = cls([Identity(ndim)])
+        out.transforms.pop()
+        return out
 
     def __iter__(self) -> Iterator[Transform[ArrayT]]:
         """Iterate through component transforms.
@@ -299,6 +315,9 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         return len(self.transforms)
 
     def invert(self) -> Transform[ArrayT] | None:
+        if self.is_empty():
+            return type(self).empty(self.ndims.source)
+
         try:
             transforms = [~t for t in reversed(self.transforms)]
         except NotImplementedError:
@@ -314,7 +333,8 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
 
     def to_device(self, xp: ModuleType, device: str | None = None) -> Self:
         result = copy(self)
-        result.transforms = [t.to_device(xp, device) for t in self.transforms]
+        if not self.is_empty():
+            result.transforms = [t.to_device(xp, device) for t in self.transforms]
         return result
 
     def __str__(self) -> str:
@@ -329,9 +349,15 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
     def is_identity(self) -> bool:
         return all(t.is_identity() for t in self)
 
+    def is_empty(self) -> bool:
+        return not self.transforms
+
     def flatten(self, drop_inverse: bool = True) -> Self:
         """Flatten nested sequences."""
         from .transforms.bijection import Bijection
+
+        if self.is_empty():
+            return copy(self)
 
         out: list[Transform[ArrayT]] = []
 
@@ -357,7 +383,8 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
         Does not check whether transforms invert each other,
         e.g. `Translation(1) | Translation(-1)`.
         """
-        from .transforms import Identity
+        if self.is_empty():
+            return copy(self)
 
         out: list[Transform[ArrayT]] = []
         affine = None
@@ -383,11 +410,13 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
             add_to_output(affine, out)
 
         if not out:
-            out.append(Identity(self.ndims.source))
+            return type(self).empty(self.ndims.source)
 
         return type(self)(out)
 
     def to_affine(self) -> Affine[ArrayT] | None:
+        if self.is_empty():
+            return Affine.identity(self.ndims.source)  # type:ignore
         simple = self.simplify(True)
         if len(simple) != 1:
             return None

@@ -36,9 +36,11 @@ format:
 test:
     uv run --all-groups --all-extras pytest -v
 
+# Run marimo server for editing examples.
 example-edit example:
     uv run --group examples marimo edit examples/{{example}}.py
 
+# Run marimo examples headless.
 example-test:
     uv run --group examples marimo export session examples --force-overwrite
 
@@ -46,6 +48,7 @@ example-test:
 bench:
     uv run --group test pytest --benchmark-only
 
+# Bump version, creating a git tag and changelog entry. Level can be "major", "minor", or "patch".
 bump level:
     test -z "$(git status --porcelain)" || ( git status && false )
     uv version --bump {{level}}
@@ -54,8 +57,10 @@ bump level:
     git commit -m "Bump to v$(uv version --short)"
     git tag -a "v$(uv version --short)" -m "$(changelog entry latest)"
 
+# Run pre-commit hooks on all files.
 pre-commit:
     uv run --group dev prek run --all-files
 
+# Run a REPL with all dependencies installed.
 repl:
     uv run --all-groups --all-extras --with ipython ipython
