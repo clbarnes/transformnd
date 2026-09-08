@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.0 - 2026-09-08
+
 ### Fixed
 
 - `is_identity()` implementation for Identity, Translate, Scale
