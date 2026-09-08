@@ -235,7 +235,7 @@ class TransformGraph(Generic[ArrayT, SpaceRef]):
         if src_ndim is None:
             raise ValueError(f"Unknown source space {source_space}")
         elif source_space == target_space:
-            return TransformSequence([Identity(src_ndim)])
+            return TransformSequence.empty(src_ndim)  # type:ignore
 
         if self.ndim(target_space) is None:
             raise ValueError(f"Unknown target space {source_space}")
