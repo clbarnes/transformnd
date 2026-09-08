@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Fixed
+
+- `is_identity()` implementation for Identity, Translate, Scale
+
+### Changed
+
+- `TransformSequence` can now be empty with `.empty(ndim)` constructor
+- `TransformGraph.get_sequence` can now handle identity transforms (i.e. space A to space A) [issues/86](https://github.com/clbarnes/transformnd/issues/86)
+
 ## 0.8.0 - 2026-08-28
 
 ### Added
