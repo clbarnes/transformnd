@@ -45,6 +45,9 @@ class Identity(Transform[ArrayT]):
     def __str__(self) -> str:
         return f"{super().__str__()}({self.ndims.source})"
 
+    def is_identity(self) -> bool:
+        return True
+
 
 class Translate(Transform[ArrayT]):
     """Translate coordinates by addition."""
@@ -71,6 +74,10 @@ class Translate(Transform[ArrayT]):
                 f"Translation must be 1D, got shape {self.translation.shape}"
             )
         super().__init__(NDims(len(self.translation), len(self.translation)))
+
+    def is_identity(self) -> bool:
+        xp = array_namespace(self.translation)
+        return xp.all(self.translation == 0)
 
     def to_affine(self) -> Affine[ArrayT]:
         return Affine[ArrayT].translation(self.translation)
@@ -140,3 +147,7 @@ class Scale(Transform[ArrayT]):
 
     def __str__(self) -> str:
         return f"{super().__str__()}({join_strs(self.scale)})"
+
+    def is_identity(self) -> bool:
+        xp = array_namespace(self.scale)
+        return xp.all(self.scale == 1)
