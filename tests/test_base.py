@@ -121,3 +121,12 @@ def test_to_affine_no():
     seq = TransformSequence([t1, t2, t3])
     aff = seq.to_affine()
     assert aff is None
+
+
+def test_empty_seq():
+    t = TransformSequence.empty(2)
+    assert t.is_identity()
+    assert t.ndims.source == 2
+
+    with pytest.raises(ValueError):
+        t = TransformSequence([])
