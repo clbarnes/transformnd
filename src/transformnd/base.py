@@ -416,7 +416,9 @@ class TransformSequence(Transform[ArrayT], Sequence[Transform[ArrayT]]):
 
     def to_affine(self) -> Affine[ArrayT] | None:
         if self.is_empty():
-            return Affine.identity(self.ndims.source)  # type:ignore
+            from .transforms import Affine
+
+            return Affine.identity(self.ndims.source)  # type: ignore
         simple = self.simplify(True)
         if len(simple) != 1:
             return None
