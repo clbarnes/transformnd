@@ -25,6 +25,22 @@ def test_invert():
     assert ti.created == {0}
 
 
+def test_change_ndim():
+    orig = as_floats([[1, 2]])
+    add0 = ProjectAxis(created={0}, source_ndim=2)
+    assert add0.ndims.source == 2
+    assert add0.ndims.target == 3
+    added = add0.apply(orig)
+    assert added == pytest.approx(as_floats([[0, 1, 2]]))
+
+    rem0 = add0.invert()
+    assert rem0 is not None
+    assert rem0.ndims.source == 3
+    assert rem0.ndims.target == 2
+    removed = rem0.apply(added)
+    assert removed == pytest.approx(orig)
+
+
 def random_ops(in_ndim: int, out_ndim: int, seed=1991) -> ProjectAxis:
     rng = Random(seed)
     n_dropped = rng.randint(max(0, in_ndim - out_ndim), in_ndim - 1)
