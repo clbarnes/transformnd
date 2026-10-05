@@ -5,6 +5,7 @@ default:
 # Generate documentation, by default under `./doc/html`.
 doc docdir='doc/html': install-kernel
     rm -rf {{docdir}}
+    mkdir -p {{docdir}}
     uv run --group doc pdoc \
         --output-directory {{docdir}} \
         --no-include-undocumented \
