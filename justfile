@@ -3,7 +3,7 @@ default:
     just --list
 
 # Generate documentation, by default under `./doc/html`.
-doc docdir='doc/html':
+doc docdir='doc/html': install-kernel
     rm -rf {{docdir}}
     uv run --group doc pdoc \
         --output-directory {{docdir}} \
@@ -12,10 +12,15 @@ doc docdir='doc/html':
         --search \
         transformnd
     mkdir -p {{docdir}}/examples
-    uv run --group docs jupytext --to ipynb examples/*.py
-    uv run --group docs jupyter dejavu --to html examples/*.ipynb --output-dir {{docdir}}/examples
+    uv run --group doc jupytext --to ipynb examples/*.py
+    uv run --group doc jupyter dejavu --to html examples/*.ipynb --output-dir {{docdir}}/examples
 
-examples-run:
+# Install a jupyter kernel required by examples
+install-kernel:
+    uv run --group doc python -m ipykernel install --name python_kernel
+
+# Run examples.
+examples-run: install-kernel
     uv run --group examples jupytext --execute examples/*.py
 
 # Run linters and type checkers.
