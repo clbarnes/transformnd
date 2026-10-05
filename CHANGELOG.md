@@ -2,7 +2,13 @@
 
 ## Unreleased
 
+### Fixed
+
+- `Spaced.invert` now correctly inverts space references [issues/89](https://github.com/clbarnes/transformnd/issues/89)
+
 ## 0.9.1 - 2026-09-18
+
+- `TransformSequence.into_affine` now does not hit a NameError
 
 ## 0.9.0 - 2026-09-08
 
