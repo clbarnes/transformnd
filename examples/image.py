@@ -1,3 +1,18 @@
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.19.6
+#   kernelspec:
+#     display_name: python_kernel
+#     language: python
+#     name: python_kernel
+# ---
+
 # %% [markdown]
 """
 # Image transformation with `transformnd`
@@ -88,9 +103,9 @@ viewport_to_cells = viewport_to_world | viewport_offset | ~cells_to_world
 
 # %% [markdown]
 """
-# Here we want to get all of the coordinates of our viewport, across all channels, in the shape needed by `transformnd` (number of coordinates x dimensionality of coordinates).
-#
-# We then transform that to get the positions of those coordinates within the cells image.
+Here we want to get all of the coordinates of our viewport, across all channels, in the shape needed by `transformnd` (number of coordinates x dimensionality of coordinates).
+
+We then transform that to get the positions of those coordinates within the cells image.
 """
 
 # %%

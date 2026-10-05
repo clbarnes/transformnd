@@ -27,10 +27,6 @@ are of valid type and dimensions.
 Additionally, `transformnd` provides an interface for transforming types other than NxD numpy arrays,
 and implements these adapters for a few common types.
 
-See the [tutorial here](https://github.com/clbarnes/transformnd/blob/main/examples/tutorial.py).
-It is a [marimo](https://marimo.io) notebook.
-Open it with `uv run --group examples marimo edit examples/tutorial.py`.
-
 ## Usage
 
 `transformnd` is pre-1.0 and the API is subject to change.

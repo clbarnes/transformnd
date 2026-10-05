@@ -12,15 +12,17 @@ doc docdir='doc/html':
         --search \
         transformnd
     mkdir -p {{docdir}}/examples
-    uv run --group examples marimo export html examples/tutorial.py -o {{docdir}}/examples/tutorial.html
-    uv run --group examples marimo export html examples/image.py -o {{docdir}}/examples/image.html
+    uv run --group docs jupytext --to ipynb examples/*.py
+    uv run --group docs jupyter dejavu --to html examples/*.ipynb --output-dir {{docdir}}/examples
+
+examples-run:
+    uv run --group examples jupytext --execute examples/*.py
 
 # Run linters and type checkers.
 lint:
     uv run --group lint ruff check src tests examples bench
     uv run --group lint mypy src tests bench
     uv run --group lint ruff format --check src tests examples bench
-    uv run --group examples marimo check --strict --ignore-scripts examples/*.py
     uv run --group lint pydoclint src
 
 # Auto-fix format and lints where possible.
@@ -35,14 +37,6 @@ format:
 # Run unit tests.
 test:
     uv run --all-groups --all-extras pytest -v
-
-# Run marimo server for editing examples.
-example-edit example:
-    uv run --group examples marimo edit examples/{{example}}.py
-
-# Run marimo examples headless.
-example-test:
-    uv run --group examples marimo export session examples --force-overwrite
 
 # Run benchmarks.
 bench:
