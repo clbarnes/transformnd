@@ -64,6 +64,8 @@ dev = [
     {include-group = "doc"},
     {include-group = "examples"},
     {include-group = "bench"},
+    "prek>=0.3.11",
+    "rust-just>=1.58.0",
 ]
 test = [
     "pytest",
@@ -77,15 +79,18 @@ lint = [
     "types-shapely>=2.1.0.20260408",
     "pydoclint>=0.8.6",
 ]
-doc = [
-    "pdoc>=16.0.0",
-]
 examples = [
-    "marimo>=0.9",
     "matplotlib>=3.10.8",
     "pandas>=3.0.2",
     "pooch>=1.9.0",
     "scikit-image>=0.26.0",
+    "jupytext>=1.19.6",
+    "ipykernel>=7.4.0",
+]
+doc = [
+    "pdoc>=16.0.0",
+    "nbconvert>=7.17.1",
+    {include-group = "examples"},
 ]
 bench = [
     "pytest-benchmark>=5.2.3",
@@ -107,8 +112,11 @@ addopts = ["--benchmark-skip"]
 arg-type-hints-in-docstring = false
 allow-init-docstring = true
 
-[tool.ruff]
-lint.external = [
+[tool.ruff.lint]
+external = [
     "DOC",  # pydoclint
     "D",  # pydocstyle
 ]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"examples/*.py" = ["E402"]
