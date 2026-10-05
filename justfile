@@ -17,7 +17,7 @@ doc docdir='doc/html': install-kernel
 
 # Install a jupyter kernel required by examples
 install-kernel:
-    uv run --group doc python -m ipykernel install --name python_kernel
+    uv run --group doc python -m ipykernel install --name python_kernel --user
 
 # Run examples.
 examples-run: install-kernel
