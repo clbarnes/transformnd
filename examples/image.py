@@ -1,28 +1,30 @@
 # %% [markdown]
-# # Image transformation with `transformnd`
-#
-# `transformnd` transforms coordinates, not images, but coordinate transformations can be used to transform images.
-# Your output (transformed) and source images both have pixels with an `xy` coordinate in their respective image spaces,
-# and image transformation is simply a case of finding which source pixel to use for each output pixel.
-#
-# Here we take a 2-channel fluorescence microscopy image of some cells in 3 dimensions, use scaling information to map those pixels into a real-world space, and then map the pixels of our viewport into the the same space.
-#
-# We will refer to the following coordinate spaces and their axes:
-#
-# - cells
-#   - Z: 0.29um
-#   - C: membrane/ nuclei label intensity
-#   - Y: 0.26um
-#   - X: 0.26um
-# - world
-#   - C: membrane/ nuclei label intensity
-#   - Z: 1um
-#   - Y: 1um
-#   - X: 1um
-# - viewport
-#   - Y: 1px
-#   - X: 1px
-#   - C: red/green/blue intensity
+"""
+# Image transformation with `transformnd`
+
+`transformnd` transforms coordinates, not images, but coordinate transformations can be used to transform images.
+Your output (transformed) and source images both have pixels with an `xy` coordinate in their respective image spaces,
+and image transformation is simply a case of finding which source pixel to use for each output pixel.
+
+Here we take a 2-channel fluorescence microscopy image of some cells in 3 dimensions, use scaling information to map those pixels into a real-world space, and then map the pixels of our viewport into the the same space.
+
+We will refer to the following coordinate spaces and their axes:
+
+- cells
+  - Z: 0.29um
+  - C: membrane/ nuclei label intensity
+  - Y: 0.26um
+  - X: 0.26um
+- world
+  - C: membrane/ nuclei label intensity
+  - Z: 1um
+  - Y: 1um
+  - X: 1um
+- viewport
+  - Y: 1px
+  - X: 1px
+  - C: red/green/blue intensity
+"""
 
 # %%
 from skimage.data import cells3d
@@ -68,10 +70,12 @@ viewport_to_world = tnd.base.TransformSequence(
 print(viewport_to_world)
 
 # %% [markdown]
-# Both images know how to transform their array indices into the real world.
-#
-# We can invert one of those transforms to get a transformation between viewport-space and cell-space.
-# We can also have a separate transformation to control moving the viewport (useful if we had an interactive viewer).
+"""
+Both images know how to transform their array indices into the real world.
+
+We can invert one of those transforms to get a transformation between viewport-space and cell-space.
+We can also have a separate transformation to control moving the viewport (useful if we had an interactive viewer).
+"""
 
 # %%
 from transformnd.transforms import Translate
@@ -83,9 +87,11 @@ viewport_offset = Translate([0, 35 * 0.29, 64 * 0.26, 0.0])
 viewport_to_cells = viewport_to_world | viewport_offset | ~cells_to_world
 
 # %% [markdown]
+"""
 # Here we want to get all of the coordinates of our viewport, across all channels, in the shape needed by `transformnd` (number of coordinates x dimensionality of coordinates).
 #
 # We then transform that to get the positions of those coordinates within the cells image.
+"""
 
 # %%
 import numpy as np
@@ -109,9 +115,11 @@ cells_coords = viewport_to_cells.apply(vp_coords)
 print(f"{cells_coords.shape=}")
 
 # %% [markdown]
-# `scipy.ndimage.map_coordinates` is where the magic happens;
-# looking up our coordinates in the cells image to get the intensities.
-# There's a dask version too!
+"""
+`scipy.ndimage.map_coordinates` is where the magic happens;
+looking up our coordinates in the cells image to get the intensities.
+There's a dask version too!
+"""
 
 # %%
 from scipy.ndimage import map_coordinates

@@ -1,9 +1,11 @@
 # %% [markdown]
-# # `transformnd` tutorial
-#
-# `transformnd` is a python library which provides implementations of coordinate transformations, base classes to ensure a consistent API across implementations, and utilities for combining and working with those coordinate transformations.
-#
-# First, define a basic shape, and make a function for plotting it:
+"""
+# `transformnd` tutorial
+
+`transformnd` is a python library which provides implementations of coordinate transformations, base classes to ensure a consistent API across implementations, and utilities for combining and working with those coordinate transformations.
+
+First, define a basic shape, and make a function for plotting it:
+"""
 
 # %%
 import numpy as np
@@ -48,10 +50,12 @@ def plot_shape(**kwargs):
 plot_shape()
 
 # %% [markdown]
-# Now we'll add some basic transformations.
-#
-# Transformations are subclasses of the `Transform` abstract base class.
-# Once the transformation is instantiated, it can be used just like a function, transforming a numpy array of coordinates into a new numpy array.
+"""
+Now we'll add some basic transformations.
+
+Transformations are subclasses of the `Transform` abstract base class.
+Once the transformation is instantiated, it can be used just like a function, transforming a numpy array of coordinates into a new numpy array.
+"""
 
 # %%
 from transformnd.transforms.simple import Scale, Translate
@@ -65,9 +69,11 @@ plot_shape(
 )
 
 # %% [markdown]
-# ## `TransformSequence`
-#
-# Transforms can be chained together into a single transformation, with the `TransformSequence` class.
+"""
+## `TransformSequence`
+
+Transforms can be chained together into a single transformation, with the `TransformSequence` class.
+"""
 
 # %%
 from transformnd import TransformSequence
@@ -81,11 +87,13 @@ plot_shape(
 )
 
 # %% [markdown]
-# ## Composing and inverting transformations
-#
-# `TransformSequences` can also be constructed with the `|` operator.
-#
-# Certain transformations can be inverted with the `~` operator.
+"""
+## Composing and inverting transformations
+
+`TransformSequences` can also be constructed with the `|` operator.
+
+Certain transformations can be inverted with the `~` operator.
+"""
 
 # %%
 translate_scale = translate | scale
@@ -104,18 +112,20 @@ plot_shape(
 )
 
 # %% [markdown]
-# ## Affine transformations
-#
-# A common class of coordinate transformations are affine transformations.
-# These require a transformation matrix which then multiplies the coordinate array.
-# `transformnd` provides convenience methods for constructing this transformation matrix out of common operations: translations, scales, reflections, rotations, and shears.
-#
-# Because this all uses matrix multiplication under the hood, `AffineTransform` instances can be composed using the matrix multiplication operator `@` rather than needing to apply the transforms one at a time in a `TransformSequence`.
-#
-# Note that, as with raw affine transformation matrices, the individual transformations are effectively applied right to left.
-# That is, to apply a scale, then a rotation, then a translation, use `(translation @ rotation @ scale).apply(coordinates)`.
-#
-# Affine transformations are invertible.
+"""
+## Affine transformations
+
+A common class of coordinate transformations are affine transformations.
+These require a transformation matrix which then multiplies the coordinate array.
+`transformnd` provides convenience methods for constructing this transformation matrix out of common operations: translations, scales, reflections, rotations, and shears.
+
+Because this all uses matrix multiplication under the hood, `AffineTransform` instances can be composed using the matrix multiplication operator `@` rather than needing to apply the transforms one at a time in a `TransformSequence`.
+
+Note that, as with raw affine transformation matrices, the individual transformations are effectively applied right to left.
+That is, to apply a scale, then a rotation, then a translation, use `(translation @ rotation @ scale).apply(coordinates)`.
+
+Affine transformations are invertible.
+"""
 
 # %%
 from transformnd.transforms.affine import Affine
@@ -134,13 +144,15 @@ plot_shape(
 assert np.allclose((tran @ rot @ sca).apply(square), (sca | rot | tran).apply(square))
 
 # %% [markdown]
-# ## Spaces and bridging transforms
-#
-# A common task in coordinate transformation is to convert coordinates in one space (e.g. a pixel index of an image) into some other space (e.g. a location in "world" space, using the image's resolution and offset).
-#
-# Given a set of transforms between known spaces, you can do bridging transforms:
-# calculating how to get from one space to another by applying some subset of those transforms in sequence.
-# This uses the `TransformGraph` class (requires `networkx`).
+"""
+## Spaces and bridging transforms
+
+A common task in coordinate transformation is to convert coordinates in one space (e.g. a pixel index of an image) into some other space (e.g. a location in "world" space, using the image's resolution and offset).
+
+Given a set of transforms between known spaces, you can do bridging transforms:
+calculating how to get from one space to another by applying some subset of those transforms in sequence.
+This uses the `TransformGraph` class (requires `networkx`).
+"""
 
 # %%
 from transformnd import TransformGraph, Spaced
@@ -166,18 +178,20 @@ print("Transform sequence from a to c:", g.get_sequence("a", "c"))
 print("Transform sequence from d to a:", g.get_sequence("d", "a"))
 
 # %% [markdown]
-# ## Making your own `Transform`
-#
-# There are many different types of transformation, which have been implemented in many different ways in many different libraries.
-# `transformnd` makes it easy to bring lots of different implementations under one interface, which can then make use of the same composition tools.
-#
-# `Transform` is an abstract base class with a number of utility methods already implemented.
-# At a minimum, you just need to subclass it and implement the `.apply` method.
-# If your transformation is only defined for certain dimensionalities, that can also be specified: use the `._validate_coords` method to check that passed-in coordinates are of the right shape. [1]
-#
-# You can also optionally implement `.__invert__`, if the transformation is invertible.
-#
-# [1]: N.B. `TransformSequence` and `TransformGraph` both ensure that their component transforms have compatible dimensionalities.
+"""
+## Making your own `Transform`
+
+There are many different types of transformation, which have been implemented in many different ways in many different libraries.
+`transformnd` makes it easy to bring lots of different implementations under one interface, which can then make use of the same composition tools.
+
+`Transform` is an abstract base class with a number of utility methods already implemented.
+At a minimum, you just need to subclass it and implement the `.apply` method.
+If your transformation is only defined for certain dimensionalities, that can also be specified: use the `._validate_coords` method to check that passed-in coordinates are of the right shape. [1]
+
+You can also optionally implement `.__invert__`, if the transformation is invertible.
+
+[1]: N.B. `TransformSequence` and `TransformGraph` both ensure that their component transforms have compatible dimensionalities.
+"""
 
 # %%
 from transformnd import Transform, NDims
@@ -201,20 +215,22 @@ class IsotropicScale2d(Transform):
 
 
 # %% [markdown]
-# ## Adapters
-#
-# Lots of objects have coordinates, but many other features too.
-# `transformnd` makes it easy to transform arbitrary python objects like this using adapters.
-# Basically, you define a subclass of `transformnd.adapters.BaseAdapter` and implement `.apply`, which takes a transform and an object.
-# This method will get coordinates from the object, and construct a new one from the transformed coordinates and the old object.
-#
-# For cases where an object has transformable attributes, there is the `AttrAdapter`, which takes key-value pairs of the name of the transformable attribute, and an adapter which knows how to apply a transform to that attribute.
-# Cases where the attribute is just a coordinate array can use the `NullAdapter`.
-#
-# If you're going to use the same adapter-transform combination a lot, you can use `Adapter.partial` to create a callable representing that combination.
-#
-# When writing your own `Adapter`, consider giving the `.apply` method an `in_place` keyword argument if you have the option of modifying the existing object rather than creating a new one.
-# `AttrAdapter`s which compose over other adapters will save themselves some copying by using this argument intelligently.
+"""
+## Adapters
+
+Lots of objects have coordinates, but many other features too.
+`transformnd` makes it easy to transform arbitrary python objects like this using adapters.
+Basically, you define a subclass of `transformnd.adapters.BaseAdapter` and implement `.apply`, which takes a transform and an object.
+This method will get coordinates from the object, and construct a new one from the transformed coordinates and the old object.
+
+For cases where an object has transformable attributes, there is the `AttrAdapter`, which takes key-value pairs of the name of the transformable attribute, and an adapter which knows how to apply a transform to that attribute.
+Cases where the attribute is just a coordinate array can use the `NullAdapter`.
+
+If you're going to use the same adapter-transform combination a lot, you can use `Adapter.partial` to create a callable representing that combination.
+
+When writing your own `Adapter`, consider giving the `.apply` method an `in_place` keyword argument if you have the option of modifying the existing object rather than creating a new one.
+`AttrAdapter`s which compose over other adapters will save themselves some copying by using this argument intelligently.
+"""
 
 # %%
 from dataclasses import dataclass
@@ -250,8 +266,10 @@ town_translator = town_adapter.partial(translate)
 translated_town_2 = town_translator(translated_town)  # noqa: F841
 
 # %% [markdown]
-# `transformnd` includes adapters for instances of `meshio.Mesh`, `pandas.DataFrame` (where certain columns make up a coordinate array), and geometries from `shapely`.
-# These are only available if you have the requisite dependencies installed.
+"""
+`transformnd` includes adapters for instances of `meshio.Mesh`, `pandas.DataFrame` (where certain columns make up a coordinate array), and geometries from `shapely`.
+These are only available if you have the requisite dependencies installed.
+"""
 
 # %%
 import pandas as pd

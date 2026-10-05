@@ -77,23 +77,21 @@ lint = [
     "types-shapely>=2.1.0.20260408",
     "pydoclint>=0.8.6",
 ]
-doc = [
-    "jupytext>=1.19.6",
-    "nbconvert>=7.17.1",
-    "pdoc>=16.0.0",
-]
 examples = [
-    "marimo>=0.9",
     "matplotlib>=3.10.8",
     "pandas>=3.0.2",
     "pooch>=1.9.0",
     "scikit-image>=0.26.0",
 ]
+doc = [
+    "pdoc>=16.0.0",
+    "jupytext>=1.19.6",
+    "nbconvert>=7.17.1",
+    "ipykernel>=7.4.0",
+    {include-group = "examples"},
+]
 bench = [
     "pytest-benchmark>=5.2.3",
-]
-docs = [
-    "ipykernel>=7.4.0",
 ]
 
 [build-system]
