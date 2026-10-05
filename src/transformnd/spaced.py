@@ -38,7 +38,7 @@ class Spaced(Generic[ArrayT, SpaceRef]):
         t = self.transform.invert()
         if t is None:
             return None
-        return type(self)(t, self.spaces.source, self.spaces.target)
+        return type(self)(t, self.spaces.target, self.spaces.source)
 
     def __invert__(self):
         out = self.invert()
