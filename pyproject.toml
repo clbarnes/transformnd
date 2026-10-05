@@ -78,6 +78,8 @@ lint = [
     "pydoclint>=0.8.6",
 ]
 doc = [
+    "jupytext>=1.19.6",
+    "nbconvert>=7.17.1",
     "pdoc>=16.0.0",
 ]
 examples = [
@@ -89,6 +91,9 @@ examples = [
 ]
 bench = [
     "pytest-benchmark>=5.2.3",
+]
+docs = [
+    "ipykernel>=7.4.0",
 ]
 
 [build-system]
@@ -107,8 +112,11 @@ addopts = ["--benchmark-skip"]
 arg-type-hints-in-docstring = false
 allow-init-docstring = true
 
-[tool.ruff]
-lint.external = [
+[tool.ruff.lint]
+external = [
     "DOC",  # pydoclint
     "D",  # pydocstyle
 ]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"examples/*.py" = ["E402"]
