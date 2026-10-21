@@ -38,7 +38,7 @@ thinplatesplines = [
 ]
 movingleastsquares = ["molesq>=0.4.0"]
 pandas = ["pandas>=3.0.2"]
-shapely = ["shapely>=2.1.2"]
+shapely = ["shapely>=2.2"]
 polars = [
     "polars>=1.40.1",
 ]
