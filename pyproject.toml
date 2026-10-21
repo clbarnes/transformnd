@@ -70,7 +70,7 @@ dev = [
 ]
 test = [
     "pytest",
-    "jax",
+    "jax>=0.12",
     "dask>=2026.3.0",
 ]
 lint = [
@@ -87,6 +87,7 @@ examples = [
     "scikit-image>=0.26.0",
     "jupytext>=1.19.6",
     "ipykernel>=7.4.0",
+    "scipy",
 ]
 doc = [
     "pdoc>=16.0.0",

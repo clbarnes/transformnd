@@ -42,11 +42,11 @@ format:
 
 # Run unit tests.
 test:
-    uv run --all-groups --all-extras pytest -v
+    uv run --group test --all-extras pytest -v
 
 # Run benchmarks.
 bench:
-    uv run --group test pytest --benchmark-only
+    uv run --group test --all-extras pytest -v --benchmark-only
 
 # Bump version, creating a git tag and changelog entry. Level can be "major", "minor", or "patch".
 bump level:
