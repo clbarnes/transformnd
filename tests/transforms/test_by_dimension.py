@@ -2,8 +2,10 @@ import numpy as np
 import pytest
 
 from transformnd.transforms.by_dimension import SubTransform
-from transformnd.transforms import ByDimension, Scale, MapAxis
+from transformnd.transforms import ByDimension, Scale, MapAxis, Translate
 from transformnd.base import TransformSequence
+
+from ..common import NullTransform
 
 
 def test_2d_scale():
@@ -113,3 +115,53 @@ def test_cross_axes_transform():
     by_dim = ByDimension(subtransforms=[t_1, t_2])
     coords_byDim = by_dim.apply(coords.copy())
     assert np.array_equal(coords_byDim, coords_transformed)
+
+
+@pytest.mark.parametrize(
+    "subtransforms",
+    [
+        # scale, with identity filled in
+        [SubTransform(Scale([1.5]), [1], [1])],
+        # map axis and scale
+        [
+            SubTransform(MapAxis([1, 0]), [0, 1], [0, 1]),
+            SubTransform(Scale([1.5]), [2], [2]),
+        ],
+        # sequence with translation, to swapped axes
+        [
+            SubTransform(
+                TransformSequence([MapAxis([1, 0]), Translate([3.0, -4.0])]),
+                [0, 2],
+                [2, 0],
+            ),
+            SubTransform(Scale([2.0]), [1], [1]),
+        ],
+        # crossed axes
+        [
+            SubTransform(Scale([2.0]), [0], [1]),
+            SubTransform(Translate([5.0]), [1], [2]),
+            SubTransform(Scale([3.0]), [2], [0]),
+        ],
+    ],
+)
+def test_to_affine(subtransforms):
+    by_dim = ByDimension(subtransforms=subtransforms, fill_identity=3)
+    coords = np.random.default_rng(0).normal(size=(10, 3))
+    affine = by_dim.to_affine()
+    assert affine is not None
+    assert affine.apply(coords.copy()) == pytest.approx(by_dim.apply(coords.copy()))
+
+
+def test_to_affine_in_sequence():
+    by_dim = ByDimension([SubTransform(Translate([2.0]), [0], [0])], fill_identity=2)
+    affine = TransformSequence([by_dim, Scale([2.0, 3.0])]).to_affine()
+    assert affine is not None
+    assert affine.apply(np.array([[1.0, 1.0]])) == pytest.approx(np.array([[6.0, 3.0]]))
+
+
+def test_to_affine_not_affineable():
+    by_dim = ByDimension(
+        [SubTransform(NullTransform(1, affineable=False), [0], [0])],
+        fill_identity=2,
+    )
+    assert by_dim.to_affine() is None

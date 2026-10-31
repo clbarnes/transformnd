@@ -1,7 +1,9 @@
 from collections.abc import Iterable
 from typing import Self
 from array_api_compat import array_namespace
+import numpy as np
 
+from .affine import Affine
 from .simple import Identity
 
 from ..base import Transform
@@ -163,6 +165,28 @@ class ByDimension(Transform[ArrayT]):
         return type(self)(
             subtransforms=inverted_transforms,
         )
+
+    def to_affine(self) -> Affine[ArrayT] | None:
+        """Combine the subtransforms' affines, if all subtransforms can be converted.
+
+        Each subtransform's linear map and translation are placed in the rows of its output axes,
+        and the columns of its input axes.
+
+        Returns
+        -------
+        Affine[ArrayT] | None
+            The affine transformation, if all subtransforms can be converted to affine.
+            None otherwise.
+        """
+        m = np.zeros((self.ndims.target + 1, self.ndims.source + 1))
+        m[-1, -1] = 1
+        for t in self.subtransforms:
+            sub_affine = t.transform.to_affine()
+            if sub_affine is None:
+                return None
+            m[np.ix_(t.output_axes, t.input_axes)] = sub_affine.matrix[:-1, :-1]
+            m[t.output_axes, -1] = sub_affine.matrix[:-1, -1]
+        return Affine(m)
 
     def is_identity(self) -> bool:
         for t in self.subtransforms:
