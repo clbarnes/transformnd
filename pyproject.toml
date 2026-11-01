@@ -120,7 +120,13 @@ external = [
     "D",  # pydocstyle
 ]
 ignore = [
-    "C408",  # would ban dict() in favour of {}; I prefer dict() to distinguish from set literals
+    # Would ban dict() in favour of {};
+    # I prefer dict() to distinguish from set literals.
+    "C408",
+    # Prefers type parameters instead of inheriting from Generic[typevar].
+    # Currently, we need to use typevars because we python 3.12 doesn't support default type parameters.
+    # Should be revisited when python 3.12 is deprecated.
+    "UP046",
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]
