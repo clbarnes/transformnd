@@ -1,8 +1,10 @@
-from transformnd.base import Transform
-from transformnd.types import NDims
-from transformnd.transforms.affine import Affine
 from copy import copy
+
 import numpy as np
+
+from transformnd.base import Transform
+from transformnd.transforms.affine import Affine
+from transformnd.types import NDims
 
 
 class NullTransform(Transform):

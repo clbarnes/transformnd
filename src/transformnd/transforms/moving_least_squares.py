@@ -4,9 +4,10 @@ Implementation of Moving Least Squares transformation.
 Requires the `movingleastsquares` extra.
 """
 
-from array_api_compat import array_namespace
-import numpy as np
 from typing import Self
+
+import numpy as np
+from array_api_compat import array_namespace
 
 from ..base import Transform
 from ..types import NDims

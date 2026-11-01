@@ -1,8 +1,10 @@
 from functools import lru_cache
+
 from array_api_compat import array_namespace
+from array_api_compat import device as xp_device
+
 from ..util import ArrayT
 from .base import Extents
-from array_api_compat import device as xp_device
 
 
 class BoundingBox(Extents[ArrayT]):
@@ -17,7 +19,7 @@ class BoundingBox(Extents[ArrayT]):
         self.maxes = maxes
         super().__init__(xp.shape(mins)[0])
 
-    @lru_cache()
+    @lru_cache
     def extents_cast(self, namespace, device) -> tuple[ArrayT, ArrayT]:
         return (
             namespace.asarray(self.mins, device=device),

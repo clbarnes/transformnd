@@ -5,18 +5,19 @@ Rigid transformations implemented as affine multiplications.
 from __future__ import annotations
 
 import math
-from typing import Container, Union, Self
+from collections.abc import Container
+from copy import copy
 from types import ModuleType
+from typing import Self
 
 import numpy as np
+from array_api_compat import array_namespace
+from array_api_compat import device as xp_device
 from numpy.typing import ArrayLike
 
-from copy import copy
-
-from array_api_compat import array_namespace, device as xp_device
-from ..base import Transform, ArrayT
-from ..util import as_floats, is_square
+from ..base import ArrayT, Transform
 from ..types import NDims
+from ..util import as_floats, is_square
 
 
 class Affine(Transform[ArrayT]):
@@ -148,7 +149,7 @@ class Affine(Transform[ArrayT]):
             self.matrix @ rhs.matrix,
         )
 
-    def to_device(self, xp: ModuleType, device: str | None = None) -> "Affine[ArrayT]":
+    def to_device(self, xp: ModuleType, device: str | None = None) -> Affine[ArrayT]:
         """Return a copy with the matrix placed on the given device/backend.
 
         Use this before a tight apply() loop to avoid per-call host-to-device
@@ -291,7 +292,7 @@ class Affine(Transform[ArrayT]):
     @classmethod
     def reflection(
         cls,
-        axis: Union[int, Container[int]],
+        axis: int | Container[int],
         ndim: int,
     ) -> Affine[ArrayT]:
         """Create an affine reflection.
@@ -346,7 +347,7 @@ class Affine(Transform[ArrayT]):
     @classmethod
     def rotation3(
         cls,
-        rotation: Union[float, tuple[float, float, float]],
+        rotation: float | tuple[float, float, float],
         degrees: bool = True,
         clockwise: bool = False,
         order: tuple[int, int, int] = (0, 1, 2),
@@ -402,7 +403,7 @@ class Affine(Transform[ArrayT]):
     @classmethod
     def shearing(
         cls,
-        factor: Union[float, np.ndarray],
+        factor: float | np.ndarray,
         ndim: int | None = None,
     ) -> Affine[ArrayT]:
         """Create an affine shear.

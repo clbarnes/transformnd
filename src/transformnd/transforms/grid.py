@@ -1,8 +1,10 @@
-from typing import Any, Protocol, Generic
+from typing import Any, Generic, Protocol
 
 from array_api_compat import array_namespace
+
 from transformnd.types import NDims
 from transformnd.util import join_strs
+
 from ..base import Transform
 from ..types import ArrayT
 

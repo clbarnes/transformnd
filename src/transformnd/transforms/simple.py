@@ -3,17 +3,17 @@ Simple transformations like rigid translation and scaling.
 """
 
 from copy import copy
-from typing import Self
 from types import ModuleType
-
-from numpy.typing import ArrayLike
+from typing import Self
 
 from array_api_compat import array_namespace
 from array_api_compat import device as xp_device
+from numpy.typing import ArrayLike
+
 from ..base import Transform
+from ..transforms.affine import Affine
 from ..types import NDims
 from ..util import ArrayT, as_floats, join_strs
-from ..transforms.affine import Affine
 
 
 class Identity(Transform[ArrayT]):

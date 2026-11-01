@@ -1,6 +1,7 @@
 """Adapt polars DataFrames for transformation."""
 
 from typing import TYPE_CHECKING
+
 import numpy as np
 
 from ..base import Transform

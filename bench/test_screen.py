@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from transformnd.transforms.simple import Identity, Translate, Scale, Transform
 from transformnd.transforms.affine import Affine
+from transformnd.transforms.simple import Identity, Scale, Transform, Translate
 
 
 @pytest.mark.parametrize(

@@ -1,17 +1,17 @@
 """Utilities used elsewhere in the package."""
 
-from collections.abc import Iterable
-import os
-from types import ModuleType
-import warnings
 import logging
+import os
+import warnings
+from collections.abc import Iterable
+from types import ModuleType
 
+import numpy as np
 from array_api_compat import (
     array_namespace,
     is_dask_namespace,
     is_jax_namespace,
 )
-import numpy as np
 
 from .types import ArrayT
 

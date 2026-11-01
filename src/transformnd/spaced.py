@@ -1,8 +1,8 @@
 from collections.abc import Iterable, Sequence
-from typing import Self, Generic
+from typing import Generic, Self
+
 from .base import Transform
-from .types import ArrayT, SrcTgt
-from .types import SpaceRef
+from .types import ArrayT, SpaceRef, SrcTgt
 
 
 class Spaced(Generic[ArrayT, SpaceRef]):

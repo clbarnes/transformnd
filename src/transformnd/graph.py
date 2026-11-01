@@ -1,24 +1,25 @@
 """Bridging transforms between known spaces."""
 
 from __future__ import annotations
+
+import logging
+from collections.abc import Callable, Hashable, Iterable, Iterator, Mapping
 from copy import copy, deepcopy
 from functools import lru_cache
-from collections.abc import Callable, Iterable, Iterator, Mapping
-import logging
 from itertools import pairwise
 from types import ModuleType
-from typing import Any, Generic, Hashable, Self
-from typing_extensions import TypeVar
-from .spaced import Spaced
+from typing import Any, Generic, Self
 
 import networkx as nx
+from typing_extensions import TypeVar
 
 from transformnd.transforms.simple import Identity
 
-from .transforms.bijection import Bijection
 from .base import Transform, TransformSequence
-from .util import ArrayT
+from .spaced import Spaced
+from .transforms.bijection import Bijection
 from .types import SpaceRef
+from .util import ArrayT
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +197,7 @@ class TransformGraph(Generic[ArrayT, SpaceRef]):
 
         return out
 
-    @lru_cache()
+    @lru_cache
     def get_sequence(
         self,
         source_space: SpaceRef,

@@ -1,15 +1,13 @@
 from copy import deepcopy
 
-from transformnd.base import Transform, TransformSequence
-from transformnd.graph import TransformGraph
-from transformnd.transforms.simple import Translate, Scale
-from transformnd.transforms.affine import Affine
-from transformnd import Spaced
-
+import numpy as np
 import pytest
 
-import numpy as np
-
+from transformnd import Spaced
+from transformnd.base import Transform, TransformSequence
+from transformnd.graph import TransformGraph
+from transformnd.transforms.affine import Affine
+from transformnd.transforms.simple import Scale, Translate
 from transformnd.util import as_floats
 
 

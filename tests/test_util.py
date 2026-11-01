@@ -1,12 +1,12 @@
 from types import ModuleType
-import pytest
 
+import dask.array
+import jax.numpy
+import numpy
+import pytest
 from array_api_compat import is_array_api_obj
 
-from transformnd.util import chain_or, none_eq, same_or_none, as_floats
-import jax.numpy
-import dask.array
-import numpy
+from transformnd.util import as_floats, chain_or, none_eq, same_or_none
 
 
 def test_same_or_none():

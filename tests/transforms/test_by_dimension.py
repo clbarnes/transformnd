@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
 
-from transformnd.transforms.by_dimension import SubTransform
-from transformnd.transforms import ByDimension, Scale, MapAxis, Translate
 from transformnd.base import TransformSequence
+from transformnd.transforms import ByDimension, MapAxis, Scale, Translate
+from transformnd.transforms.by_dimension import SubTransform
 
 from ..common import NullTransform
 

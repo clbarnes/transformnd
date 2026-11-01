@@ -6,9 +6,9 @@ from typing import Self
 import numpy as np
 from array_api_compat import array_namespace, is_dask_array
 
+from ..base import ArrayT, Transform
 from ..types import NDims
-from ..base import Transform, ArrayT
-from ..util import join_strs, set_scipy_array_api, as_floats
+from ..util import as_floats, join_strs, set_scipy_array_api
 
 __all__ = ["Coordinates", "Displacements"]
 

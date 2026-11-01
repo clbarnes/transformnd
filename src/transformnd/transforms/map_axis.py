@@ -1,11 +1,12 @@
 from typing import Self
-from array_api_compat import array_namespace
+
 import numpy as np
+from array_api_compat import array_namespace
 
 from ..base import Transform
-from ..util import ArrayT, join_strs
-from ..types import NDims
 from ..transforms.affine import Affine
+from ..types import NDims
+from ..util import ArrayT, join_strs
 
 
 class MapAxis(Transform[ArrayT]):
