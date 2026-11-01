@@ -1,10 +1,9 @@
+import numpy as np
 import polars as pl
+import pytest
 
 from transformnd.adapters.polars import PolarsAdapter
 from transformnd.transforms import Scale
-import numpy as np
-
-import pytest
 
 
 def test_pandas():

@@ -1,5 +1,6 @@
-from transformnd.extents.bounding_box import BoundingBox
 import numpy as np
+
+from transformnd.extents.bounding_box import BoundingBox
 
 
 def test_bbox():

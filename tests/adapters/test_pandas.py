@@ -1,10 +1,9 @@
+import numpy as np
 import pandas as pd
+import pytest
 
 from transformnd.adapters.pandas import PandasAdapter
 from transformnd.transforms import Scale
-import numpy as np
-
-import pytest
 
 
 def test_pandas():

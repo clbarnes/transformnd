@@ -1,7 +1,7 @@
 import numpy as np
+import pytest
 
 from transformnd.transforms.simple import Identity, Scale, Translate
-import pytest
 
 
 def test_identity(coords5x3):

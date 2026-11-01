@@ -3,12 +3,12 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from ..base import Transform, ArrayT
+from ..base import ArrayT, Transform
 from .base import BaseAdapter
 
 if TYPE_CHECKING:
-    from shapely.geometry.base import BaseGeometry
     from shapely.coords import CoordinateSequence
+    from shapely.geometry.base import BaseGeometry
 
 
 logger = logging.getLogger(__name__)

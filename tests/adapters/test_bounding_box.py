@@ -1,10 +1,9 @@
 import numpy as np
-
-from transformnd.extents.bounding_box import BoundingBox
-from transformnd.adapters.bounding_box import BoundingBoxAdapter
-from transformnd.transforms import Scale
-
 import pytest
+
+from transformnd.adapters.bounding_box import BoundingBoxAdapter
+from transformnd.extents.bounding_box import BoundingBox
+from transformnd.transforms import Scale
 
 
 def test_bbox_adapter():

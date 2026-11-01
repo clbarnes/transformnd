@@ -1,7 +1,9 @@
 from random import Random
+
+import pytest
+
 from transformnd.transforms import ProjectAxis
 from transformnd.util import as_floats
-import pytest
 
 
 def test_insert():

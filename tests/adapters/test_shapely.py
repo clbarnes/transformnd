@@ -1,18 +1,17 @@
+import pytest
 from shapely import (
-    Point,
-    LineString,
-    LinearRing,
-    Polygon,
-    MultiPoint,
-    MultiLineString,
-    MultiPolygon,
     GeometryCollection,
+    LinearRing,
+    LineString,
+    MultiLineString,
+    MultiPoint,
+    MultiPolygon,
+    Point,
+    Polygon,
 )
 
 from transformnd.adapters.shapely import ShapelyAdapter
 from transformnd.transforms import Scale
-
-import pytest
 
 
 @pytest.mark.parametrize(

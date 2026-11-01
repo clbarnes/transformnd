@@ -170,7 +170,7 @@ This uses the `TransformGraph` class (requires `networkx`).
 """
 
 # %%
-from transformnd import TransformGraph, Spaced
+from transformnd import Spaced, TransformGraph
 
 g = TransformGraph()
 ab = Scale([2, 2])
@@ -209,7 +209,7 @@ You can also optionally implement `.__invert__`, if the transformation is invert
 """
 
 # %%
-from transformnd import Transform, NDims
+from transformnd import NDims, Transform
 
 
 class IsotropicScale2d(Transform):
@@ -278,7 +278,7 @@ town_adapter = AttrAdapter(houses=None, shops=None)
 translated_town = town_adapter.apply(translate, my_town)
 
 town_translator = town_adapter.partial(translate)
-translated_town_2 = town_translator(translated_town)  # noqa: F841
+translated_town_2 = town_translator(translated_town)
 
 # %% [markdown]
 """

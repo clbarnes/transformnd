@@ -4,7 +4,7 @@ from array_api_compat import array_namespace
 
 from transformnd.transforms.affine import Affine
 
-from ..base import Transform, ArrayT
+from ..base import ArrayT, Transform
 
 
 class Bijection(Transform[ArrayT]):

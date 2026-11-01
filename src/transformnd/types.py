@@ -1,7 +1,8 @@
-from collections.abc import Sequence
-from typing import Callable, Generic, Hashable, NamedTuple, Self
-from typing_extensions import TypeVar
+from collections.abc import Callable, Hashable, Sequence
+from typing import Generic, NamedTuple, Self
+
 import numpy as np
+from typing_extensions import TypeVar
 
 ArrayT = TypeVar("ArrayT", default=np.ndarray)
 

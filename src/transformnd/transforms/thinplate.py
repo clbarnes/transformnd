@@ -9,8 +9,8 @@ import logging
 import numpy as np
 
 from ..base import Transform
-from ..util import as_floats
 from ..types import NDims
+from ..util import as_floats
 
 logger = logging.getLogger(__name__)
 

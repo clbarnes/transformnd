@@ -1,12 +1,12 @@
 from copy import copy
+from itertools import pairwise
 
 import numpy as np
 import pytest
 
-from transformnd.base import TransformSequence, TransformFnWrapper
-from transformnd.transforms.simple import Translate, Scale
+from transformnd.base import TransformFnWrapper, TransformSequence
 from transformnd.transforms.affine import Affine
-from itertools import pairwise
+from transformnd.transforms.simple import Scale, Translate
 
 from .common import NullTransform
 

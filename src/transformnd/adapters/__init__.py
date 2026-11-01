@@ -27,13 +27,13 @@ from .polars import PolarsAdapter
 from .shapely import ShapelyAdapter
 
 __all__ = [
-    "BaseAdapter",
-    "SimpleAdapter",
-    "NullAdapter",
-    "FnAdapter",
     "AttrAdapter",
-    "ReshapeAdapter",
+    "BaseAdapter",
+    "FnAdapter",
+    "NullAdapter",
     "PandasAdapter",
     "PolarsAdapter",
+    "ReshapeAdapter",
     "ShapelyAdapter",
+    "SimpleAdapter",
 ]

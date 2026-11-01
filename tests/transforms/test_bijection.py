@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from transformnd.transforms import Bijection, Scale, MapAxis
+from transformnd.transforms import Bijection, MapAxis, Scale
 from transformnd.util import as_floats
 
 

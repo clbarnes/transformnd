@@ -1,8 +1,10 @@
 from array_api_compat import array_namespace
+
 from transformnd.base import Transform
-from .base import BaseAdapter
-from ..extents.bounding_box import BoundingBox
+
 from ..base import ArrayT
+from ..extents.bounding_box import BoundingBox
+from .base import BaseAdapter
 
 
 class BoundingBoxAdapter(BaseAdapter[BoundingBox[ArrayT], ArrayT]):

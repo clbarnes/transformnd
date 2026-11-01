@@ -5,18 +5,17 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from copy import copy
-from typing import Self, TYPE_CHECKING
+from itertools import pairwise
 from types import ModuleType
+from typing import TYPE_CHECKING, Self
 
 from array_api_compat import array_namespace
 
+from .types import NDims, TransformSignature
 from .util import (
     ArrayT,
     join_strs,
 )
-from itertools import pairwise
-
-from .types import TransformSignature, NDims
 
 if TYPE_CHECKING:
     from .transforms import Affine
@@ -96,7 +95,6 @@ class Transform[ArrayT](ABC):
         ArrayT
             Transformed coordinates in the same shape.
         """
-        pass
 
     def invert(self) -> Transform[ArrayT] | None:
         """Invert the transformation, returning `None` if not possible."""
@@ -117,7 +115,7 @@ class Transform[ArrayT](ABC):
             return NotImplemented
         return t
 
-    def to_device(self, xp: ModuleType, device: str | None = None) -> Self:  # noqa: ARG002
+    def to_device(self, xp: ModuleType, device: str | None = None) -> Self:
         """Return a copy of this transform with array parameters placed on the given device.
 
         Useful for pre-allocating parameters on GPU before a tight apply() loop,

@@ -1,14 +1,14 @@
 """Simple adapter cases."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from copy import deepcopy
 from functools import partial
-from collections.abc import Callable
-from typing import TypeVar, Any
+from typing import Any, TypeVar
 
 from array_api_compat import array_namespace
 
-from ..base import Transform, ArrayT
+from ..base import ArrayT, Transform
 
 ObjectT = TypeVar("ObjectT")
 
@@ -32,7 +32,6 @@ class BaseAdapter[ObjectT, ArrayT](ABC):
         ObjectT
             The transformed object.
         """
-        pass
 
     def partial(self, *args: Any, **kwargs: Any) -> Callable[..., ObjectT]:
         """Create a partial function with frozen arguments.
@@ -135,7 +134,7 @@ class AttrAdapter(BaseAdapter[ObjectT, ArrayT]):
                 if "got an unexpected keyword argument 'in_place'" in str(e):
                     transformed = v.apply(transform, member)
                 else:
-                    raise e
+                    raise
             setattr(obj, k, transformed)
 
         return obj
@@ -149,12 +148,10 @@ class SimpleAdapter(BaseAdapter[ObjectT, ArrayT], ABC):
     @abstractmethod
     def _to_array(self, obj: ObjectT) -> ArrayT:
         """Convert the object into an array of coordinates."""
-        pass
 
     @abstractmethod
     def _from_array(self, coords: ArrayT) -> ObjectT:
         """Convert an array of coordinates into the correct type."""
-        pass
 
     def apply(self, transform: Transform[ArrayT], obj: ObjectT) -> ObjectT:
         coords: ArrayT = self._to_array(obj)

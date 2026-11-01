@@ -56,7 +56,7 @@ print(f"{cells.max()=}")
 
 # %%
 import transformnd as tnd
-from transformnd.transforms import ProjectAxis, MapAxis, Scale
+from transformnd.transforms import MapAxis, ProjectAxis, Scale
 
 # Aligned at world origin.
 # This would be stored alongside the data.
