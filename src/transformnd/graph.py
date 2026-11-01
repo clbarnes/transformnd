@@ -57,6 +57,7 @@ class TransformGraph(Generic[ArrayT, SpaceRef]):
         given transforms.
         """
         self.graph = nx.MultiDiGraph()
+        self.get_sequence = lru_cache()(self._get_sequence)
 
     def ndim(self, space: SpaceRef) -> int | None:
         """Get the dimensionality of the given space, or None if missing."""
@@ -197,8 +198,7 @@ class TransformGraph(Generic[ArrayT, SpaceRef]):
 
         return out
 
-    @lru_cache
-    def get_sequence(
+    def _get_sequence(
         self,
         source_space: SpaceRef,
         target_space: SpaceRef,

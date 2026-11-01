@@ -134,7 +134,7 @@ class AttrAdapter(BaseAdapter[ObjectT, ArrayT]):
                 if "got an unexpected keyword argument 'in_place'" in str(e):
                     transformed = v.apply(transform, member)
                 else:
-                    raise e
+                    raise
             setattr(obj, k, transformed)
 
         return obj

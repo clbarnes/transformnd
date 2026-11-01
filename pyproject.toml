@@ -119,6 +119,9 @@ external = [
     "DOC",  # pydoclint
     "D",  # pydocstyle
 ]
+ignore = [
+    "C408",  # would ban dict() in favour of {}; I prefer dict() to distinguish from set literals
+]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "examples/*.py" = ["E402"]

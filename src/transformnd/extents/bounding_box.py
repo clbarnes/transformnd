@@ -17,10 +17,10 @@ class BoundingBox(Extents[ArrayT]):
 
         self.mins = mins
         self.maxes = maxes
+        self.extents_cast = lru_cache()(self._extents_cast)
         super().__init__(xp.shape(mins)[0])
 
-    @lru_cache
-    def extents_cast(self, namespace, device) -> tuple[ArrayT, ArrayT]:
+    def _extents_cast(self, namespace, device) -> tuple[ArrayT, ArrayT]:
         return (
             namespace.asarray(self.mins, device=device),
             namespace.asarray(self.maxes, device=device),

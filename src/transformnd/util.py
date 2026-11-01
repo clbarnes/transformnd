@@ -69,7 +69,7 @@ def chain_or[T](*args: T | None, default: _NoDefault | T = NO_DEFAULT) -> T:
         if arg is not None:
             return arg
     if isinstance(default, _NoDefault):
-        raise ValueError("No non-None arguments")
+        raise ValueError("No non-None arguments")  # noqa: TRY004
     return default
 
 
