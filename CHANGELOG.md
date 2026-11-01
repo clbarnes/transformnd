@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `ByDimension.to_affine()`, if all of its subtransforms can be converted to affine
+
 ## 0.9.2 - 2026-10-05
 
 ### Fixed
