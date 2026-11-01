@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.10.1 - 2026-11-01
+
 ### Added
 
 - `ByDimension.to_affine()`, if all of its subtransforms can be converted to affine
